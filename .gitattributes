@@ -1,0 +1,4 @@
+# Keep line endings as they are on disk. Without this, git rewrites them
+# on the way in and warns about it every single time you commit, which is
+# noise you do not need mid-edit.
+* -text

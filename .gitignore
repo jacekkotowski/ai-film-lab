@@ -1,0 +1,39 @@
+out/
+analysis/
+__pycache__/
+*.pyc
+.venv/
+
+# uv.lock IS tracked, deliberately. pyproject.toml gives ranges, and a
+# range is a promise that every computer resolves the same way -- which
+# is not true. `opencv-python-headless>=4.9` quietly resolved to 5.0,
+# which removed CascadeClassifier, and face detection died without a
+# word for weeks. The lock is what makes the next machine behave like
+# this one, so it travels with the code.
+
+# Your originals are read-only and often gigabytes. Git tracks the EDIT
+# (film.yaml), not the footage -- that is what makes the history cheap
+# enough to commit on every render. Back media/ up the way you back up
+# photographs; do not ask git to do it.
+media/
+music/
+film.yaml.bak
+.lastfilm
+caption_wrap_after.png
+.Rproj.user
+last_error.txt
+
+# Which camera and microphone this particular machine has. Per-machine,
+# not per-project, and never shared -- the next computer has different
+# hardware with differently-spelled names.
+.devices.json
+
+# The thumbnail you upload beside the film. Same reasoning as media/:
+# it is a picture, back it up the way you back up pictures.
+cover/
+
+# The shelf itself travels (see pack.py). Its contents are your music
+# and your pictures -- same reasoning as media/ and cover/ above, and
+# music/ and cover/ already match at any depth. The READ ME is written
+# by `film library` on whichever machine needs it.
+library/READ ME.txt
