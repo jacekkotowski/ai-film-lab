@@ -1,10 +1,24 @@
 # AI Film Lab
 
 Drop photographs and clips in a folder. Get a cinematic sequence out —
-camera movement, music, captions from your own talking.
+camera movement, music, captions from your own talking. It runs on your
+own computer: nothing is uploaded, no account, no internet needed once
+it's installed.
 
-**Read [HOW_TO_USE.md](HOW_TO_USE.md).** It is the whole manual, and it
-assumes nothing.
+## Get it running (Windows)
+
+1. Above, click **Code → Download ZIP**, then unzip it wherever you
+   like. (`git clone` works too, if you'd rather.)
+2. Double-click **`FILM.bat`**. The very first time, if it can't find
+   the two free programs it needs, it prints two lines to paste into
+   PowerShell — paste them, close the window, and double-click
+   `FILM.bat` again. That only happens once.
+3. It asks for a name, opens a folder for your photos and clips, and
+   walks you through everything from there — one question at a time,
+   telling you the next step as it goes.
+
+**[Read HOW_TO_USE.md](HOW_TO_USE.md)** for the full walkthrough. It
+assumes nothing, and it's the manual for everything below this point too.
 
 ---
 
