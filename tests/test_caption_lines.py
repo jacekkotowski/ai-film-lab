@@ -159,3 +159,175 @@ def test_a_stray_last_word_is_folded_onto_the_line_before():
 
 def test_silence_produces_no_captions():
     assert _chunk_words([]) == []
+
+
+# --------------------------------------------------------------------------
+# Breaking the captions where YOU broke them
+# --------------------------------------------------------------------------
+
+from ffilm.voice import align_to_script, lines_for, script_units
+
+
+def test_the_script_is_cut_where_its_author_cut_it():
+    """A line break you typed is a decision -- booth.reflow already kept
+    it. A full stop inside a line is the other place a caption may end."""
+    assert script_units("One thing. Two things.\nA line I broke myself.") == \
+        ["One thing.", "Two things.", "A line I broke myself."]
+
+
+def test_blank_lines_and_stray_space_do_not_become_captions():
+    assert script_units("\n\n  Only this.  \n\n") == ["Only this."]
+
+
+def test_a_caption_takes_its_words_from_the_page_and_its_times_from_the_ear():
+    """The whole point. Whisper heard no punctuation and ran two
+    sentences together; the script knows where they part."""
+    words = say("i miss you and i worry if you are ok do not be afraid")
+    units = ["I miss you and I worry if you are ok.", "Do not be afraid."]
+    out = align_to_script(words, units)
+    assert texts(out) == units
+    assert out[0].start == words[0].start
+    assert out[1].end == words[-1].end
+    assert out[0].end <= out[1].start
+
+
+def test_punctuation_and_case_do_not_stop_a_match():
+    words = say("nagrywam to zeby powiedziec ze w ciebie wierze")
+    out = align_to_script(words, ["Nagrywam to, zeby powiedziec, "
+                                  "ze w ciebie wierze!"])
+    assert len(out) == 1
+
+
+def test_a_line_you_fluffed_and_read_again_keeps_the_second_reading():
+    """You stumble, stop, and say the sentence properly. Both readings
+    are in the transcript; only one of them is the take."""
+    words = say("do not be do not be afraid of them")
+    out = align_to_script(words, ["Do not be afraid of them."])
+    assert len(out) == 1
+    # timed from the good reading, not from the false start
+    assert out[0].start > words[0].start
+
+
+def test_a_sentence_you_wrote_but_never_said_is_not_captioned():
+    words = say("only the first one")
+    out = align_to_script(words, ["Only the first one.", "This never got said."])
+    assert texts(out) == ["Only the first one."]
+
+
+def test_no_script_means_listen_instead():
+    words = say("You are enough. You always were.")
+    assert lines_for(words, None) == _chunk_words(words)
+    assert lines_for(words, "   ") == _chunk_words(words)
+
+
+def test_improvising_falls_back_to_listening():
+    """The script said one thing and you said something else entirely.
+    Forcing the page onto that would caption words nobody spoke."""
+    words = say("actually let me say something completely different today")
+    out = lines_for(words, "A prepared sentence that bears no relation.")
+    assert texts(out) == texts(_chunk_words(words))
+
+
+def test_captions_never_run_backwards():
+    words = say("second thing first thing")
+    out = align_to_script(words, ["First thing.", "Second thing."])
+    for a, b in zip(out, out[1:]):
+        assert a.start <= b.start
+
+
+def test_a_sentence_spanning_two_breaths_is_captioned_once():
+    """Whisper splits on breaths, not on sentences. Aligning each of its
+    segments separately found the same written sentence in both and put
+    it on screen twice -- 4 of 23 sentences, on a real take."""
+    units = ["I lose my backpack, everything I own is in it."]
+    first_breath = say("i lose my backpack")
+    second = say("everything i own is in it", rate=0.3)
+    for w in second:                       # lay it after the first breath
+        w.start += 5.0
+        w.end += 5.0
+    out = align_to_script(first_breath + second, units)
+    # It may well be cut in two -- five seconds apart, it SHOULD be --
+    # but each half appears once, and between them they say the sentence.
+    joined = " ".join(texts(out))
+    assert joined.count("backpack") == 1
+    assert joined.count("everything") == 1
+
+
+# --------------------------------------------------------------------------
+# Short enough to read
+# --------------------------------------------------------------------------
+
+from ffilm.voice import CAPTION_CHARS, CAPTION_SECONDS
+
+
+def test_a_long_sentence_is_cut_at_its_own_commas():
+    """Putting a whole written sentence on screen unbroken made the print
+    small (render.fit_caption shrinks until it fits) and left silent gaps
+    (caption_fit clamps the display to 4.5s). Measured on a real take:
+    one sentence ran 9.4 seconds, so it showed for 4.5 and left 4.9
+    seconds of talking with nothing on screen."""
+    unit = ("I got there early, pranked my way in a year ahead, "
+            "passed the exam before anyone expected me to.")
+    words = say(unit.replace(",", ""), rate=0.5)
+    out = align_to_script(words, [unit])
+    assert len(out) > 1, "a nine second sentence must not be one caption"
+    for ln in out:
+        assert ln.dur <= CAPTION_SECONDS + 0.6
+        assert len(ln.text) <= CAPTION_CHARS + 12
+
+
+def test_the_pieces_still_say_the_whole_sentence():
+    unit = "I got there early, and it did not matter at all in the end."
+    words = say(unit.replace(",", ""), rate=0.5)
+    said = " ".join(texts(align_to_script(words, [unit])))
+    for w in ("early", "matter", "end"):
+        assert w in said
+
+
+def test_a_short_sentence_is_left_in_one_piece():
+    """Cutting is for sentences that need it. This one does not."""
+    out = align_to_script(say("and it didn't matter"), ["And it didn't matter."])
+    assert texts(out) == ["And it didn't matter."]
+
+
+def test_thirteen_short_words_are_still_one_caption():
+    """Counting words got this wrong in both directions. This sentence is
+    thirteen words, fifty-six characters and three and a half seconds --
+    one comfortable caption -- and a word ceiling cut it in two."""
+    unit = "I wanted to prove to the girl I loved that I was worthy."
+    out = align_to_script(say(unit.strip("."), rate=0.26), [unit])
+    assert texts(out) == [unit]
+
+
+def test_a_caption_is_measured_in_ink_not_in_words():
+    long_words = ("Extraordinarily complicated pronunciations overwhelm tired readers.")
+    assert len(long_words) > CAPTION_CHARS
+    out = align_to_script(say(long_words.strip("."), rate=0.5), [long_words])
+    assert len(out) > 1
+
+
+def test_with_no_real_breath_the_line_is_filled_not_halved():
+    """Measured on a real take: the winning gap was 0.00s, and it cut
+    "He was pulling fresh | readings from weather balloons" for no
+    reason. Given nothing to go on, fill the caption."""
+    unit = ("He was pulling fresh readings from weather balloons "
+            "and ships and stations.")
+    out = align_to_script(say(unit.strip("."), rate=0.22), [unit])
+    assert len(out) > 1
+    assert len(out[0].text.split()) >= 6, \
+        f"first caption is a stub: {out[0].text!r}"
+
+
+def test_a_hyphen_or_an_apostrophe_does_not_stop_the_splitting():
+    """`_key` makes two tokens of "decision-maker" and two of "can't",
+    so the count of words on the page and the count matched against the
+    transcript drift apart. Comparing them directly made the splitter
+    give up without a word -- and a seventy-three character, seven
+    second caption reached the screen with both ceilings in force."""
+    unit = ("and a decision-maker who has to pick one under a deadline "
+            "he can't move.")
+    out = align_to_script(say(unit.strip("."), rate=0.4), [unit])
+    assert len(out) > 1, "it must still be cut"
+    for ln in out:
+        assert len(ln.text) <= CAPTION_CHARS + 12
+        assert ln.dur <= CAPTION_SECONDS + 1.0
