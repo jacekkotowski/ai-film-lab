@@ -12,8 +12,9 @@ Nothing here touches ffmpeg or a file. These are the numbers only.
 
 import re
 
-from ffilm.audio import (CLICK_FADE, SPEECH_NORM, VOICE_FLOOR_HZ,
-                         atempo_chain, speech_chain, voice_tone)
+from ffilm.audio import (CLICK_FADE, DENOISE, NOISE_GATE, SPEECH_NORM,
+                         VOICE_FLOOR_HZ, atempo_chain, speech_chain,
+                         voice_tone)
 from ffilm.caption_fit import fit_per_clip
 from ffilm.spec import Film, Shot
 from ffilm.voice import Line, VoiceSource
@@ -131,7 +132,35 @@ def test_speech_lift_false_leaves_the_voice_completely_alone():
     """The one switch in film.yaml that means: my recording is fine."""
     chain = speech_chain(0.0, 5.0, 0, 1.0, lift=False)
     assert not any("highpass" in c or "equalizer" in c or "speechnorm" in c
-                   for c in chain)
+                   or "afftdn" in c or "agate" in c for c in chain)
+
+
+# --------------------------------------------------------------------------
+# The waterfall between the sentences
+# --------------------------------------------------------------------------
+
+def test_the_expander_is_not_allowed_to_lift_the_room():
+    """Expansion does not know what speech is -- it lifts whatever is
+    quiet, and between two sentences the only quiet thing is the room.
+    Measured on a real take, the same second of room tone: raw -45.3dB,
+    through e=25 it came out at -17.5dB, against a voice at -15.0dB. The
+    room was arriving within 2.5dB of the person talking, and it sounded
+    like a waterfall."""
+    e = float(re.search(r"e=([\d.]+)", SPEECH_NORM).group(1))
+    assert e <= 12, "high expansion is what made the gaps roar"
+
+
+def test_the_hiss_is_taken_out_before_it_is_amplified():
+    chain = speech_chain(0.0, 5.0, 0, 1.0, lift=True)
+    assert chain.index(DENOISE) < chain.index(SPEECH_NORM)
+
+
+def test_the_gate_closes_after_the_expansion_not_before():
+    """A gate ahead of the normaliser is pointless -- whatever leaks
+    through gets expanded anyway. Measured: placed first it changed the
+    room tone by exactly 0.0dB; placed last, by -48.6dB."""
+    chain = speech_chain(0.0, 5.0, 0, 1.0, lift=True)
+    assert chain.index(NOISE_GATE) > chain.index(SPEECH_NORM)
 
 
 def test_the_tone_shaping_arrives_with_the_lift():
