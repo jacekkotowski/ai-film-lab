@@ -159,6 +159,74 @@ def out_path(project: Path) -> Path:
     return project / "out" / "cover.jpg"
 
 
+# --------------------------------------------------------------------------
+# Handing it to YouTube
+#
+# Not an uploader. Uploading needs three google packages, an OAuth client
+# and a verified app -- and until Google verifies that app, anybody ELSE
+# using this toolkit gets their uploads forced to private, which is the
+# worst way for a feature to work: fine for whoever built it, quietly
+# broken for whoever was given it. So this does the retyping instead,
+# which is where the time actually goes.
+# --------------------------------------------------------------------------
+
+UPLOAD_NOTES = "upload.txt"
+
+# YouTube stops calling it a Short past this, and the whole point of
+# `--vertical` is Shorts.
+SHORTS_MAX_SECONDS = 180
+
+
+def upload_path(project: Path) -> Path:
+    return project / "out" / UPLOAD_NOTES
+
+
+def shorts_problems(width: int, height: int, duration: float,
+                    has_audio: bool = True) -> list[str]:
+    """What YouTube will object to, said here instead of after the
+    upload. Pure, so it is checked in a test rather than by uploading."""
+    out = []
+    if height <= width:
+        out.append(f"this is {width}x{height} -- landscape. A Short has to "
+                   f"be taller than it is wide. `uv run film shape "
+                   f"--vertical` re-frames it.")
+    if duration > SHORTS_MAX_SECONDS:
+        out.append(f"{duration:.0f}s long, and a Short stops at "
+                   f"{SHORTS_MAX_SECONDS}s. It will still upload -- just "
+                   f"as an ordinary video, not a Short.")
+    if not has_audio:
+        out.append("there is no sound track in the file at all.")
+    return out
+
+
+def upload_notes(title: str, film, problems: list[str]) -> str:
+    """The words to paste into YouTube, written out once.
+
+    Chapters come from the captions already in film.yaml -- they are the
+    only place the film says anything about itself in words.
+    """
+    lines = [title, "", "DESCRIPTION", ""]
+    said = []
+    t = 0.0
+    for s in film.shots:
+        for c in getattr(s, "captions", []) or []:
+            at = t + getattr(c, "at", 0.0)
+            said.append((at, c.text))
+        t += s.duration
+    if said:
+        for at, text in said[:12]:
+            lines.append(f"  {int(at) // 60}:{int(at) % 60:02d}  {text}")
+        lines.append("")
+    lines.append("#Shorts")
+    lines.append("")
+    lines.append(f"({film.duration:.0f} seconds, "
+                 f"{film.width}x{film.height})")
+    if problems:
+        lines += ["", "BEFORE YOU UPLOAD"]
+        lines += [f"  - {p}" for p in problems]
+    return "\n".join(lines) + "\n"
+
+
 # The opening shot: the same picture and the same words as the thumbnail,
 # written out where the film can use it as an ordinary still. It lives in
 # analysis/ because it is DERIVED -- like a proxy, like a converted HEIC.

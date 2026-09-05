@@ -33,6 +33,14 @@ STILL_EXT = kinds.STILL
 # silence -- no error, no mention, just missing from the film.
 HEIC_EXT = kinds.HEIC
 
+# Where an unreadable video gets moved, so it neither breaks a future
+# ingest nor sits there forever looking like it is still waiting to be
+# used. Inside media/, not deleted: "originals are read-only" means kept,
+# not judged -- a file ffprobe gave up on may still be worth a second
+# look or a repair tool, and that call is always yours, not this
+# toolkit's. Named in kinds.py because guide.py scans media/ too.
+UNREADABLE_DIRNAME = kinds.UNREADABLE_DIRNAME
+
 
 # --------------------------------------------------------------------------
 # Where is the thing that matters?
@@ -249,6 +257,27 @@ def make_proxy(src: Path, dst: Path, height: int = 480) -> None:
          "-crf", "28", "-g", "12", "-an", str(dst)], check=True)
 
 
+def quarantine(path: Path, media: Path, where: str | None = None) -> Path:
+    """Move a file out of the way, into a named folder inside media/.
+
+    Two callers: ingest, for a video it could not read, and `film
+    record`, for a take you fluffed and asked to do again. Moved, never
+    deleted, in both cases -- see UNREADABLE_DIRNAME. Numbered instead
+    of overwritten on a name clash, for the same reason record.py never
+    reuses a take's filename: two files landing on one name would mean
+    losing whichever one lost the collision.
+    """
+    folder = media / (where or UNREADABLE_DIRNAME)
+    folder.mkdir(exist_ok=True)
+    dst = folder / path.name
+    n = 2
+    while dst.exists():
+        dst = folder / f"{path.stem}_{n}{path.suffix}"
+        n += 1
+    path.rename(dst)
+    return dst
+
+
 def loudness(path: Path) -> tuple[float, float] | None:
     """(mean, peak) level of the clip in dBFS, or None if it has no audio."""
     r = subprocess.run(
@@ -408,14 +437,23 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
         d.mkdir(parents=True, exist_ok=True)
 
     known = STILL_EXT | Shot.VIDEO_EXT | HEIC_EXT
-    files = sorted(p for p in media.rglob("*") if p.suffix.lower() in known)
+    # media/_unreadable/ is where quarantine() puts videos ingest could
+    # not read -- excluded here, or a quarantined file would be found
+    # again on the next run and either fail a second time or, worse,
+    # get scanned as ordinary footage once it no longer fails.
+    in_quarantine = lambda p: bool(set(kinds.ASIDE_DIRNAMES)
+                                   & set(p.relative_to(media).parts))
+    files = sorted(p for p in media.rglob("*")
+                   if p.suffix.lower() in known and not in_quarantine(p))
 
     # Anything in media/ we are not going to touch. Say so at the end --
     # a file that silently does not appear in the film is the worst kind
     # of bug, because it looks like nothing happened.
     ignored = sorted(p.name for p in media.rglob("*")
-                     if p.is_file() and p.suffix.lower() not in known)
+                     if p.is_file() and p.suffix.lower() not in known
+                     and not in_quarantine(p))
     unreadable: list[str] = []
+    quarantined: list[str] = []
     converted = 0
 
     entries: list[dict] = []
@@ -454,6 +492,18 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
             })
         else:
             info = video_info(path)
+            if not info["width"] or not info["height"]:
+                # ffprobe found no video stream at all -- a moov-less mp4
+                # from a recording that was killed rather than stopped
+                # cleanly, most often. Photos get exactly this check via
+                # cv2.imread returning None; video had no equivalent, so
+                # this file used to reach make_proxy()'s `check=True` and
+                # take the whole ingest down with an unhandled
+                # CalledProcessError instead of a clean skip.
+                quarantine(path, media)
+                unreadable.append(source.name)
+                quarantined.append(source.name)
+                continue
             proxy = proxies / f"{path.stem}.mp4"
             make_proxy(path, proxy)
             cuts = detect_cuts(proxy)
@@ -500,14 +550,23 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
         print(f"\n  !! {len(unreadable)} file(s) could NOT be read, and are "
               f"not in your film:")
         for nm in unreadable:
-            print(f"       {nm}")
-        print("     If these are iPhone photos, the easiest fix is on the "
-              "phone:\n"
-              "     Settings > Camera > Formats > Most Compatible. They "
-              "arrive as\n"
-              "     jpg from then on. For the ones you already have, open "
-              "each in\n"
-              "     Windows Photos and use Save as > JPEG.")
+            moved = "  (moved to media/_unreadable/)" if nm in quarantined else ""
+            print(f"       {nm}{moved}")
+        if quarantined:
+            print("     A video in that state is not just skipped -- it is "
+                  "moved so a\n"
+                  "     future ingest does not trip over it again. Nothing "
+                  "is deleted; it\n"
+                  "     is still in media/_unreadable/ if you want to look "
+                  "or try a repair.")
+        if len(quarantined) < len(unreadable):
+            print("     If these are iPhone photos, the easiest fix is on the "
+                  "phone:\n"
+                  "     Settings > Camera > Formats > Most Compatible. They "
+                  "arrive as\n"
+                  "     jpg from then on. For the ones you already have, open "
+                  "each in\n"
+                  "     Windows Photos and use Save as > JPEG.")
     if ignored:
         shown = ", ".join(ignored[:4]) + ("..." if len(ignored) > 4 else "")
         print(f"\n  {len(ignored)} file(s) in media/ ignored -- not photos "

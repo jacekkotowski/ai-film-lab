@@ -20,8 +20,10 @@ cli.py  --  the commands you type.
 from __future__ import annotations
 
 import argparse
+import subprocess
 import sys
 import time
+import webbrowser
 from pathlib import Path
 
 from dataclasses import replace
@@ -37,6 +39,7 @@ from . import scaffold
 from .moves import choose_moves
 from .render import QUALITIES, render
 from .spec import Film
+from .spec import title_of as spec_title_of
 
 DEFAULT_PROJECT = "projects/film_001"
 
@@ -168,7 +171,48 @@ def cmd_render(args, quality_name: str) -> None:
     print(f"  done in {time.time() - t0:.1f}s")
     if quality_name == "final":
         auto_cover(project)
+        ship(project, film, out, open_page=not getattr(args, "no_open", False))
     guide.print_next(project)
+
+
+UPLOAD_PAGE = "https://www.youtube.com/upload"
+
+
+def ship(project: Path, film, out: Path, open_page: bool = True) -> None:
+    """Everything between "it is rendered" and "it is uploaded".
+
+    Which is: the words, checked against what YouTube will accept, and
+    then the two windows you would have opened anyway. Not an uploader --
+    see the note in cover.py for why not.
+    """
+    has_audio = True
+    try:
+        from .render import ffprobe_bin
+        r = subprocess.run(
+            [ffprobe_bin(), "-v", "error", "-select_streams", "a",
+             "-show_entries", "stream=index", "-of", "csv=p=0", str(out)],
+            capture_output=True, text=True)
+        has_audio = bool(r.stdout.strip())
+    except (OSError, ValueError):
+        pass
+
+    problems = cover.shorts_problems(film.width, film.height,
+                                     film.duration, has_audio)
+    title = getattr(film, "title", None) or spec_title_of(project)
+    notes = cover.upload_path(project)
+    notes.parent.mkdir(parents=True, exist_ok=True)
+    notes.write_text(cover.upload_notes(title, film, problems),
+                     encoding="utf-8")
+    print(f"  what to paste -> {notes}")
+    for p in problems:
+        print(f"    Careful: {p}")
+
+    if open_page:
+        guide.open_folder(out.parent)
+        try:
+            webbrowser.open(UPLOAD_PAGE)
+        except Exception:
+            print(f"    (open {UPLOAD_PAGE} yourself)")
 
 
 def auto_cover(project: Path) -> None:
@@ -256,8 +300,12 @@ def cmd_caption(args) -> None:
 
     for src in sources:
         print(f"-- {src.label} --")
+        # The words you wrote, if you wrote any. They decide where a
+        # caption ends; the transcript only decides when.
+        from . import booth
         lines = voice.transcribe(src.audio_path, model_size=args.model,
-                                 language=args.lang)
+                                 language=args.lang,
+                                 script=booth.read_script(project, None))
         all_lines_for_transcript.append((src.label, lines))
 
         if args.transcript_only:
@@ -724,9 +772,18 @@ def cmd_record(args) -> None:
         out = take.out
         if not out.exists() or out.stat().st_size < 10_000:
             print("  That take did not save.")
-            return ["That take did not save.",
-                    "Something else grabbed the camera. Nothing you had "
-                    "already recorded is lost -- try again.", ""]
+            # ffmpeg says why. It always said why -- these lines were
+            # collected and then thrown away, and a guess was printed
+            # over the top of them. "Something else grabbed the camera"
+            # sent me looking for a program holding the webcam for an
+            # hour, while the real reason was sitting unread in this
+            # list.
+            for line in take.errors[-3:]:
+                print(f"    {line}")
+            return ["That take did not save."] + (
+                [take.errors[-1]] if take.errors else
+                ["Something else may have grabbed the camera."]) + [
+                "Nothing you had already recorded is lost -- try again.", ""]
         length, warnings = rec.verify_take(out, mode, bool(audio), take.heard)
         takes.append(out)
         print(f"  Take {len(takes)}: {_secs(length)}")
@@ -737,11 +794,35 @@ def cmd_record(args) -> None:
                 [f"{len(takes)} take{'s' if len(takes) > 1 else ''} so far, "
                  f"{_secs(total)} in total."])
 
+    def drop_last() -> None:
+        """Throw away the take just made, because it was fluffed.
+
+        Every take kept becomes a shot, so going again after a fumbled
+        line used to put the fumble in the film beside the good version.
+        This is the one thing in the toolkit that removes something from
+        media/, and it does it only when somebody presses the button
+        that says so, about a take made seconds earlier.
+
+        Moved, not deleted: `media/_discarded/`, the same shape as
+        `media/_unreadable/`, so a mis-click costs nothing and nothing
+        here ever destroys a recording outright.
+        """
+        if not takes:
+            return
+        gone = takes.pop()
+        try:
+            kept = ingest_mod.quarantine(gone, project / "media",
+                                         where=kinds.DISCARDED_DIRNAME)
+            print(f"  dropped {gone.name} -> {kept.parent.name}\\")
+        except OSError as e:
+            print(f"  could not put {gone.name} aside: {e}")
+
     if windowed:
         print("\nThe window is open. Everything happens in it.")
         booth.session(script=script, script_path=project / "script.txt",
                       wpm=args.wpm, title=project.name,
-                      start=new_take, finish=took, seconds=args.seconds)
+                      start=new_take, finish=took, seconds=args.seconds,
+                      discard=drop_last)
     else:
         print("\nLook at the camera, not at the screen.")
         while True:
@@ -1003,9 +1084,14 @@ def cmd_drop(args) -> None:
 
 
 def cmd_new(args) -> None:
-    root = make_project(toolkit_root() / "projects" / args.name,
-                        vertical=args.vertical)
-    shape = "1080x1920 vertical (YouTube Shorts)" if args.vertical else "1920x1080"
+    # `film new` with nothing after it is a real thing to type, and the
+    # name it picks is the same one the walk-through offers.
+    name = guide.tidy_name(args.name or "") or guide.default_name(
+        taken=[p.name for p in guide.known_projects()])
+    vertical = not args.wide
+    root = make_project(toolkit_root() / "projects" / name,
+                        vertical=vertical)
+    shape = "1080x1920 vertical (YouTube Shorts)" if vertical else "1920x1080"
     print(f"Created {root}   [{shape}]")
     print(f"  photos + clips  ->  {root / 'media'}")
     _report_library()
@@ -1040,7 +1126,12 @@ def main() -> None:
         return p
 
     for name in ("peek", "draft", "final"):
-        common(sub.add_parser(name, help=f"render at {name} quality"))
+        p = sub.add_parser(name, help=f"render at {name} quality")
+        common(p)
+        if name == "final":
+            p.add_argument("--no-open", action="store_true",
+                           help="do not open the out folder and the "
+                                "YouTube upload page afterwards")
 
     p = sub.add_parser("ingest", help="analyse the media folder")
     p.add_argument("--project", "-p", default=None)
@@ -1159,9 +1250,18 @@ def main() -> None:
     p.add_argument("--mic", default=None, help="always use this microphone")
 
     p = sub.add_parser("new", help="create a project folder")
-    p.add_argument("name")
+    p.add_argument("name", nargs="?", default=None,
+                   help="left out: named for the time of day and the date, "
+                        "e.g. Morning_2026-09-05")
+    # Vertical unless you say otherwise. Every film made here so far has
+    # been one, the walk-through has always defaulted to it, and only
+    # this command disagreed -- so `film new` and pressing ENTER made
+    # differently shaped films out of the same answer.
     p.add_argument("--vertical", action="store_true",
-                   help="1080x1920 for YouTube Shorts / Reels / TikTok")
+                   help="1080x1920 for YouTube Shorts / Reels / TikTok "
+                        "(the default)")
+    p.add_argument("--wide", "--widescreen", action="store_true",
+                   dest="wide", help="1920x1080 instead")
 
     args = ap.parse_args()
     try:

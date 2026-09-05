@@ -19,11 +19,14 @@ ask for it.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 from . import kinds
@@ -43,9 +46,15 @@ class Step:
 
     @property
     def pretty(self) -> str:
-        if self.shell:
-            return " ".join(self.shell)
-        return "uv run film " + " ".join(self.args)
+        # Quoted, because this line is printed to be RETYPED -- that is
+        # the whole reason it is printed. A film called `Morning 2026`
+        # came out as `-p Morning 2026`, which reads as a project called
+        # Morning and a stray argument, and fails for a reason nobody
+        # would guess from looking at it. It still ran when you pressed
+        # ENTER, because that path passes a list and never goes near a
+        # shell -- so this was wrong only in the copy somebody typed.
+        parts = self.shell or (["uv", "run", "film"] + self.args)
+        return " ".join(f'"{x}"' if " " in x else x for x in parts)
 
 
 # --------------------------------------------------------------------------
@@ -63,8 +72,79 @@ def _mtime(p: Path) -> float:
 def _newest(folder: Path, exts: set[str]) -> float:
     if not folder.is_dir():
         return 0.0
-    times = [_mtime(f) for f in folder.rglob("*") if f.suffix.lower() in exts]
+    # media/_unreadable/ is where ingest puts what it could not read. It
+    # is inside media/, so rglob finds it, and counting it meant a
+    # project holding nothing but one broken take looked like a project
+    # with footage in it.
+    times = [_mtime(f) for f in folder.rglob("*")
+             if f.suffix.lower() in exts
+             and not set(kinds.ASIDE_DIRNAMES)
+             & set(f.relative_to(folder).parts)]
     return max(times) if times else 0.0
+
+
+def _manifest_counts(manifest: Path) -> tuple[int, int]:
+    """How many files ingest could use, and how many it could not.
+
+    Returns (-1, 0) when there is no manifest yet, so "not ingested" and
+    "ingested and found nothing" stay different answers.
+    """
+    try:
+        d = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return -1, 0
+    return int(d.get("count", 0) or 0), len(d.get("unreadable") or [])
+
+
+# When the day stops being one thing and starts being the next. Ordinary
+# waking hours, not astronomical ones -- this names a film, it does not
+# settle an argument about when evening begins.
+TIME_OF_DAY = ((5, "Morning"), (12, "Afternoon"), (18, "Evening"),
+               (22, "Night"))
+
+
+def part_of_day(when: datetime) -> str:
+    """Morning / Afternoon / Evening / Night, for an hour of the clock."""
+    name = "Night"                      # before 5am, and after 10pm
+    for hour, label in TIME_OF_DAY:
+        if when.hour >= hour:
+            name = label
+    return name
+
+
+def default_name(when: datetime | None = None,
+                 taken: Iterable[str] = ()) -> str:
+    """What to call a film when you did not want to name it.
+
+    `Morning_2026-09-05`. The date in ISO order so a folder listing sorts
+    itself, and the part of the day in front because that is how you will
+    actually remember which one it was.
+
+    Never returns a name that is already in `taken` -- two films in one
+    afternoon is an ordinary thing to do, and silently opening the first
+    one again instead of making a second is not.
+    """
+    when = when or datetime.now()
+    base = f"{part_of_day(when)}_{when:%Y-%m-%d}"
+    taken = set(taken)
+    if base not in taken:
+        return base
+    n = 2
+    while f"{base}_{n}" in taken:
+        n += 1
+    return f"{base}_{n}"
+
+
+def tidy_name(name: str) -> str:
+    """A name somebody typed, made safe to be a folder and an argument.
+
+    The prompt says "no spaces" and nothing enforced it, so a film called
+    `Morning 2026-09-15` got made -- which works everywhere except in the
+    command the guide prints for you to retype, where it reads as a
+    project called Morning and a stray argument.
+    """
+    keep = [c if (c.isalnum() or c in "-_.") else "_" for c in name.strip()]
+    return "".join(keep).strip("_") or ""
 
 
 def projects_dir() -> Path:
@@ -116,43 +196,70 @@ def _shelf_note() -> str:
             f"film gets both. Or skip it: the film still works.\n")
 
 
+def _get_material(project: Path, unreadable: int = 0) -> list[Step]:
+    """There is nothing to make a film out of yet -- go and get some.
+
+    Two ways to arrive here, not one: an empty project, and a project
+    whose files ingest could not read. The second used to fall through
+    to "write a first edit", and `init` cannot write a film with no
+    shots in it -- so the guide offered the one step that was certain to
+    fail, and offered it again every time it did.
+    """
+    p = ["-p", project.name]
+    media = project / "media"
+    # An empty project is the one moment where "say it to the camera"
+    # is a real alternative to "go and find some files", so it is the
+    # one place worth offering. Windows only, because that is where
+    # `film record` works -- see record.py.
+    record_step = ([Step(
+        "...or say it to the camera right now", ["record"] + p,
+        why="A window opens. Paste in what you want to say -- it\n"
+            "scrolls while you talk -- or leave it empty and just\n"
+            "speak. You can see yourself and watch the sound level.\n"
+            "SPACE ends a take, and it offers you another.")]
+        if sys.platform == "win32" else [])
+    # Say it plainly when the folder is not empty but might as well be.
+    # "Drag your photos in" over a folder that already has a file in it
+    # reads as though nothing happened at all.
+    note = ""
+    if unreadable:
+        note = (f"The {unreadable} file(s) already in media\\ could not be "
+                f"read, so\n"
+                f"there is nothing to build a film from yet -- they are in\n"
+                f"media\\{kinds.UNREADABLE_DIRNAME}\\ and nothing was "
+                f"deleted. A take that did\n"
+                f"not save is the usual reason.\n\n")
+    # One window, not two. The music and the thumbnail picture come
+    # off the shared shelf, which is filled in once and never again --
+    # so the only folder anybody has to look at is this film's own
+    # pictures. `film library` is where the other two live.
+    return [Step(
+        "Drag your photos and clips into the folder that just opened",
+        why=note + "media\\  ->  your photos, your clips, your AI intro\n"
+            "\n"
+            + _shelf_note() + "\n"
+            "If you care about the order, put a number in front of the\n"
+            "filename:\n"
+            "\n"
+            "    00_ 01_ 02_               they play in that order\n"
+            "    open_close_hello.png      opens AND closes the film\n"
+            "    quote_stay_curious.png    a held card, filename is the text",
+        folders=[media])] + record_step
+
+
 def next_steps(project: Path) -> list[Step]:
     """What to do next, best first. The rest are the sensible alternatives."""
     name = project.name
     p = ["-p", name]
 
+    manifest = project / "analysis" / "manifest.json"
+    usable, unreadable = _manifest_counts(manifest)
+
     media = project / "media"
     newest_media = _newest(media, MEDIA_EXT)
     if not newest_media:
-        # An empty project is the one moment where "say it to the camera"
-        # is a real alternative to "go and find some files", so it is the
-        # one place worth offering. Windows only, because that is where
-        # `film record` works -- see record.py.
-        record_step = ([Step(
-            "...or say it to the camera right now", ["record"] + p,
-            why="A window opens. Paste in what you want to say -- it\n"
-                "scrolls while you talk -- or leave it empty and just\n"
-                "speak. You can see yourself and watch the sound level.\n"
-                "SPACE ends a take, and it offers you another.")]
-            if sys.platform == "win32" else [])
-        # One window, not two. The music and the thumbnail picture come
-        # off the shared shelf, which is filled in once and never again --
-        # so the only folder anybody has to look at is this film's own
-        # pictures. `film library` is where the other two live.
-        return [Step(
-            "Drag your photos and clips into the folder that just opened",
-            why="media\\  ->  your photos, your clips, your AI intro\n"
-                "\n"
-                + _shelf_note() + "\n"
-                "If you care about the order, put a number in front of the\n"
-                "filename:\n"
-                "\n"
-                "    00_ 01_ 02_               they play in that order\n"
-                "    open_close_hello.png      opens AND closes the film\n"
-                "    quote_stay_curious.png    a held card, filename is the text",
-            folders=[media])] + record_step
+        return _get_material(project, unreadable)
 
-    manifest = project / "analysis" / "manifest.json"
     if _mtime(manifest) < newest_media:
         return [
             Step("Build the whole film in one go", ["go"] + p,
@@ -162,6 +269,12 @@ def next_steps(project: Path) -> list[Step]:
                  ["ingest"] + p,
                  why="Finds the faces and the interesting part of each picture."),
         ]
+
+    # Ingested, and there was nothing in it. Never offer `init` here:
+    # it refuses with "No usable media found", which is correct of it
+    # and useless as a next step.
+    if usable == 0:
+        return _get_material(project, unreadable)
 
     yml = project / "film.yaml"
     if not yml.exists():
@@ -360,12 +473,18 @@ def _pick_project(current: Path) -> Path | None:
 
 def _make_project() -> Path | None:
     print("\nStarting a new film.\n")
-    name = _ask("A name for it (no spaces, e.g. morning01):  ")
-    if not name or name == "q":
+    # Offered, not demanded. Naming a thing before it exists is the
+    # hardest question this asks anybody, and pressing ENTER used to
+    # answer it with "Nothing created." -- which reads as a refusal when
+    # it was only a blank.
+    suggested = default_name(taken=[p.name for p in known_projects()])
+    name = _ask(f"A name for it, or ENTER for {suggested}:  ")
+    if name.lower() == "q":
         print("\nNothing created.")
         return None
+    name = tidy_name(name) or suggested
     shape = _ask("ENTER for vertical (Shorts), or W for widescreen:  ")
-    args = ["new", name] + ([] if shape.lower() == "w" else ["--vertical"])
+    args = ["new", name] + (["--wide"] if shape.lower() == "w" else [])
     print(f"\n  uv run film {' '.join(args)}")
     if _run(args) != 0:
         return None
@@ -490,8 +609,17 @@ def walk(project: Path | None = None) -> None:
                 open_folder(f)
             continue
         if _run(chosen.args) != 0:
-            print("\nThat stopped early -- the reason is above. Fix it and "
-                  "run `uv run film` again.")
-            return
+            # A take that did not save is the ordinary case here, not a
+            # broken installation -- you fluffed it, something grabbed the
+            # camera, you closed the window. Ending the whole walk-through
+            # at "press any key" means going back to the start for what is
+            # nearly always just: go again.
+            print("\nThat stopped early -- the reason is above.")
+            if not interactive:
+                return
+            if _ask("\n  ENTER to try that again, or Q to stop:  ").startswith("q"):
+                return
+            last_title = None
+            continue
 
     print("\nThat is a lot of steps. Run `uv run film` again to carry on.")

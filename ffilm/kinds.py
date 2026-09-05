@@ -27,6 +27,22 @@ AUDIO = {".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg"}
 # Everything that belongs in media/ -- the picture side of a film.
 MEDIA = STILL | HEIC | VIDEO
 
+# The one folder inside media/ that is not material. `ingest` moves a
+# file it cannot read in here rather than deleting it, so ANYTHING that
+# scans media/ has to skip it -- and this lives here, with the rest of
+# the shared vocabulary, because it did not: ingest skipped it and the
+# guide did not, so the guide counted a broken take as footage and sent
+# somebody to `init`, which cannot write a film with no shots in it.
+UNREADABLE_DIRNAME = "_unreadable"
+
+# The other one: a take you fluffed and asked to record again. Same
+# rule -- inside media/, skipped by everything that scans it, and moved
+# rather than deleted, so pressing the wrong button costs nothing.
+DISCARDED_DIRNAME = "_discarded"
+
+# Everything inside media/ that is NOT material.
+ASIDE_DIRNAMES = (UNREADABLE_DIRNAME, DISCARDED_DIRNAME)
+
 # What may sit behind a title on a thumbnail. A superset of STILL, and
 # deliberately NOT part of it: a .gif in media/ would be found by ingest
 # and turned into a shot, and OpenCV cannot decode one, so that shot
