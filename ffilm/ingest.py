@@ -247,13 +247,33 @@ def convert_heic(src: Path, dst: Path) -> bool:
     return r.returncode == 0 and dst.exists()
 
 
+# A proxy is a 480p stand-in for `peek` and `draft`, which are the rough
+# looks by definition. Sixty of them a second is more than either can
+# use -- the film itself renders at 24 -- and they cost time and disk to
+# make. Measured on a 109s 1080p60 take: 17.7s and 7.0MB at the source's
+# own rate, 14.9s and 5.6MB at 30. Faster AND smaller, which is not a
+# trade at all.
+PROXY_FPS = 30
+
+
 def make_proxy(src: Path, dst: Path, height: int = 480) -> None:
+    """The 480p stand-in. Software decoding on purpose.
+
+    -hwaccel looks like the obvious win here and is the opposite of one:
+    the GPU decodes, and then every frame has to be copied back to system
+    memory for `scale`, which costs more than the decode saved. Measured
+    on this machine against 17.2s of plain software: dxva2 25.4s, qsv
+    29.3s, d3d11va 41.3s, and nvenc wrote nothing at all. Paying for it
+    properly would mean the whole filter chain on the GPU, which is a
+    different toolkit.
+    """
     if dst.exists() and dst.stat().st_mtime > src.stat().st_mtime:
         return
     dst.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error", "-i", str(src),
-         "-vf", f"scale=-2:{height}", "-c:v", "libx264", "-preset", "veryfast",
+         "-vf", f"fps={PROXY_FPS},scale=-2:{height}",
+         "-c:v", "libx264", "-preset", "veryfast",
          "-crf", "28", "-g", "12", "-an", str(dst)], check=True)
 
 
