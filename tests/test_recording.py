@@ -156,10 +156,19 @@ def cmd(**kw):
     return record_command(**kw)
 
 
-def test_the_negotiated_mode_is_passed_to_the_camera():
+def test_the_negotiated_size_is_passed_to_the_camera():
     c = cmd(mode=(1280, 720, 30.0))
     assert "-video_size" in c and "1280x720" in c
-    assert "30" in c[c.index("-framerate") + 1]
+
+
+def test_the_frame_rate_is_never_asked_for():
+    """An Elgato Facecam Pro will not open at ANY explicitly requested
+    rate -- not even 59.9999, the one it advertises. It answers `Could
+    not set video options` -> `I/O error`, naming neither the flag nor
+    the rate, and the recording is simply impossible. A virtual camera
+    on the same machine accepted the flag, so this hid until somebody
+    pointed the toolkit at their real camera."""
+    assert "-framerate" not in cmd(mode=(1280, 720, 30.0))
 
 
 def test_no_mode_means_no_size_flags():
@@ -188,6 +197,26 @@ def test_recording_nothing_at_all_is_refused_rather_than_attempted():
 
 def test_a_fixed_length_take_stops_itself():
     assert "-t" in cmd(seconds=4)
+
+
+def test_the_clock_comes_from_this_machine_not_from_the_devices():
+    """The nastiest one. A camera and a microphone are two clocks, and
+    dshow reports each one's own idea of "now" -- measured 262851
+    seconds apart on this laptop. The mp4 muxer interleaves by
+    timestamp, so it held every packet waiting for the other stream and
+    wrote a 48-byte file, while the camera light was on and the level
+    meter moved. A take with both video and audio is the ordinary case,
+    so the ordinary case recorded nothing at all."""
+    c = cmd()
+    assert "-use_wallclock_as_timestamps" in c
+    assert c[c.index("-use_wallclock_as_timestamps") + 1] == "1"
+
+
+def test_the_clock_flag_is_an_input_option():
+    """It only does anything before -i. After it, it is silently ignored
+    and the bug comes straight back."""
+    c = cmd()
+    assert c.index("-use_wallclock_as_timestamps") < c.index("-i")
 
 
 def test_the_console_is_kept_quiet():
@@ -397,6 +426,39 @@ def test_the_lead_out_does_not_speed_up_the_reading():
 
 
 # --------------------------------------------------------------------------
+# How wide a column the words are read in
+# --------------------------------------------------------------------------
+
+def test_the_column_fits_the_words_asked_for():
+    """Five words at 100px a word is a five hundred pixel column."""
+    assert booth.prompter_width(100.0, 1920, words=5) == 500
+
+
+def test_a_wider_screen_does_not_widen_the_column():
+    """The bug this replaced: the column was 60% of screen width, so the
+    same script on a 4K monitor put twice as many words on a line -- at
+    the same reading distance, with the eye travelling twice as far off
+    the lens."""
+    assert booth.prompter_width(100.0, 1920) == \
+        booth.prompter_width(100.0, 3840)
+
+
+def test_longer_words_get_a_wider_column_for_the_same_word_count():
+    """Polish words are longer than English ones. Five of them is still
+    five of them, so the column has to follow the language."""
+    assert booth.prompter_width(140.0, 1920) > booth.prompter_width(90.0, 1920)
+
+
+def test_the_column_never_outgrows_the_screen():
+    assert booth.prompter_width(9999.0, 1280) <= int(1280 * 0.9)
+
+
+def test_the_column_never_collapses_to_one_word_a_line():
+    """Narrow is the point; a slot machine is not."""
+    assert booth.prompter_width(1.0, 1920) >= booth.MIN_PROMPTER_PX
+
+
+# --------------------------------------------------------------------------
 # The capture that also feeds the window
 # --------------------------------------------------------------------------
 
@@ -473,6 +535,21 @@ def test_a_take_at_the_full_rate_says_nothing():
     assert record.rate_note(27.0, 30) == []
 
 
+def test_more_frames_than_the_film_wants_is_not_a_complaint():
+    """Measured: 45fps captured against a camera advertising 60, into a
+    film that renders at 24. Nothing asks the camera for a rate any more,
+    so its advertised figure is not a promise -- and reporting a
+    shortfall against it sent somebody hunting a problem that could not
+    reach the finished film."""
+    assert record.rate_note(45.3, 59.9999) == []
+    assert record.rate_note(31.5, 59.9999) == []
+    assert record.rate_note(24.0, 60) == []
+
+
+def test_below_the_film_rate_is_still_worth_saying():
+    assert record.rate_note(19.0, 60) != []
+
+
 def test_half_the_rate_is_blamed_on_the_light_not_the_computer():
     """Measured on this machine: 2299 frames over 76.9s at brightness 108,
     then 92 frames over 6.3s at brightness 52. Both halved together. The
@@ -498,3 +575,19 @@ def test_the_old_message_never_fires_on_a_clean_halving():
     for got, asked in ((15.0, 30), (12.0, 24), (7.5, 30)):
         assert "could not keep up" not in " ".join(
             record.rate_note(got, asked))
+
+
+# --------------------------------------------------------------------------
+# A picture that never moved
+# --------------------------------------------------------------------------
+
+def test_a_frozen_take_is_explained_by_the_camera_not_the_person():
+    """A virtual camera with nothing feeding it does not fail. It hands
+    over one still image forever, and that records as a flawless take --
+    right length, right size, plays fine, a photograph of a placeholder.
+    Measured: 158s live reported no frozen stretch; 8s of an unfed
+    virtual camera reported one starting at 0."""
+    note = record.frozen_note()[0]
+    assert "never moved" in note
+    assert "virtual camera" in note
+    assert "film devices" in note, "say how to fix it, not just what broke"

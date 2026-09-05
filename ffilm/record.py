@@ -52,6 +52,11 @@ REC_PREFIX = "rec_"
 MAX_CAPTURE_WIDTH = 1920
 MIN_CAPTURE_FPS = 24
 
+# What the finished film runs at -- spec.Film.fps. The only rate that
+# decides whether a slow capture is worth mentioning: frames above this
+# are downsampled away by the render and were never going to be seen.
+FILM_FPS = 24
+
 # DirectShow hands frames over a small ring buffer, and when it fills,
 # the frames are simply gone -- "real-time buffer too full" and a stutter
 # you only find later. Memory is cheaper than a retake.
@@ -230,12 +235,25 @@ def escape_device(name: str) -> str:
 
 
 def input_spec(video: str | None, audio: str | None) -> str:
+    """One dshow name for both devices. Kept for a camera that really
+    does carry its own microphone; `record_command` no longer asks for
+    the two SEPARATE devices this way -- see `dshow_inputs`."""
     parts = []
     if video:
         parts.append(f"video={escape_device(video)}")
     if audio:
         parts.append(f"audio={escape_device(audio)}")
     return ":".join(parts)
+
+
+def audio_stream(video: str | None) -> str:
+    """Which input the microphone is, now that it is opened as its own.
+
+    Its own input means its own index, and every `-map` that names the
+    sound has to follow it -- the file's audio, and the level meter the
+    recording window reads.
+    """
+    return "1:a" if video else "0:a"
 
 
 def record_command(out: Path, video: str | None, audio: str | None,
@@ -263,24 +281,96 @@ def record_command(out: Path, video: str | None, audio: str | None,
     # ffmpeg's own log, and at `error` there is no log to read.
     quiet = "info" if (window and audio) else "error"
     cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", quiet, "-nostats"]
-    cmd += ["-f", "dshow", "-rtbufsize", RTBUFSIZE]
-    if mode and video:
-        w, h, fps = mode
-        cmd += ["-video_size", f"{w}x{h}", "-framerate", f"{fps:g}"]
-    # A fixed-length take, when there is no window, is ffmpeg's own job:
-    # an INPUT limit, so it stops reading the camera and every output
-    # ends together.
+
+    # The camera and the microphone are opened as TWO inputs, not as one
+    # combined `video=X:audio=Y`. Measured on this machine:
     #
-    # With the window it cannot be. Measured: `-t` before `-i` ends the
-    # capture cleanly with one output, and does NOT end it once the
-    # preview and metering outputs are attached -- ffmpeg sits there
-    # indefinitely. So the window enforces the limit itself, by sending
-    # the same `q` a person's SPACE would send. Which also means the
-    # shutdown path is identical either way, and only one of them has to
-    # be right.
-    if seconds and not window:
-        cmd += ["-t", f"{seconds:g}"]
-    cmd += ["-i", input_spec(video, audio)]
+    #   video=Elgato Facecam Pro:audio=Mikrofon (Samson Go Mic Connect)
+    #     -> Error opening input: I/O error
+    #   video=Elgato Facecam Pro
+    #     -> opens, runs, exits 0
+    #
+    # DirectShow can only hand over a combined device when the two are
+    # connectable, which a USB camera and a separate USB microphone are
+    # not. Asking for them together does not fall back -- it fails
+    # outright, and it fails for the camera somebody actually owns while
+    # working perfectly for a virtual one, which is the worst possible
+    # place for a difference like this to hide.
+    #
+    # Opened separately they both work. Each then keeps its own clock,
+    # and -use_wallclock_as_timestamps on each is what puts them back on
+    # the same one -- see below.
+    def dshow_input(spec: str, is_video: bool) -> list[str]:
+        part = ["-f", "dshow", "-rtbufsize", RTBUFSIZE]
+        if is_video and mode:
+            # Size, but NOT rate. Asking for a frame rate is how you get
+            # a camera that refuses to open at all, and it refuses with
+            # `Could not set video options` -> `I/O error`, which names
+            # neither the flag nor the rate. Measured on an Elgato
+            # Facecam Pro, everything else identical:
+            #
+            #   bare                        opens, exits 0
+            #   -video_size 1920x1080       opens, exits 0
+            #   -framerate 59.9999          I/O error
+            #   -framerate 60               I/O error
+            #
+            # 59.9999 is the rate that camera ADVERTISES, and it will
+            # not be asked to run at it. A virtual camera on the same
+            # machine took the flag happily, so this stayed hidden until
+            # somebody used the camera they actually own.
+            #
+            # Nothing is lost by not asking: a device that offers one
+            # rate runs at it regardless. `best_mode` still reads the
+            # rates -- they decide which SIZE is worth having, which is
+            # the choice that was ever really being made.
+            w, h, _fps = mode
+            part += ["-video_size", f"{w}x{h}"]
+        # Stamp packets when they ARRIVE, not by whatever clock the
+        # device claims to be on. Measured, and the nastiest bug in here:
+        #
+        #     Stream #0:0: Video ... start 525697.585975
+        #     Stream #0:1: Audio ... start 262846.149000
+        #
+        # A camera and a microphone are two pieces of hardware with two
+        # unrelated clocks, and dshow reports each one's own idea of
+        # "now". Those two are 262851 seconds -- about three days --
+        # apart. The mp4 muxer interleaves by timestamp, so it sat
+        # holding every packet waiting for the other stream to catch up,
+        # and wrote a 48-byte file containing nothing while the camera
+        # light was on and the level meter was moving.
+        #
+        # Then the second failure, on top of the first: an ffmpeg jammed
+        # like that never gets round to reading stdin, so `q` did
+        # nothing. SPACE did nothing, the Stop button did nothing, and
+        # the only way out was to kill it -- which is how a take ends up
+        # with no moov atom.
+        #
+        # Measured over 6 second takes on this machine, everything else
+        # identical: video alone stopped on `q` in 0.77s and played back.
+        # Video plus microphone wrote 0 bytes and was still running 15
+        # seconds after `q`. With this flag: 0.81s, and it plays.
+        part += ["-use_wallclock_as_timestamps", "1"]
+        # A fixed-length take, when there is no window, is ffmpeg's own
+        # job: an INPUT limit, so it stops reading the device and every
+        # output ends together. On each input, because there are two of
+        # them now and one of them stopping is not the take stopping.
+        #
+        # With the window it cannot be. Measured: `-t` before `-i` ends
+        # the capture cleanly with one output, and does NOT end it once
+        # the preview and metering outputs are attached -- ffmpeg sits
+        # there indefinitely. So the window enforces the limit itself, by
+        # sending the same `q` a person's SPACE would send. Which also
+        # means the shutdown path is identical either way, and only one
+        # of them has to be right.
+        if seconds and not window:
+            part += ["-t", f"{seconds:g}"]
+        return part + ["-i", spec]
+
+    if video:
+        cmd += dshow_input(f"video={escape_device(video)}", True)
+    if audio:
+        cmd += dshow_input(f"audio={escape_device(audio)}", False)
+    aud = audio_stream(video)
 
     if window and video:
         from .booth import PREVIEW_FPS, PREVIEW_H, PREVIEW_W
@@ -302,9 +392,9 @@ def record_command(out: Path, video: str | None, audio: str | None,
                 f"format=rgb24[pw]",
                 "-map", "[main]"]
         if audio:
-            cmd += ["-map", "0:a"]
+            cmd += ["-map", aud]
     elif window and audio:
-        cmd += ["-map", "0:a"]
+        cmd += ["-map", aud]
 
     if video:
         # veryfast, not ultrafast: this is running live against a camera,
@@ -332,7 +422,7 @@ def record_command(out: Path, video: str | None, audio: str | None,
         if audio:
             # Costs nothing measurable, unlike the preview: the file
             # comes out the same length with the meter attached.
-            cmd += ["-map", "0:a", "-af", "ebur128=peak=none",
+            cmd += ["-map", aud, "-af", "ebur128=peak=none",
                     "-f", "null", "-"]
     return cmd
 
@@ -424,6 +514,42 @@ def was_silent(path: Path) -> bool:
     return bool(m) and float(m.group(1)) < -50.0
 
 
+# How long the picture has to sit perfectly still before it counts as
+# stopped rather than as somebody holding a pose.
+FREEZE_SECONDS = 3.0
+
+
+def is_frozen(path: Path) -> bool:
+    """Did the picture actually move?
+
+    A virtual camera with nothing feeding it -- OBS shut, Camera Hub
+    idle -- does not fail. It hands over one still image, forever, and
+    that records as a flawless take: right length, right size, plays
+    fine, and is a photograph of a placeholder. Measured on this
+    machine: a live take of 158s reported no frozen stretch at all, and
+    8s of an unfed virtual camera reported one starting at 0.
+
+    ffmpeg's own freezedetect, so there is nothing here to get wrong.
+    """
+    from .render import ffmpeg_bin
+    r = subprocess.run(
+        [ffmpeg_bin(), "-hide_banner", "-i", str(path), "-map", "0:v",
+         "-vf", f"freezedetect=n=-60dB:d={FREEZE_SECONDS:g}",
+         "-f", "null", "-"],
+        capture_output=True, text=True, errors="replace")
+    return "freeze_start" in r.stderr
+
+
+def frozen_note() -> list[str]:
+    """What to say about a take whose picture never moved. Its own
+    function so the words can be tested without a camera."""
+    return ["the picture never moved in that take. That is what a "
+            "virtual camera does when nothing is feeding it -- OBS or "
+            "Camera Hub shut, most often. Check the self-view moves "
+            "before the next one, or run `uv run film devices` and pick "
+            "the camera itself rather than a virtual one."]
+
+
 def verify_take(path: Path, mode: tuple[int, int, float] | None,
                 want_audio: bool,
                 heard: bool | None = None) -> tuple[float, list[str]]:
@@ -468,11 +594,29 @@ def verify_take(path: Path, mode: tuple[int, int, float] | None,
     if mode and frames and duration > 4.0:
         got = frames / duration
         warnings += rate_note(got, mode[2])
+
+    # Last, because it costs a pass over the file, and only when there
+    # is enough take for "still" to mean anything. A frozen picture is
+    # the one fault here that leaves a file which is right in every
+    # measurable way and still worthless.
+    if frames and duration > FREEZE_SECONDS + 1.0 and is_frozen(path):
+        warnings += frozen_note()
     return duration, warnings
 
 
 def rate_note(got: float, asked: float) -> list[str]:
-    """Why a take came out slower than the rate that was asked for.
+    """Why a take came out slow -- and whether it is worth saying at all.
+
+    Judged against what the FILM needs, not against what the camera can
+    do. Nothing asks the camera for a rate any more (see dshow_input:
+    asking is what stopped a Facecam Pro opening at all), so the camera's
+    advertised figure is not a promise anybody made -- and a take that
+    comes in under it is not, by itself, a fault.
+    A shortfall only matters when it drops below the film's own rate.
+    Measured on this machine: 45fps captured against an advertised 60,
+    into a film that renders at 24. Reporting that as "the machine could
+    not keep up" sent somebody looking for a problem that could not
+    reach the finished film.
 
     A webcam short of light does not slow down smoothly. It steps down an
     exposure ladder, halving or thirding its rate to hold the shutter
@@ -487,7 +631,9 @@ def rate_note(got: float, asked: float) -> list[str]:
     nothing. It sends somebody off to close programs and check their
     processor when the answer is a lamp.
     """
-    if got >= asked * 0.8:
+    # Enough for the film is enough. Everything above this is thrown
+    # away by the render anyway, so a shortfall there is not news.
+    if got >= FILM_FPS or got >= asked * 0.8:
         return []
     ratio = got / max(asked, 0.01)
     if any(abs(ratio - 1.0 / k) < 0.08 for k in (2, 3, 4)):
@@ -496,9 +642,9 @@ def rate_note(got: float, asked: float) -> list[str]:
                 f"-- it holds the shutter open longer and gives you half "
                 f"the frames. More light on your face fixes it. Nothing "
                 f"is wrong with the computer."]
-    return [f"got {got:.0f}fps of the {asked:g} asked for -- the machine "
-            f"could not keep up. Close what else is running, or record "
-            f"smaller."]
+    return [f"got {got:.0f}fps, and the film wants {FILM_FPS} -- the "
+            f"machine could not keep up. Close what else is running, or "
+            f"record smaller."]
 
 
 def require_windows() -> None:

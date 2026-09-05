@@ -33,6 +33,7 @@ falls back to the plain terminal version, unchanged.
 
 from __future__ import annotations
 
+import logging
 import queue
 import re
 import subprocess
@@ -65,6 +66,31 @@ WPM_MIN, WPM_MAX = 40, 260
 # and 80 characters and fill every line to the edge; a phrase you chose
 # to put on its own line is almost always shorter than this.
 WRAP_WIDTH = 58
+
+# The prompter's own face and size. One place, because the column width
+# below is measured in it -- measuring in one font and drawing in
+# another is how a "five word" column quietly becomes a seven word one.
+PROMPTER_FONT = ("Georgia", 34)
+
+# How many words to put on a line. Eyes travelling sideways are eyes off
+# the lens, which is the single thing a prompter exists to prevent;
+# broadcast prompters run a narrow column for exactly that reason. About
+# five words is one glance, and a glance does not read as a glance away.
+#
+# Measured from the FONT and from YOUR script, never as a fraction of
+# the screen. It was 60% of screen width, which meant a 4K monitor got
+# roughly twice the words per line a laptop did at the same reading
+# distance -- and a language of long words more than a language of short
+# ones, which matters the moment the script is not in English.
+PROMPTER_WORDS_PER_LINE = 5
+
+# Only ever used to ask the font how wide a word is when there is no
+# script yet to ask about instead. Nine words of ordinary English.
+TYPICAL_WORDS = "the quick brown fox jumps over the lazy dog"
+
+# Narrow is the point, but not this narrow: below about this, one long
+# word wraps alone on every line.
+MIN_PROMPTER_PX = 240
 
 TICK_MS = 40
 COUNT_FROM = 3
@@ -178,6 +204,23 @@ def scroll_speed(text: str, wpm: int, text_px: float) -> float:
     return text_px / seconds
 
 
+def prompter_width(word_px: float, screen_w: int,
+                   words: int = PROMPTER_WORDS_PER_LINE) -> int:
+    """How wide the column of words should be, in pixels.
+
+    `word_px` is the width of one average word AND its trailing space,
+    measured in the prompter's own font on the script's own words -- so
+    this comes out the same number of words a line whether the script is
+    English or Polish, and whether the screen is a laptop's or a wall's.
+
+    Clamped at both ends. A column wider than the screen is not a
+    column, and one narrower than a long word would wrap every line to
+    one word and turn reading into a slot machine.
+    """
+    wanted = int(word_px * max(1, words))
+    return max(MIN_PROMPTER_PX, min(wanted, int(screen_w * 0.9)))
+
+
 # --------------------------------------------------------------------------
 # One capture
 # --------------------------------------------------------------------------
@@ -272,7 +315,8 @@ class Take:
 
 
 def session(script: str, script_path: Path, wpm: int, title: str,
-            start, finish, seconds: float | None = None) -> None:
+            start, finish, seconds: float | None = None,
+            discard=None) -> None:
     """Open the window and stay in it until the person is finished.
 
     `start()`         begins one recording and returns the running Take.
@@ -285,6 +329,7 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     last thing you want in front of somebody who is already rattled.
     """
     import tkinter as tk
+    from tkinter import font as tkfont
     from PIL import Image, ImageTk
 
     S = {"stage": "compose", "take": None, "wpm": wpm, "y": 0.0,
@@ -300,15 +345,17 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         return tk.Label(parent, text=text, bg=BG, fg=colour,
                         font=(font, size), **kw)
 
-    def button(parent, text, command, primary=False):
+    def button(parent, text, command, primary=False, small=False):
         return tk.Button(
             parent, text=text, command=command,
             bg="#e8e8e4" if primary else "#26262a",
             fg="#101012" if primary else FG,
             activebackground="#ffffff" if primary else "#34343a",
             activeforeground="#101012" if primary else FG,
-            font=("Segoe UI", 15, "bold" if primary else "normal"),
-            relief="flat", padx=22, pady=11, cursor="hand2",
+            font=("Segoe UI", 12 if small else 15,
+                  "bold" if primary else "normal"),
+            relief="flat", padx=12 if small else 22,
+            pady=6 if small else 11, cursor="hand2",
             borderwidth=0, highlightthickness=0)
 
     # ---- screen 1: the words ------------------------------------------
@@ -348,10 +395,38 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     view.configure(image=blank)
     view.image = blank
 
-    # The hints are packed BEFORE the gauges. The gauges expand to fill,
-    # and whatever is packed after them gets whatever is left -- which,
-    # against an expanding sibling, is nothing, and the hints run off
-    # the edge of the screen where nobody can read them.
+    # Everything on this screen was once keyboard-only, which is fine
+    # right up until the window has not got the keyboard -- and then a
+    # take cannot be stopped at all, by anything, while the picture and
+    # the meter carry on looking perfectly alive because both are pushed
+    # from ffmpeg and neither needs focus. See show(). A mouse click
+    # needs no focus, so the controls that matter are on screen as well
+    # as on the keys. The keys still work; these are for when they do not.
+    #
+    # Packed BEFORE the gauges, like the hints and for the same reason:
+    # the gauges expand to fill, and whatever is packed after them gets
+    # what is left, which against an expanding sibling is nothing.
+    controls = tk.Frame(strip, bg=BG)
+    controls.pack(side="right", anchor="n", padx=(14, 0))
+
+    speed_row = tk.Frame(controls, bg=BG)
+    speed_row.pack(anchor="e")
+    button(speed_row, "slower", lambda: nudge_wpm(-WPM_STEP),
+           small=True).pack(side="left", padx=(0, 6))
+    button(speed_row, "faster", lambda: nudge_wpm(WPM_STEP),
+           small=True).pack(side="left")
+    # Without this the speed is invisible: you click, the words change
+    # pace slightly, and there is nothing on screen saying what you just
+    # set it to or how far it will still go.
+    wpm_label = big(controls, "", 12, DIM)
+    wpm_label.pack(anchor="e", pady=(4, 6))
+
+    button(controls, "start the words again", lambda: reset_words(),
+           small=True).pack(anchor="e", pady=(0, 8))
+
+    button(controls, "Stop this take", lambda: stop_take(),
+           primary=True).pack(anchor="e")
+
     big(strip, "SPACE  stop this take\n"
                "R  start the words again\n"
                "UP / DOWN  faster, slower",
@@ -377,6 +452,29 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     review_row = tk.Frame(review, bg=BG)
     review_row.pack(anchor="w")
 
+    def grab_keyboard(widget) -> None:
+        """Actually be the window the keys go to.
+
+        On top is not the same as listening. Launched from FILM.bat the
+        console keeps the keyboard, so the recording screen sat there
+        looking active -- self-view moving, meter moving, both pushed
+        from ffmpeg and needing no focus -- while every SPACE went to
+        the console behind it and the take could not be stopped by any
+        key at all.
+
+        Two separate things had to be wrong for that, and both were:
+        the toplevel never took the OS focus, and Tk's own focus was
+        still on `editor`, which is unmapped by the time anybody is
+        recording. So: raise, take the focus, and put it somewhere that
+        is actually on screen.
+        """
+        root.lift()
+        try:
+            root.focus_force()
+        except tk.TclError:
+            pass                     # window on its way out; nothing to focus
+        widget.focus_set()
+
     def show(name: str) -> None:
         for f in (compose, stage, review):
             f.pack_forget()
@@ -390,11 +488,31 @@ def session(script: str, script_path: Path, wpm: int, title: str,
             editor.focus_set()
         elif name == "review":
             review.pack(fill="both", expand=True, padx=44, pady=20)
+            grab_keyboard(review)
         else:
             stage.pack(fill="both", expand=True)
+            grab_keyboard(canvas)
 
     # ---- the script, scrolling ----------------------------------------
     item = {"id": None}
+
+    def column_px() -> int:
+        """Ask the font how wide five of THESE words are.
+
+        Re-measured every time the words are laid out, because the words
+        are what it measures -- paste a Polish script over an English
+        one and the column follows it.
+        """
+        f = tkfont.Font(root=root, family=PROMPTER_FONT[0],
+                        size=PROMPTER_FONT[1])
+        sample = (S["script"] or TYPICAL_WORDS).split()[:200]
+        if not sample:
+            sample = TYPICAL_WORDS.split()
+        # The trailing space is deliberate: a word occupies its own width
+        # plus the gap to the next one, and leaving that out is a column
+        # about one word too narrow.
+        per_word = f.measure(" ".join(sample) + " ") / len(sample)
+        return prompter_width(per_word, sw)
 
     def lay_out_words() -> None:
         if item["id"] is not None:
@@ -402,12 +520,13 @@ def session(script: str, script_path: Path, wpm: int, title: str,
             item["id"] = None
         canvas.delete("hint")
         if S["script"]:
-            # A narrower column than the screen allows: long lines make
-            # the eye track sideways, and sideways is where the camera
-            # is not.
+            # A narrow column: long lines make the eye track sideways,
+            # and sideways is where the camera is not. Width comes from
+            # measuring these actual words in this actual font -- see
+            # prompter_width.
             item["id"] = canvas.create_text(
-                sw // 2, 0, text=S["script"], fill=FG, font=("Georgia", 34),
-                width=int(sw * 0.60), justify="center", anchor="n")
+                sw // 2, 0, text=S["script"], fill=FG, font=PROMPTER_FONT,
+                width=column_px(), justify="center", anchor="n")
         else:
             canvas.create_text(
                 sw // 2, 70, fill=DIM, font=("Segoe UI", 20), anchor="n",
@@ -465,48 +584,66 @@ def session(script: str, script_path: Path, wpm: int, title: str,
             end_take()
             return
 
-        got_frame = False
+        # Everything below is one uncaught exception away from silently
+        # freezing the whole window -- this is the only thing that
+        # reschedules itself, so the teleprompter, the clock and the mic
+        # meter all die with it, and nothing tells you why. A single bad
+        # frame (a flaky camera driver, a preview buffer that came back
+        # the wrong size) must not take the rest down with it, so it is
+        # logged and skipped rather than left to break the loop.
         try:
-            buf = take.frames.get_nowait()
-            S["photo"] = ImageTk.PhotoImage(
-                Image.frombytes("RGB", (PREVIEW_W, PREVIEW_H), buf))
-            view.configure(image=S["photo"], width=PREVIEW_W, height=PREVIEW_H)
-            got_frame = True
-        except queue.Empty:
-            pass
+            got_frame = False
+            try:
+                buf = take.frames.get_nowait()
+                S["photo"] = ImageTk.PhotoImage(
+                    Image.frombytes("RGB", (PREVIEW_W, PREVIEW_H), buf))
+                view.configure(image=S["photo"], width=PREVIEW_W, height=PREVIEW_H)
+                got_frame = True
+            except queue.Empty:
+                pass
 
-        # The clock starts at the first frame, not at the moment ffmpeg
-        # was launched. A webcam takes a second or so to wake up, and a
-        # clock that counts the waking is a clock that lies -- it would
-        # read 0:05 over a take of three and a half seconds. The
-        # fixed-length limit is armed from the same instant, so
-        # `--seconds 30` means thirty seconds of recording.
-        if not S["rolling"] and (got_frame or time.time() - S["t0"] > 3.0):
-            S["rolling"] = True
-            S["t0"] = time.time()
-            if seconds:
-                root.after(int(seconds * 1000), take.stop)
+            # The clock starts at the first frame, not at the moment ffmpeg
+            # was launched. A webcam takes a second or so to wake up, and a
+            # clock that counts the waking is a clock that lies -- it would
+            # read 0:05 over a take of three and a half seconds. The
+            # fixed-length limit is armed from the same instant, so
+            # `--seconds 30` means thirty seconds of recording.
+            if not S["rolling"] and (got_frame or time.time() - S["t0"] > 3.0):
+                S["rolling"] = True
+                S["t0"] = time.time()
+                if seconds:
+                    root.after(int(seconds * 1000), take.stop)
 
-        elapsed = time.time() - S["t0"] if S["rolling"] else 0.0
-        clock.configure(text=f"{int(elapsed) // 60}:{int(elapsed) % 60:02d}")
-        # The dot blinks. A caption that never changes is one you stop
-        # believing by the second take.
-        rec_dot.configure(text="●  RECORDING" if int(elapsed * 2) % 2
-                          else "○  RECORDING", fg=REC_ON)
+            elapsed = time.time() - S["t0"] if S["rolling"] else 0.0
+            clock.configure(text=f"{int(elapsed) // 60}:{int(elapsed) % 60:02d}")
+            # The dot blinks. A caption that never changes is one you stop
+            # believing by the second take.
+            rec_dot.configure(text="●  RECORDING" if int(elapsed * 2) % 2
+                              else "○  RECORDING", fg=REC_ON)
 
-        filled = int(max(0.0, min(1.0, (take.level - QUIET_LUFS) /
-                                  max(1.0, LOUD_LUFS - QUIET_LUFS))) * 24)
-        if not take.heard and elapsed > 2.5:
-            mic.configure(text="no sound yet -- is the microphone muted?",
-                          fg=WARN)
-        else:
-            mic.configure(text="mic  [" + "#" * filled + "." * (24 - filled) +
-                          "]", fg=FG if filled else DIM)
+            filled = int(max(0.0, min(1.0, (take.level - QUIET_LUFS) /
+                                      max(1.0, LOUD_LUFS - QUIET_LUFS))) * 24)
+            if not take.heard and elapsed > 2.5:
+                mic.configure(text="no sound yet -- is the microphone muted?",
+                              fg=WARN)
+            else:
+                mic.configure(text="mic  [" + "#" * filled + "." * (24 - filled) +
+                              "]", fg=FG if filled else DIM)
 
-        if item["id"] is not None:
-            S["y"] -= scroll_speed(S["script"], S["wpm"], text_height()) * \
-                (TICK_MS / 1000.0)
-            canvas.coords(item["id"], sw // 2, S["y"])
+            # Not until the camera is actually running. dshow takes a
+            # second and a half to wake this webcam -- measured -- and
+            # the words used to start moving the instant ffmpeg was
+            # launched, so the first line and a half was read to a camera
+            # that was not recording yet. The clock already waited for
+            # this; the words did not, which is the half that matters,
+            # because the clock is not what you are looking at.
+            if item["id"] is not None and S["rolling"]:
+                S["y"] -= scroll_speed(S["script"], S["wpm"], text_height()) * \
+                    (TICK_MS / 1000.0)
+                canvas.coords(item["id"], sw // 2, S["y"])
+        except Exception:
+            logging.exception("booth: tick_rec hit a problem; recording "
+                              "and the window carry on regardless")
 
         root.after(TICK_MS, tick_rec)
 
@@ -532,21 +669,63 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     def again(_=None):
         begin()
 
+    def redo(_=None):
+        """Throw the take away and do the whole thing again.
+
+        Not the same as "Record another". Another one KEEPS this one,
+        and every take kept becomes a shot -- so fluffing a line and
+        going again used to put the fluff in the film as well as the
+        good version, and the only way out of that was finding the file
+        afterwards and knowing which was which.
+        """
+        if S["stage"] != "review":
+            return
+        if discard is not None:
+            discard()
+        begin()
+
     def edit_words(_=None):
         show("compose")
 
     def done(_=None):
         take = S["take"]
         if take is not None:
+            # take.wait() runs on the GUI thread, so a capture that will
+            # not shut down holds the whole window still for the length
+            # of its timeout. That is the "everything stalled" this used
+            # to produce: not a crash, a blocking wait with nothing on
+            # screen to say so. ffmpeg normally goes in under a second.
+            rec_dot.configure(text="   stopping, one moment...", fg=DIM)
+            try:
+                root.update()
+            except tk.TclError:
+                pass
             take.stop()
             take.wait()
             S["take"] = None
+            # Closing the window mid-take used to throw the take away even
+            # when the file came out fine -- `finish` is what counts it and
+            # tells the terminal about it, and only SPACE (`end_take`) ever
+            # called it. A stall bad enough to make you close the window is
+            # exactly when this matters most.
+            try:
+                finish(take)
+            except Exception:
+                logging.exception("booth: could not check the take that "
+                                  "was running when the window closed")
         save_script(script_path, reflow(editor.get("1.0", "end")))
         root.destroy()
 
     def stop_take(_=None):
         if S["stage"] == "rec" and S["take"] is not None:
             S["take"].stop()
+
+    def nudge_wpm(delta: int) -> None:
+        """One place for the reading speed, so the keys and the buttons
+        cannot drift apart, and so the number on screen is always the
+        number being used."""
+        S["wpm"] = max(WPM_MIN, min(WPM_MAX, S["wpm"] + delta))
+        wpm_label.configure(text=f"{S['wpm']} words a minute")
 
     # ---- buttons ------------------------------------------------------
     button(row, "Start recording      Ctrl+Enter", begin,
@@ -555,6 +734,11 @@ def session(script: str, script_path: Path, wpm: int, title: str,
 
     button(review_row, "Record another      Enter", again,
            primary=True).pack(side="left")
+    # Worded so it cannot be mistaken for the one next to it. These two
+    # buttons differ only in whether the take you just made survives,
+    # and that is not a thing to find out afterwards.
+    button(review_row, "Fluffed it -- do that one again      R",
+           redo).pack(side="left", padx=10)
     button(review_row, "Change the words", edit_words).pack(side="left",
                                                             padx=10)
     button(review_row, "I am finished      Esc", done).pack(side="left")
@@ -580,12 +764,15 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         return "break"
 
     def on_key(e):
+        if S["stage"] == "review" and e.keysym in ("r", "R"):
+            redo()
+            return "break"
         if S["stage"] != "rec":
             return
         if e.keysym == "Up":
-            S["wpm"] = min(WPM_MAX, S["wpm"] + WPM_STEP)
+            nudge_wpm(WPM_STEP)
         elif e.keysym == "Down":
-            S["wpm"] = max(WPM_MIN, S["wpm"] - WPM_STEP)
+            nudge_wpm(-WPM_STEP)
         elif e.keysym in ("r", "R"):
             reset_words()
 
@@ -596,7 +783,10 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     editor.bind("<Control-Return>", lambda e: (begin(), "break")[1])
     root.protocol("WM_DELETE_WINDOW", done)
 
+    nudge_wpm(0)                 # paint the speed before anyone changes it
     show("compose")
+    # The window is no use behind the console it was started from.
+    grab_keyboard(editor)
     try:
         root.mainloop()
     except KeyboardInterrupt:
