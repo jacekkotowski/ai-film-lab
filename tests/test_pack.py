@@ -131,7 +131,7 @@ def test_asking_for_a_film_that_is_not_there_says_so(tmp_path):
 
 
 def test_a_missing_optional_part_is_not_an_error(tmp_path):
-    """blender/ and data/ are listed but need not exist."""
+    """blender/ is listed but need not exist."""
     root = toolkit(tmp_path)
     assert "pyproject.toml" in names(root)      # got here without raising
 

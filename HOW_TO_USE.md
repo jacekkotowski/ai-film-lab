@@ -471,45 +471,6 @@ look:
 Any field after `preset:` overrides just that one thing — everything
 else from the preset stays.
 
-## Turn your data into a shot
-
-You're in RStudio, so your data is right there. Save whatever you want
-to show as a plain CSV, in this shape -- one row per time step per
-series:
-
-```
-time,series,value
-2019,Revenue,120
-2020,Revenue,210
-2021,Revenue,340
-```
-
-Then:
-
-```powershell
-uv run film data-clip projects\my_movie\media\growth.csv -p my_movie --kind line --seconds 4
-```
-
-This writes an mp4 clip -- a line growing, bars racing, or one big
-number climbing, matched to your film's size, frame rate, and dark
-background. It prints exactly what to paste into `film.yaml`:
-
-```yaml
-  - src: media/growth.mp4
-    duration: 4.0
-    move: static
-```
-
-Drop that in wherever the data beat belongs in your sequence, run
-`uv run film peek -p my_movie`, and it plays like any other shot.
-
-`--kind` options: `line` (a trend building), `bar_race` (values
-reordering as they change), `counter` (one number climbing to its
-final value — good for a single headline figure).
-
-From R, write the CSV with `write.csv(df, "media/growth.csv",
-row.names = FALSE)` and you're already there — no extra conversion.
-
 ## When you're happy: full quality
 
 ```powershell

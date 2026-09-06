@@ -10,9 +10,8 @@ dependencies = [
     "pyyaml>=6",
 ]
 
-# Optional. Only installed if you ask for it:  uv sync --extra data
+# Optional. Only installed if you ask for it:  uv sync --extra voice
 [project.optional-dependencies]
-data = ["manim>=0.18"]
 voice = ["faster-whisper>=1.0"]
 
 # Not a dependency of the film -- only of changing the code. Nobody

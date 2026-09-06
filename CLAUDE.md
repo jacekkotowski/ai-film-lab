@@ -145,7 +145,6 @@ THE WAY IN
   ffilm/editor.py     the browser bench (`film edit`)
   ffilm/history.py    every render commits film.yaml, so there is an undo
 
-  ffilm/data_clip.py  CSV -> an animated clip, for the RStudio side
   blender/            the 3D backend, for parallax later
 
 tests/                pure functions only, runs in under a second:

@@ -480,40 +480,6 @@ def cmd_edit(args) -> None:
     editor.serve(project, port=args.port, open_browser=not args.no_browser)
 
 
-def cmd_data_clip(args) -> None:
-    try:
-        from . import data_clip
-    except ImportError as e:
-        raise SystemExit(f"Missing a package for data clips: {e}\n"
-                         f"This needs matplotlib, which should already be "
-                         f"installed -- try `uv sync` again.")
-    project = find_project(args.project) if args.project else None
-    csv_path = Path(args.csv)
-
-    if args.out:
-        out = Path(args.out)
-        if project and not out.is_absolute():
-            out = project / out
-    else:
-        # Default: sit the mp4 next to the csv, same name, .mp4 instead
-        # of .csv -- works whether the csv is inside the project or not.
-        out = csv_path.with_suffix(".mp4")
-
-    bg = "#f2efe9" if args.light else "#141414"
-    result = data_clip.make_clip(csv_path, out, kind=args.kind,
-                                 width=args.width, height=args.height,
-                                 fps=args.fps, seconds=args.seconds,
-                                 dark=not args.light, bg=bg)
-    print(f"Wrote {result}")
-    if project and result.resolve().is_relative_to(project.resolve()):
-        rel = result.resolve().relative_to(project.resolve()).as_posix()
-        print(f"\nAdd to film.yaml:\n\n  - src: {rel}\n"
-              f"    duration: {args.seconds}\n    move: static\n")
-    else:
-        print(f"\nCopy this into your project's media/ folder (or point "
-              f"--out there directly), then reference it in film.yaml.")
-
-
 def preflight(project: Path, verbose: bool = True) -> list[str]:
     """Check the things that make a run fail two minutes in, before it does.
 
@@ -1165,17 +1131,6 @@ def main() -> None:
     p.add_argument("--port", type=int, default=8731)
     p.add_argument("--no-browser", action="store_true")
 
-    p = sub.add_parser("data-clip", help="turn a CSV into an animated clip")
-    p.add_argument("csv")
-    p.add_argument("--project", "-p", default=None)
-    p.add_argument("--out", "-o", default=None)
-    p.add_argument("--kind", default="line", choices=["line", "bar_race", "counter"])
-    p.add_argument("--width", type=int, default=1920)
-    p.add_argument("--height", type=int, default=1080)
-    p.add_argument("--fps", type=int, default=24)
-    p.add_argument("--seconds", type=float, default=6.0)
-    p.add_argument("--light", action="store_true", help="light text/axes instead of dark")
-
     p = sub.add_parser("go", help="ingest + init + caption + render, one command")
     p.add_argument("--project", "-p", default=None)
     p.add_argument("--seed", type=int, default=0)
@@ -1286,8 +1241,6 @@ def main() -> None:
             cmd_check(args)
         elif args.cmd == "edit":
             cmd_edit(args)
-        elif args.cmd == "data-clip":
-            cmd_data_clip(args)
         elif args.cmd == "go":
             cmd_go(args)
         elif args.cmd == "doctor":
