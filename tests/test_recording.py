@@ -14,7 +14,7 @@ import pytest
 
 from ffilm import record
 from ffilm.record import (Device, best_mode, choose_devices, escape_device,
-                          input_spec, is_recording, parse_devices,
+                          is_recording, parse_devices,
                           parse_modes, record_command, take_name)
 from ffilm.scaffold import _speed_for
 
@@ -141,8 +141,14 @@ def test_an_ordinary_name_is_left_exactly_alone():
     assert escape_device(name) == name
 
 
-def test_the_input_names_both_devices():
-    assert input_spec("Cam", "Mic") == "video=Cam:audio=Mic"
+def test_the_two_devices_are_opened_as_two_inputs():
+    """A combined `video=X:audio=Y` cannot open a USB camera alongside a
+    separate USB microphone -- it answers I/O error. Two inputs, and the
+    microphone is no longer stream 0."""
+    c = cmd()
+    assert " ".join(c).count("-f dshow") == 2
+    assert record.audio_stream("Cam") == "1:a"
+    assert record.audio_stream(None) == "0:a"
 
 
 # --------------------------------------------------------------------------

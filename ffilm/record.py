@@ -234,18 +234,6 @@ def escape_device(name: str) -> str:
     return name.replace("\\", "\\\\").replace(":", "\\:")
 
 
-def input_spec(video: str | None, audio: str | None) -> str:
-    """One dshow name for both devices. Kept for a camera that really
-    does carry its own microphone; `record_command` no longer asks for
-    the two SEPARATE devices this way -- see `dshow_inputs`."""
-    parts = []
-    if video:
-        parts.append(f"video={escape_device(video)}")
-    if audio:
-        parts.append(f"audio={escape_device(audio)}")
-    return ":".join(parts)
-
-
 def audio_stream(video: str | None) -> str:
     """Which input the microphone is, now that it is opened as its own.
 

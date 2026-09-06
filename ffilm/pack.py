@@ -37,7 +37,7 @@ TOOLKIT = [
     # not big, and a copy that arrives without the music is a copy where
     # every film has quietly lost its soundtrack.
     "library",
-    "ffilm", "tests", "blender",
+    "ffilm", "tests",
     "pyproject.toml", "uv.lock", "CLAUDE.md", "README.md",
     "HOW_TO_USE.md", "FILM.bat", ".gitignore", ".gitattributes",
     "_fetch.py",

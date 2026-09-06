@@ -134,13 +134,6 @@ def voice_sources(project: Path) -> list[VoiceSource]:
     return sources
 
 
-def find_voice_track(project: Path) -> Path | None:
-    """Back-compat convenience: the single most relevant audio source,
-    if you just want one file rather than the full priority list."""
-    srcs = voice_sources(project)
-    return srcs[0].audio_path if srcs else None
-
-
 # The silence between two words that means the speaker finished a
 # thought. Ordinary gaps between words in running speech are under a
 # tenth of a second; a breath is a third of one or more.

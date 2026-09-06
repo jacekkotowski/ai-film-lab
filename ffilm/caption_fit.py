@@ -17,7 +17,7 @@ contains 0:42. Everything else in the film is irrelevant to that line.
 
 from __future__ import annotations
 
-from .spec import Caption, Film, Shot
+from .spec import Caption, Film
 from .voice import Line, VoiceSource
 
 MAX_CAPTION_SECONDS = 4.5   # a caption held longer than this is hard to read

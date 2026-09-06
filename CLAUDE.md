@@ -144,8 +144,8 @@ THE WAY IN
                       FILM.bat runs.
   ffilm/editor.py     the browser bench (`film edit`)
   ffilm/history.py    every render commits film.yaml, so there is an undo
+  ffilm/pack.py       a zip you can carry to another computer
 
-  blender/            the 3D backend, for parallax later
 
 tests/                pure functions only, runs in under a second:
                         uv run --extra dev pytest
