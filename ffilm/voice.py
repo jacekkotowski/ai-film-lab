@@ -370,14 +370,26 @@ def _pack(atoms: list[str], span, tokens_before: int) -> list[tuple[str, int, in
     return out
 
 
-def _by_breath(text: str, lo: int, hi: int, at) -> list[tuple[str, int, int]]:
+def _by_breath(text: str, lo: int, hi: int, at, span) -> list[tuple[str, int, int]]:
     """A clause still too long on its own, cut where the speaker breathed.
 
     Same rule as `_breath` uses on an unscripted take: the widest silence
     beats whatever word a counter happened to reach.
+
+    Too long means any of three things, and time is one of them: a short
+    clause delivered slowly ("And it didn't matter", over six seconds)
+    is under both the character and the word ceiling and still outstays
+    the display clamp in caption_fit, which is the silent gap this whole
+    arrangement exists to prevent.
     """
     words = text.split()
-    if len(text) <= CAPTION_CHARS and len(words) <= CAPTION_WORDS:
+    # One word cannot be cut in half, however long it is. Without this,
+    # a word longer than the ceiling recursed until it indexed past the
+    # end of its own offsets and raised IndexError.
+    if len(words) < 2:
+        return [(text, lo, hi)]
+    if (len(text) <= CAPTION_CHARS and len(words) <= CAPTION_WORDS
+            and span(lo, hi) <= CAPTION_SECONDS):
         return [(text, lo, hi)]
 
     # A written word is not always one token: `_key` splits
@@ -398,7 +410,9 @@ def _by_breath(text: str, lo: int, hi: int, at) -> list[tuple[str, int, int]]:
                              len(words) - BREATH_MIN_WORDS + 1)
             if len(" ".join(words[:i])) <= CAPTION_CHARS]
     if not fits:
-        fits = [max(BREATH_MIN_WORDS, len(words) // 2)]
+        # Clamped to a real split point. BREATH_MIN_WORDS on its own
+        # could name a word that does not exist in a short clause.
+        fits = [min(max(1, len(words) // 2), len(words) - 1)]
 
     best, cut = 0.0, 0
     for i in fits:
@@ -412,8 +426,8 @@ def _by_breath(text: str, lo: int, hi: int, at) -> list[tuple[str, int, int]]:
     # reason at all. With nothing to go on, fill the line instead.
     if best < REAL_BREATH or not cut:
         cut = fits[-1]
-    return (_by_breath(" ".join(words[:cut]), lo, offset[cut], at)
-            + _by_breath(" ".join(words[cut:]), offset[cut], hi, at))
+    return (_by_breath(" ".join(words[:cut]), lo, offset[cut], at, span)
+            + _by_breath(" ".join(words[cut:]), offset[cut], hi, at, span))
 
 
 def align_to_script(words: list, units: list[str]) -> list[Line]:
@@ -478,7 +492,7 @@ def align_to_script(words: list, units: list[str]) -> list[Line]:
         # long gets cut where you breathed.
         pieces: list[tuple[str, int, int]] = []
         for text, lo, hi in _pack(_atoms(unit), span, 0):
-            pieces += _by_breath(text, lo, hi, at)
+            pieces += _by_breath(text, lo, hi, at, span)
 
         for text, lo, hi in pieces:
             here = [when[p] for p in range(lo, hi) if p in when]

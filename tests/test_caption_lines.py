@@ -331,3 +331,26 @@ def test_a_hyphen_or_an_apostrophe_does_not_stop_the_splitting():
     for ln in out:
         assert len(ln.text) <= CAPTION_CHARS + 12
         assert ln.dur <= CAPTION_SECONDS + 1.0
+
+
+def test_a_word_longer_than_the_ceiling_does_not_crash():
+    """It cannot be cut in half, however long it is. Without a guard the
+    splitter recursed until it indexed past the end of its own offsets
+    and raised IndexError."""
+    word = ("Donaudampfschiffahrtselektrizitaetenhauptbetriebswerk"
+            "bauunterbeamtengesellschaft")
+    assert len(word) > CAPTION_CHARS
+    out = align_to_script(say(word), [word + "."])
+    assert len(out) == 1
+
+
+def test_a_short_clause_said_slowly_is_still_cut():
+    """Under the character ceiling, under the word ceiling, and six and a
+    half seconds long -- so caption_fit clamps the display to 4.5s and
+    leaves two seconds of talking with nothing on screen. Time is a
+    ceiling too."""
+    unit = "And it did not matter to anyone."
+    out = align_to_script(say(unit.strip("."), rate=1.1), [unit])
+    assert len(out) > 1
+    for ln in out:
+        assert ln.dur <= CAPTION_SECONDS + 1.5
