@@ -344,13 +344,42 @@ def test_a_word_longer_than_the_ceiling_does_not_crash():
     assert len(out) == 1
 
 
-def test_a_short_clause_said_slowly_is_still_cut():
-    """Under the character ceiling, under the word ceiling, and six and a
-    half seconds long -- so caption_fit clamps the display to 4.5s and
-    leaves two seconds of talking with nothing on screen. Time is a
-    ceiling too."""
-    unit = "And it did not matter to anyone."
-    out = align_to_script(say(unit.strip("."), rate=1.1), [unit])
-    assert len(out) > 1
-    for ln in out:
-        assert ln.dur <= CAPTION_SECONDS + 1.5
+def test_the_clock_never_breaks_a_phrase():
+    """From one real film, twice. When the clock could cut anywhere:
+
+        the recognition of / that murder as / the "law of laws."
+
+    When it could cut only at a real pause -- still wrong, because the
+    speaker paused half a second after "that", for emphasis, in the
+    middle of the phrase:
+
+        the recognition of that / murder as the "law of laws."
+
+    A pause in speech is not a boundary in a sentence, and without a
+    parser nothing can tell which is which. Fifty-two characters is one
+    caption however long it took to say."""
+    unit = 'the recognition of that murder as the "law of laws."'
+    assert len(unit) <= CAPTION_CHARS
+    for words in (say(unit.strip("."), rate=0.6),                # slow
+                  say(unit.strip("."), gap_after={3: 0.6})):     # slow + pause
+        out = align_to_script(words, [unit])
+        assert len(out) == 1, f"chopped into {[l.text for l in out]}"
+
+
+def test_a_sentence_that_ends_in_a_quote_mark_still_ends():
+    """The character before the space is the quote, not the stop:
+
+        the "law of laws." From care to hatred.
+
+    stayed one unit, blew the character ceiling, and was cut mid-phrase
+    into `the recognition of that` / `murder as the "law of laws." ...`.
+    Straightth from a real film."""
+    units = script_units('the recognition of that murder as the '
+                         '"law of laws." From care to hatred.')
+    assert units == ['the recognition of that murder as the "law of laws."',
+                     "From care to hatred."]
+
+
+def test_closing_brackets_and_curly_quotes_count_too():
+    assert len(script_units("He said it (loudly.) Then he left.")) == 2
+    assert len(script_units("She wrote \u201cno.\u201d He agreed.")) == 2

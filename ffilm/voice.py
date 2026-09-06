@@ -273,23 +273,40 @@ def _key(text: str) -> list[str]:
     return re.findall(r"\w+", text.casefold(), flags=re.UNICODE)
 
 
+# A sentence ends with punctuation -- and then, often, with the quote
+# mark that closes what was being said. Splitting on the punctuation
+# alone missed every quoted sentence, because the character before the
+# space is the quote, not the stop:
+#
+#     the "law of laws." From care to hatred.
+#
+# stayed one unit, blew the character ceiling, and got cut mid-phrase
+# into `the recognition of that` / `murder as the "law of laws." ...`.
+SENTENCE_END = re.compile("[.!?…]+[\"'”’»)\\]]*\\s+")
+
+
 def script_units(text: str) -> list[str]:
     """The script, cut where its author cut it.
 
     A line break you typed is a decision -- `booth.reflow` keeps those
     and flattens the ones a window put in, so by the time a script
-    reaches here every remaining break is yours. Inside a line, a full
-    stop is the other place a caption may end.
+    reaches here every remaining break is yours. Inside a line, the end
+    of a sentence is the other place a caption may end.
     """
     units: list[str] = []
     for line in text.splitlines():
         line = line.strip()
         if not line:
             continue
-        for part in re.split(r"(?<=[.!?…])\s+", line):
-            part = part.strip()
+        start = 0
+        for m in SENTENCE_END.finditer(line):
+            part = line[start:m.end()].strip()
             if part:
                 units.append(part)
+            start = m.end()
+        tail = line[start:].strip()
+        if tail:
+            units.append(tail)
     return units
 
 
@@ -376,11 +393,29 @@ def _by_breath(text: str, lo: int, hi: int, at, span) -> list[tuple[str, int, in
     Same rule as `_breath` uses on an unscripted take: the widest silence
     beats whatever word a counter happened to reach.
 
-    Too long means any of three things, and time is one of them: a short
-    clause delivered slowly ("And it didn't matter", over six seconds)
-    is under both the character and the word ceiling and still outstays
-    the display clamp in caption_fit, which is the silent gap this whole
-    arrangement exists to prevent.
+    Width is the only reason to cut. Not time.
+
+    Time was tried twice and was wrong twice. Text past the character
+    ceiling has its type shrunk by render.fit_caption until it fits, and
+    a caption nobody can read is no caption -- so width must force a
+    break. A phrase that merely takes a while does not: caption_fit
+    clamps the display to 4.5s, so it shows for four and a half and
+    leaves a second or so bare. That is the whole cost.
+
+    Against it, from one real film:
+
+        the recognition of / that murder as / the "law of laws."
+
+    when the clock could cut anywhere, and then
+
+        the recognition of that / murder as the "law of laws."
+
+    when the clock could only cut at a real pause -- because the speaker
+    paused half a second after "that", for emphasis, in the middle of
+    the phrase. A pause in speech is not a boundary in a sentence, and
+    without a parser there is no way to tell which is which. So the
+    clock does not get to break a phrase at all. A second of bare screen
+    is cheaper than a caption that says "the recognition of that".
     """
     words = text.split()
     # One word cannot be cut in half, however long it is. Without this,
@@ -388,8 +423,7 @@ def _by_breath(text: str, lo: int, hi: int, at, span) -> list[tuple[str, int, in
     # end of its own offsets and raised IndexError.
     if len(words) < 2:
         return [(text, lo, hi)]
-    if (len(text) <= CAPTION_CHARS and len(words) <= CAPTION_WORDS
-            and span(lo, hi) <= CAPTION_SECONDS):
+    if len(text) <= CAPTION_CHARS and len(words) <= CAPTION_WORDS:
         return [(text, lo, hi)]
 
     # A written word is not always one token: `_key` splits
@@ -410,7 +444,8 @@ def _by_breath(text: str, lo: int, hi: int, at, span) -> list[tuple[str, int, in
                              len(words) - BREATH_MIN_WORDS + 1)
             if len(" ".join(words[:i])) <= CAPTION_CHARS]
     if not fits:
-        # Clamped to a real split point. BREATH_MIN_WORDS on its own
+        # It does not fit on screen, so it has to break somewhere.
+        # Clamped to a real split point: BREATH_MIN_WORDS on its own
         # could name a word that does not exist in a short clause.
         fits = [min(max(1, len(words) // 2), len(words) - 1)]
 
