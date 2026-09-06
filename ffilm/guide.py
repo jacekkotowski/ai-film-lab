@@ -425,6 +425,16 @@ def open_folder(folder: Path) -> None:
         pass
 
 
+def play(path: Path) -> None:
+    """Open a finished render in whatever plays video on this machine.
+
+    The same call as open_folder -- os.startfile opens a folder in
+    Explorer and a file in its default application -- but the name says
+    which one is meant at the call site.
+    """
+    open_folder(path)
+
+
 def _run(args: list[str]) -> int:
     """Run one film command in a child process, exactly as printed."""
     print()

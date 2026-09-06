@@ -172,6 +172,12 @@ def cmd_render(args, quality_name: str) -> None:
     if quality_name == "final":
         auto_cover(project)
         ship(project, film, out, open_page=not getattr(args, "no_open", False))
+    elif not getattr(args, "no_open", False):
+        # peek and draft exist to be WATCHED -- "is the ORDER right?",
+        # "does the MOTION feel right?" -- and the loop they belong to is
+        # the whole system. Going round it should not include finding the
+        # file yourself every time.
+        guide.play(out)
     guide.print_next(project)
 
 
@@ -448,7 +454,7 @@ def cmd_go(args) -> None:
     q = "final" if args.final else "draft"
     render_args = argparse.Namespace(
         project=args.project, out=None, seed=args.seed, font=args.font,
-        supersample=None)
+        supersample=None, no_open=getattr(args, "no_open", False))
     cmd_render(render_args, q)
     # cmd_render has already printed the next step -- saying it twice
     # makes it look like two different suggestions.
@@ -1094,10 +1100,10 @@ def main() -> None:
     for name in ("peek", "draft", "final"):
         p = sub.add_parser(name, help=f"render at {name} quality")
         common(p)
-        if name == "final":
-            p.add_argument("--no-open", action="store_true",
-                           help="do not open the out folder and the "
-                                "YouTube upload page afterwards")
+        p.add_argument("--no-open", action="store_true",
+                       help="do not open the out folder and the YouTube "
+                            "upload page afterwards" if name == "final"
+                       else "do not open the film when it is rendered")
 
     p = sub.add_parser("ingest", help="analyse the media folder")
     p.add_argument("--project", "-p", default=None)
