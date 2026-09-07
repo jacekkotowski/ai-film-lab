@@ -30,7 +30,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 from .moves import window_at, window_past_end
-from .spec import Caption, Film, Look, Shot, Window
+from .spec import Caption, Film, Look, Shot, Window, frames_for
 
 # --------------------------------------------------------------------------
 # Quality tiers
@@ -672,7 +672,7 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
     video_target = out.with_name(out.stem + "__silent.mp4") if needs_sound else out
     proc = open_encoder(video_target, ow, oh, fps, quality, audio,
                         film.audio_offset)
-    total = sum(max(1, int(round(s.duration * fps))) for s in film.shots)
+    total = sum(frames_for(s.duration, fps) for s in film.shots)
     done = 0
     stopped_early = False
 
@@ -687,7 +687,7 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
         for shot in film.shots:
             if stopped_early:
                 break
-            n = max(1, int(round(shot.duration * fps)))
+            n = frames_for(shot.duration, fps)
             max_scale = max(window_at(shot, 0, seed).scale,
                             window_at(shot, 1, seed).scale) * 1.05
             src = open_source(film, shot, rw, rh, max_scale)
@@ -808,7 +808,8 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
     if needs_sound:
         from .audio import build_soundtrack
         try:
-            build_soundtrack(film, video_target, out, quiet=quiet)
+            build_soundtrack(film, video_target, out, fps=fps,
+                             quiet=quiet)
         finally:
             video_target.unlink(missing_ok=True)
     return out

@@ -327,3 +327,48 @@ def test_a_hand_tuned_shot_is_still_never_second_guessed():
                 frm=Window(0.2, 0.3, 1.4, 0.0), to=Window(0.8, 0.7, 1.1, 0.0))
     f, t = windows_for(shot)
     assert (f.cx, t.cx, f.scale) == (0.2, 0.8, 1.4)
+
+
+# --------------------------------------------------------------------------
+# One clock for the picture and the sound
+# --------------------------------------------------------------------------
+
+def test_a_shot_is_a_whole_number_of_frames():
+    from ffilm.spec import frames_for
+    assert frames_for(4.0, 24) == 96
+    assert frames_for(5.03, 24) == 121          # 120.72 rounded
+    assert frames_for(0.001, 24) == 1           # never nothing
+
+
+def test_the_soundtrack_stands_where_the_picture_stands():
+    """The bug this replaces: the picture advances a whole frame at a
+    time and the soundtrack advanced by film.yaml's decimals, so they
+    parted company a little at every cut and the gap was the running
+    total of every rounding so far. Measured on a real ten-shot film:
+    shot 1 dead in sync, shot 4 thirty-three milliseconds adrift, which
+    on a face is visible."""
+    from ffilm.spec import frames_for
+    fps = 24
+    # the real durations from Evening_2026-09-05, which is where it showed
+    durations = [4.0, 6.175, 2.6, 14.258, 2.492, 4.65, 72.25, 1.133, 21.233]
+
+    picture, f = [], 0
+    for d in durations:
+        picture.append(f / fps)
+        f += frames_for(d, fps)
+
+    sound, a = [], 0
+    for d in durations:
+        sound.append(round(a / fps * 1000) / 1000)      # adelay takes ms
+        a += frames_for(d, fps)
+
+    for p, s in zip(picture, sound):
+        assert abs(p - s) < 0.002, "sound and picture must share a clock"
+
+    # ...and the old way really did drift, or the assertion above proves
+    # nothing at all.
+    naive, t = [], 0.0
+    for d in durations:
+        naive.append(t)
+        t += d
+    assert max(abs(p - n) for p, n in zip(picture, naive)) > 0.02

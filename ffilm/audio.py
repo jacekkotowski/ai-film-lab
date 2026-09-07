@@ -209,11 +209,22 @@ def speech_chain(start: float, end: float | None, delay: int,
 
 
 def build_soundtrack(film: Film, silent_video: Path, out: Path,
-                     quiet: bool = False) -> Path:
-    """Mux speech + narration + music onto an already-rendered video."""
-    from .render import ffmpeg_bin, ffprobe_bin
+                     fps: int | None = None, quiet: bool = False) -> Path:
+    """Mux speech + narration + music onto an already-rendered video.
 
-    total = film.duration
+    `fps` is the rate the picture was ACTUALLY rendered at -- peek and
+    draft may differ from film.fps -- because every position below is
+    measured on the frame grid the picture is already on. Placing sound
+    at the exact second instead is what put the lips out of step: see
+    spec.frames_for.
+    """
+    from .render import ffmpeg_bin, ffprobe_bin
+    from .spec import frames_for
+
+    fps = fps or film.fps
+    # The film's real length is whole frames, not the sum of the numbers
+    # in film.yaml -- and the music is cut to it.
+    total = sum(frames_for(s.duration, fps) for s in film.shots) / fps
     inputs: list[str] = ["-i", str(silent_video)]
     filters: list[str] = []
     idx = 1                      # input 0 is the silent video
@@ -228,10 +239,15 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
     specs: list[tuple[Path, float, float | None, int, float]] = []
 
     if film.keep_clip_audio:
-        t = 0.0
+        # Counted in FRAMES, not seconds. The picture advances a whole
+        # frame at a time, so a soundtrack that advances by film.yaml's
+        # decimals parts company with it a little at every cut, and the
+        # gap is the running total of every rounding so far.
+        at = 0
         for shot in film.shots:
+            n = frames_for(shot.duration, fps)
             if shot.kind != "video":
-                t += shot.duration
+                at += n
                 continue
             src = film.resolve(shot.src)
             # peek/draft swap in a 480p proxy, and proxies are built with
@@ -250,11 +266,15 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
                 if found is not None:
                     src = found
             if not src.exists() or not _has_audio(src):
-                t += shot.duration
+                at += n
                 continue
-            specs.append((src, shot.tin, shot.tin + shot.duration * shot.speed,
-                          int(round(t * 1000)), shot.speed))
-            t += shot.duration
+            # The segment is as long as the PICTURE is, for the same
+            # reason: n/fps seconds of screen, times speed, is how much
+            # of the take was actually shown.
+            specs.append((src, shot.tin,
+                          shot.tin + (n / fps) * shot.speed,
+                          int(round(at / fps * 1000)), shot.speed))
+            at += n
 
     if film.audio:
         nar = film.resolve(film.audio)
