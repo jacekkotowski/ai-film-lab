@@ -135,16 +135,26 @@ def default_name(when: datetime | None = None,
     return f"{base}_{n}"
 
 
-def tidy_name(name: str) -> str:
-    """A name somebody typed, made safe to be a folder and an argument.
+# What Windows will not have in a folder name. Everything else is
+# yours, including spaces.
+ILLEGAL = set('<>:"/\\|?*')
 
-    The prompt says "no spaces" and nothing enforced it, so a film called
-    `Morning 2026-09-15` got made -- which works everywhere except in the
-    command the guide prints for you to retype, where it reads as a
-    project called Morning and a stray argument.
+
+def tidy_name(name: str) -> str:
+    """A name somebody typed, made safe to be a folder -- and no further.
+
+    Spaces are KEPT. The project name is the film's title, and a title is
+    written with spaces: `Zima nad morzem` should stay exactly that, not
+    become `Zima Nad Morzem`, which is what turning it into underscores
+    and title-casing it back produces.
+
+    Spaces were briefly banned here because the guide prints commands to
+    be retyped and `-p Morning 2026-09-15` reads as a project called
+    Morning plus a stray argument. That is now fixed where it belonged,
+    in Step.pretty, which quotes it.
     """
-    keep = [c if (c.isalnum() or c in "-_.") else "_" for c in name.strip()]
-    return "".join(keep).strip("_") or ""
+    kept = "".join(" " if (c in ILLEGAL or ord(c) < 32) else c for c in name)
+    return " ".join(kept.split()).strip(" .")
 
 
 def projects_dir() -> Path:

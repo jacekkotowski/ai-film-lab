@@ -142,11 +142,22 @@ def test_a_second_film_in_the_same_afternoon_gets_its_own_name():
     assert guide.default_name(when, taken=[first, first + "_2"]) == first + "_3"
 
 
-def test_a_typed_name_with_spaces_is_made_safe():
-    """The prompt said "no spaces" and nothing enforced it, so a film
-    called `Morning 2026-09-15` got made."""
-    assert guide.tidy_name("Morning 2026-09-15") == "Morning_2026-09-15"
-    assert " " not in guide.tidy_name("  two  words  ")
+def test_a_name_written_as_words_stays_words():
+    """The project name IS the film's title, and a title is written with
+    spaces. Turning them into underscores and title-casing them back
+    gives `Zima Nad Morzem` for a Polish name that was already correct.
+
+    Spaces were banned here for a while because the guide prints
+    commands to be retyped, and `-p Morning 2026-09-15` reads as a
+    project called Morning plus a stray argument. That belongs in
+    Step.pretty, which quotes it -- not here."""
+    assert guide.tidy_name("Zima nad morzem") == "Zima nad morzem"
+    assert guide.tidy_name("  two   words  ") == "two words"
+
+
+def test_only_what_windows_refuses_is_taken_out():
+    assert guide.tidy_name('a/b:c*d') == "a b c d"
+    assert guide.tidy_name("..hidden..") == "hidden"
 
 
 def test_a_name_of_nothing_but_punctuation_falls_back(tmp_path):

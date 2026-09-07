@@ -225,3 +225,14 @@ def test_headers_of_a_file_that_is_not_a_mapping(tmp_path):
     yml = tmp_path / "film.yaml"
     yml.write_text("- just\n- a list\n", encoding="utf-8")
     assert headers(yml) == {}
+
+
+def test_a_name_already_written_as_words_is_not_title_cased():
+    """Underscores are a request to be turned into a title. Spaces are a
+    title already -- and `Zima Nad Morzem` is wrong where `Zima nad
+    morzem` was right. Same for anything with its own capitals."""
+    assert pretty_name("Zima nad morzem") == "Zima nad morzem"
+    assert pretty_name("D-Day weather") == "D-Day weather"
+    assert pretty_name("The Medallion") == "The Medallion"
+    # ...and underscores still behave exactly as they did
+    assert pretty_name("the_medallion") == "The Medallion"

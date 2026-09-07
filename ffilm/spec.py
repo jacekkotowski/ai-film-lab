@@ -276,8 +276,16 @@ def pretty_name(stem: str) -> str:
 
     A folder name and a filename are usually already the words somebody
     wanted; they are just wearing underscores.
+
+    Unless they are not. A name with a space in it was typed as words by
+    a person who meant those words -- `Zima nad morzem` is Polish and is
+    correct; title-casing it to `Zima Nad Morzem` is not. Underscores are
+    a request to be turned into a title; spaces are a title already.
     """
-    words = re.split(r"[_\-]+", stem.strip())
+    stem = stem.strip()
+    if " " in stem:
+        return stem
+    words = re.split(r"[_\-]+", stem)
     return " ".join(w.capitalize() for w in words if w)
 
 
