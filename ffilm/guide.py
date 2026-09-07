@@ -502,7 +502,18 @@ def _make_project() -> Path | None:
     if name.lower() == "q":
         print("\nNothing created.")
         return None
-    name = tidy_name(name) or suggested
+    typed, name = name.strip(), tidy_name(name) or suggested
+    # The name becomes the title, so a character quietly disappearing
+    # from it is a title quietly wrong. Windows will not have < > : " /
+    # \ | ? * in a folder name and there is nothing to be done about
+    # that -- but being told beats finding out on the thumbnail.
+    if typed and name != typed:
+        lost = "".join(sorted({c for c in typed if c in ILLEGAL}))
+        if lost:
+            print(f"\n  Windows will not have {' '.join(lost)} in a folder "
+                  f"name, so this film is called\n  \"{name}\".")
+            print(f"  For the full version on screen, put it in film.yaml:"
+                  f"\n      title: \"{typed}\"")
     shape = _ask("ENTER for vertical (Shorts), or W for widescreen:  ")
     args = ["new", name] + (["--wide"] if shape.lower() == "w" else [])
     print(f"\n  uv run film {' '.join(args)}")
