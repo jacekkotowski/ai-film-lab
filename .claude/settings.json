@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run --extra dev pytest)",
+      "Bash(uv run --extra dev pytest -q)",
+      "Bash(uv --version)",
+      "Bash(ffprobe *)"
+    ]
+  }
+}
