@@ -199,6 +199,20 @@ def shorts_problems(width: int, height: int, duration: float,
     return out
 
 
+# How much of the description these lines may take. YouTube's box holds
+# 5000 characters and the rest of what goes in it is a fixed handful of
+# words, so this is nearly all of it.
+#
+# There used to be a bare `said[:12]` here instead, with no comment and
+# no reason, and it did the one thing a limit must never do quietly: a
+# 51-second film with sixteen captions had its last four -- its whole
+# ending -- dropped from the description, and nothing said so. Counting
+# characters rather than lines is what makes the number defensible: it
+# is the actual constraint. Saying so when it bites is what makes it
+# honest.
+UPLOAD_DESCRIPTION_BUDGET = 4000
+
+
 def upload_notes(title: str, film, problems: list[str]) -> str:
     """The words to paste into YouTube, written out once.
 
@@ -214,8 +228,18 @@ def upload_notes(title: str, film, problems: list[str]) -> str:
             said.append((at, c.text))
         t += s.duration
     if said:
-        for at, text in said[:12]:
-            lines.append(f"  {int(at) // 60}:{int(at) % 60:02d}  {text}")
+        kept = []
+        room = UPLOAD_DESCRIPTION_BUDGET
+        for at, text in said:
+            line = f"  {int(at) // 60}:{int(at) % 60:02d}  {text}"
+            if kept and len(line) + 1 > room:
+                break
+            kept.append(line)
+            room -= len(line) + 1
+        lines += kept
+        if len(kept) < len(said):
+            lines.append(f"  ... and {len(said) - len(kept)} more, left "
+                         f"out to stay inside YouTube's description box.")
         lines.append("")
     lines.append("#Shorts")
     lines.append("")

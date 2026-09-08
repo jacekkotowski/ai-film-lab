@@ -345,3 +345,41 @@ def test_an_ordinary_cover_is_not_needlessly_degraded(tmp_path):
     out = tmp_path / "cover.jpg"
     save(photo(1080, 1920), out)
     assert out.stat().st_size < MAX_BYTES
+
+
+# --------------------------------------------------------------------------
+# What to paste into YouTube
+# --------------------------------------------------------------------------
+
+def film_of(*texts, dur=51.5):
+    """A stand-in film carrying one shot and some captions."""
+    from types import SimpleNamespace as NS
+    caps = [NS(at=float(i) * 2.0, text=t) for i, t in enumerate(texts)]
+    shot = NS(captions=caps, duration=dur)
+    return NS(shots=[shot], duration=dur, width=1080, height=1920)
+
+
+def test_every_caption_reaches_the_description():
+    """There was a bare `said[:12]` here once. A 51-second film with
+    sixteen captions lost its last four -- the whole ending -- and the
+    file gave no sign that anything had been left out."""
+    texts = [f"line {i}" for i in range(16)]
+    out = cover.upload_notes("T", film_of(*texts), [])
+    for t in texts:
+        assert t in out, f"{t} was dropped from the description"
+
+
+def test_a_description_that_will_not_fit_says_so():
+    """Trimming is allowed. Trimming in silence is not -- that is the
+    whole reason the old limit went unnoticed for as long as it did."""
+    texts = [f"line {i} " + "x" * 200 for i in range(60)]
+    out = cover.upload_notes("T", film_of(*texts), [])
+    assert len(out) < cover.UPLOAD_DESCRIPTION_BUDGET + 500
+    assert "more, left out" in out
+
+
+def test_one_enormous_caption_is_still_listed():
+    """Better an over-long description that can be cut by hand than one
+    that mysteriously has no chapters at all."""
+    out = cover.upload_notes("T", film_of("y" * 6000), [])
+    assert "yyyy" in out

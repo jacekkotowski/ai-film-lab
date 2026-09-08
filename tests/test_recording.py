@@ -597,3 +597,38 @@ def test_a_frozen_take_is_explained_by_the_camera_not_the_person():
     assert "never moved" in note
     assert "virtual camera" in note
     assert "film devices" in note, "say how to fix it, not just what broke"
+
+
+# --------------------------------------------------------------------------
+# A take that is quiet rather than silent
+# --------------------------------------------------------------------------
+
+def test_a_take_at_the_usual_level_is_not_worth_mentioning():
+    """Nine of my takes peak at 0.0dBFS. Warning about those would train
+    somebody to ignore the warning."""
+    for peak in (0.0, -0.4, -3.0, -9.9):
+        assert record.level_note(peak) == []
+
+
+def test_a_take_recorded_17db_down_is_mentioned():
+    """The two takes recorded after a conferencing app pulled the Windows
+    capture level from 80% to 55% peaked at -16.1 and -17.3dBFS. Nothing
+    in the toolkit said a word about either, and both were edited and
+    rendered before anybody noticed."""
+    for peak in (-16.1, -17.3):
+        assert record.level_note(peak) != []
+
+
+def test_the_quiet_note_sends_you_to_the_windows_level_not_to_the_mic():
+    """The gain on the device was never touched -- an application moved
+    the capture slider. Telling somebody to turn up a microphone that is
+    already up is how they end up making it worse."""
+    note = record.level_note(-17.3)[0]
+    assert "Windows" in note
+    assert "conferencing" in note
+
+
+def test_a_take_with_no_measurable_level_says_nothing():
+    """No audio stream, or a volumedetect that printed nothing. Silence
+    is `was_silent`'s job and it has a better message for it."""
+    assert record.level_note(None) == []

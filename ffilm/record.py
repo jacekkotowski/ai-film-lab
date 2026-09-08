@@ -489,6 +489,23 @@ def choose_devices(devices: list[Device], saved: dict,
 # --------------------------------------------------------------------------
 
 
+def volume_of(path: Path) -> tuple[float | None, float | None]:
+    """The take's mean and peak level in dBFS, in one pass.
+
+    Both come out of the same `volumedetect`, because there are two
+    different questions to ask of a take and no reason to read the file
+    twice to ask them.
+    """
+    text = _ffmpeg_text(["-hide_banner", "-i", str(path), "-map", "0:a",
+                         "-af", "volumedetect", "-f", "null", "-"])
+
+    def find(key: str) -> float | None:
+        m = re.search(rf"{key}:\s*(-?[\d.]+) dB", text)
+        return float(m.group(1)) if m else None
+
+    return find("mean_volume"), find("max_volume")
+
+
 def was_silent(path: Path) -> bool:
     """Did the microphone actually pick anything up?
 
@@ -496,10 +513,42 @@ def was_silent(path: Path) -> bool:
     muted in the Windows mixer records a perfect, confident, silent
     take, and the moment to find that out is now.
     """
-    text = _ffmpeg_text(["-hide_banner", "-i", str(path), "-map", "0:a",
-                         "-af", "volumedetect", "-f", "null", "-"])
-    m = re.search(r"mean_volume:\s*(-?[\d.]+) dB", text)
-    return bool(m) and float(m.group(1)) < -50.0
+    mean, _ = volume_of(path)
+    return mean is not None and mean < -50.0
+
+
+# A take that is merely quiet, as opposed to silent. `was_silent` draws
+# its line at a mean of -50dB, which is a microphone muted or unplugged.
+# This is the other failure, and the one that actually happened: every
+# device works, the picture is fine, the level is simply low, and nothing
+# anywhere says so.
+#
+# Measured across my own takes, peak level (volumedetect max_volume):
+#
+#     nine takes at the usual capture level          0.0 dB
+#     two recorded after an app pulled it to 55%   -16.1 and -17.3 dB
+#
+# Peak, not mean: mean falls when you leave long pauses, and a take with
+# thinking in it is not a quiet take. -10 sits ten dB below the good ones
+# and six above the bad, which is as much daylight as a threshold gets.
+#
+# Worth saying even though the edit lifts the voice anyway. The lift
+# rescues the level; it cannot rescue the signal-to-noise ratio that was
+# never recorded, and the whole cost is paid silently.
+QUIET_PEAK_DB = -10.0
+
+
+def level_note(peak: float | None) -> list[str]:
+    """Was that loud enough to be worth keeping? Pure, so it is checked
+    in a test rather than by recording something quiet on purpose."""
+    if peak is None or peak >= QUIET_PEAK_DB:
+        return []
+    return [f"that take peaks at {peak:.0f}dBFS -- about {abs(peak):.0f}dB "
+            f"below where this machine usually records. The film will "
+            f"still sound right, because the edit lifts the voice, but "
+            f"quiet is signal you do not get back. Check the microphone "
+            f"level in Windows: conferencing apps turn it down and do "
+            f"not put it back."]
 
 
 # How long the picture has to sit perfectly still before it counts as
@@ -571,6 +620,8 @@ def verify_take(path: Path, mode: tuple[int, int, float] | None,
         warnings.append("that take is silent. The microphone is connected "
                         "but nothing reached it -- it is probably muted, "
                         "either in Windows or by a switch on the device.")
+    elif want_audio:
+        warnings += level_note(volume_of(path)[1])
 
     frames = next((int(s.get("nb_frames") or 0) for s in streams
                    if s.get("codec_type") == "video"), 0)
