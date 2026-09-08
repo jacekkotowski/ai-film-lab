@@ -4,7 +4,25 @@
       "Bash(uv run --extra dev pytest)",
       "Bash(uv run --extra dev pytest -q)",
       "Bash(uv --version)",
-      "Bash(ffprobe *)"
+
+      "Bash(ffprobe *)",
+      "Bash(ffmpeg *)",
+
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(sed -n *)",
+      "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(find *)",
+
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git show *)"
     ]
   }
 }

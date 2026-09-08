@@ -52,9 +52,41 @@ CLICK_FADE = 0.02      # seconds of fade at each end of a speech segment
 SPEECH_NORM = "speechnorm=p=0.7:e=6:r=0.0003:l=1"
 
 # Before the expansion: take the hiss out, so there is less of it to
-# lift. Broadband, gentle, and it does not touch the voice (measured:
-# +0.1dB on speech).
-DENOISE = "afftdn=nf=-25"
+# lift. Broadband, gentle, and it does not touch the voice.
+#
+# `nf` tells afftdn where the noise floor is, and it is ABSOLUTE dBFS --
+# so a fixed number is only right for a take recorded at the level it was
+# tuned for. It used to be -25: the loud end of the filter's own range
+# (-80..-20), and 25dB hotter than ffmpeg's own default. On a take
+# peaking near 0dBFS that is survivable. On a quiet one it is not.
+# Consonants are broadband and low-energy, so to a spectral denoiser
+# that has been told the room sits at -25dB, an `s` IS the room.
+#
+# Measured on two of my own takes -- sibilance (4-10kHz, relative to the
+# whole signal) against not denoising at all:
+#
+#                     take at -17dBFS peak     take at 0dBFS peak
+#                     (floor -56, SNR 17)      (floor -38, SNR 23)
+#     nf=-25                -9.2 dB                  -1.1 dB
+#     nf=-50                -0.5 dB                   0.0 dB
+#     nf=-50:tn=1           -0.2 dB                   0.0 dB
+#
+# That 9.2dB is entirely consonants, and it is why a quiet take can come
+# back sounding like the plosives were edited out. They were.
+#
+# `tn=1` is what makes one setting serve every take: afftdn tracks the
+# noise floor as it goes instead of trusting the number. It also adapts
+# in the useful direction -- on the quieter take, the one with the WORSE
+# signal-to-noise ratio, it removed 11.7dB of hiss; on the cleaner one,
+# 2.7dB. `nf` stays at ffmpeg's default as the estimate it starts from.
+#
+# Not `tr=1` (track residual). It denoises harder -- 11.6dB on the loud
+# take -- and starts costing consonants again on the quiet one (-2.8dB).
+#
+# Caveat worth knowing: tracking needs a little audio to converge, and
+# `speech_chain` trims per shot. A shot starting mid-word gives it no
+# room tone to learn from, so it does less. Less is the safe direction.
+DENOISE = "afftdn=nf=-50:tn=1"
 
 # After the expansion: close the gaps completely. This has to come after,
 # not before -- a gate ahead of the normaliser is pointless, because
