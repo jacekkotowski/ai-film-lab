@@ -1,0 +1,95 @@
+fps: 24
+resolution:
+- 1080
+- 1920
+music_volume: 0.6
+music_fade: 2.0
+music_duck: 0.5
+look:
+  preset: old_film
+  glow: 0.25
+shots:
+- id: s00
+  src: analysis/title.jpg
+  duration: 4.0
+  move: static
+  note: the opening card -- the same picture and the same words as the thumbnail, so clicking
+    the miniature lands you on the frame you clicked. Made from your library; delete this whole
+    block if you would rather open on yourself talking.
+- id: s01
+  src: media/rec_20260908-174744.mp4
+  in: '00:00.00'
+  out: '00:56.95'
+  speed: 1.2
+  move: static
+  amount: 0.6
+  focus:
+  - 0.422
+  - 0.39
+  note: 'kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out:
+    if it drags'
+  captions:
+  - text: A child is not a limitation on your freedom.
+    at: 1.45
+    dur: 2.93
+    pos: lower_third
+  - text: It makes you someone in particular.
+    at: 5.57
+    dur: 2.13
+    pos: lower_third
+  - text: I chose particular.
+    at: 8.83
+    dur: 1.33
+    pos: lower_third
+  - text: Actual names.
+    at: 11.5
+    dur: 0.73
+    pos: lower_third
+  - text: Actual days.
+    at: 13.1
+    dur: 0.66
+    pos: lower_third
+  - text: Actual hands.
+    at: 14.28
+    dur: 0.76
+    pos: lower_third
+  - text: Today I saw a pregnant woman on a bus.
+    at: 16.23
+    dur: 2.69
+    pos: lower_third
+  - text: No one gave her a seat.
+    at: 19.37
+    dur: 1.11
+    pos: lower_third
+  - text: Someone behind her called her a slut.
+    at: 21.57
+    dur: 3.33
+    pos: lower_third
+  - text: That is a polis that owes nothing forward,
+    at: 26.45
+    dur: 3.31
+    pos: lower_third
+  - text: so it carries nothing forward.
+    at: 30.08
+    dur: 1.93
+    pos: lower_third
+  - text: Not even a seat.
+    at: 33.0
+    dur: 1.41
+    pos: lower_third
+  - text: I chose particular.
+    at: 36.57
+    dur: 1.1
+    pos: lower_third
+  - text: That is the tradition.
+    at: 38.65
+    dur: 1.04
+    pos: lower_third
+  - text: I am not theorizing it.
+    at: 40.73
+    dur: 1.54
+    pos: lower_third
+  - text: I am running it.
+    at: 42.87
+    dur: 1.36
+    pos: lower_third
