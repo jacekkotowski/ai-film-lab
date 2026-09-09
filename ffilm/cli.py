@@ -291,8 +291,6 @@ def cmd_caption(args) -> None:
             "default (it's about 100 MB, so it stays optional). Install it "
             "once with:\n\n  uv sync --extra voice\n\nthen run this again."
         )
-    import yaml as _yaml
-
     if args.audio:
         audio = Path(args.audio)
         if not audio.is_absolute():
@@ -372,23 +370,22 @@ def cmd_caption(args) -> None:
               "save, and run peek again.")
         return
 
-    raw = _yaml.safe_load((project / "film.yaml").read_text(encoding="utf-8"))
-    for shot in raw.get("shots", []):
-        caps = all_placed.get(shot.get("id", ""))
-        if not caps:
-            continue
-        shot.setdefault("captions", [])
-        for c in caps:
-            # float()/str() on the way in, and safe_dump on the way out.
-            # Between them, nothing that is not a plain YAML value can be
-            # written into your film -- an unreadable film.yaml is a far
-            # worse outcome than a caption that fails to write.
-            shot["captions"].append({"text": str(c.text), "at": float(c.at),
-                                     "dur": float(c.dur), "pos": str(c.pos)})
-    (project / "film.yaml").write_text(
-        _yaml.safe_dump(raw, sort_keys=False, allow_unicode=True, width=90),
-        encoding="utf-8")
-    Film.load(project / "film.yaml")   # validate what we just wrote
+    # Spliced in as TEXT. It used to be safe_load + safe_dump, which is
+    # valid YAML and deleted every comment in the file -- including the
+    # whole header `film init` writes explaining what the numbers mean.
+    # `film go` captions on its own, so that header was gone before
+    # anybody had read the file once.
+    yml = project / "film.yaml"
+    before = yml.read_text(encoding="utf-8")
+    yml.write_text(scaffold.add_captions(before, all_placed), encoding="utf-8")
+    try:
+        Film.load(yml)                 # validate what we just wrote
+    except SystemExit as e:
+        yml.write_text(before, encoding="utf-8")
+        raise SystemExit(
+            f"Adding the captions would have broken film.yaml, so nothing "
+            f"was changed:\n\n  {e}\n\nThe transcript is still saved -- see "
+            f"above -- so nothing was lost.")
     print(f"Written. If any line came out wrong, open film.yaml and edit "
           f"the `text:` directly.")
     guide.print_next(project)
@@ -402,9 +399,14 @@ def cmd_go(args) -> None:
 
     # Check the boring things first. Discovering there is no ffmpeg two
     # minutes into a render is the sort of thing that makes people give up.
-    if preflight(project, verbose=False):
+    # Once, not twice: this used to run the whole check to decide whether
+    # to print it, and then run it all again to print it.
+    lines, problems = preflight_report(project)
+    if problems:
         print("Before anything else:\n")
-        preflight(project)
+        print("\n".join(lines))
+        for p in problems:
+            print(f"  STOP  {p}")
         raise SystemExit("\nFix the STOP line(s) above, then run this again.")
 
     print("[1/4] looking at your material")
@@ -504,6 +506,18 @@ def preflight(project: Path, verbose: bool = True) -> list[str]:
 
     Returns the list of problems. An empty list means go.
     """
+    lines, problems = preflight_report(project)
+    if verbose:
+        print("\n".join(lines))
+        for p in problems:
+            print(f"  STOP  {p}")
+    return problems
+
+
+def preflight_report(project: Path) -> tuple[list[str], list[str]]:
+    """The checks, as (what is fine, what is in the way). Separated from
+    the printing so that a caller which needs both the answer and the
+    text does not have to run every check twice to get them."""
     import shutil as _shutil
     from .ingest import faces_available
 
@@ -557,12 +571,7 @@ def preflight(project: Path, verbose: bool = True) -> list[str]:
     from . import guide as _guide
     lines.append("  ok    captions available" if _guide._voice_installed()
                  else "  --    captions off (uv sync --extra voice turns them on)")
-
-    if verbose:
-        print("\n".join(lines))
-        for p in problems:
-            print(f"  STOP  {p}")
-    return problems
+    return lines, problems
 
 
 def library_lines(project: Path) -> list[str]:
@@ -1142,9 +1151,6 @@ def main() -> None:
 
     p = sub.add_parser("check", help="validate film.yaml")
     p.add_argument("--project", "-p", default=None)
-    p.add_argument("--out", default=None)
-    p.add_argument("--seed", type=int, default=0)
-    p.add_argument("--font", default=None)
 
     p = sub.add_parser("edit", help="open the editing bench in your browser")
     p.add_argument("--project", "-p", default=None)

@@ -31,6 +31,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from .moves import EASINGS, MOVES
+from .scaffold import quoted
 from .spec import Film
 
 PAGE = r"""<!DOCTYPE html>
@@ -548,7 +549,7 @@ def dump(project: Path, data: dict) -> str:
                 for k in ("cx", "cy", "scale", "roll"):
                     L.append(f"      {k}: {float(win[k]):.4f}")
         if s.get("note"):
-            L.append(f"    note: {json.dumps(s['note'])}")
+            L.append(f"    note: {quoted(s['note'])}")
         caps = [c for c in s.get("captions", []) if str(c.get("text", "")).strip()]
         if caps:
             L.append("    captions:")
@@ -562,7 +563,7 @@ def dump(project: Path, data: dict) -> str:
                 cap_dur = min(round(float(c["dur"]), 1), dur - at)
                 if cap_dur <= 0:
                     continue                 # nothing of it is left on screen
-                L.append(f"      - text: {json.dumps(c['text'])}")
+                L.append(f"      - text: {quoted(c['text'])}")
                 L.append(f"        at: {at:.1f}")
                 L.append(f"        dur: {cap_dur:.1f}")
                 L.append(f"        pos: {c.get('pos', 'bottom')}")

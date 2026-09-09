@@ -463,15 +463,15 @@ def shot_block(s: Shot, m: dict) -> list[str]:
         else:
             note = ("kept whole -- there is sound on this one, so none "
                     "of what you said is cut. Trim in:/out: if it drags")
-        L.append(f"    note: {json.dumps(note)}")
+        L.append(f"    note: {quoted(note)}")
     elif e.get("focus_from") == "face":
         L.append("    note: \"face detected -- given longer screen time\"")
     elif e.get("from"):
-        L.append(f"    note: {json.dumps('converted from ' + Path(e['from']).name)}")
+        L.append(f"    note: {quoted('converted from ' + Path(e['from']).name)}")
     if s.captions:
         L.append("    captions:")
         for c in s.captions:
-            L.append(f"      - text: {json.dumps(c.text)}")
+            L.append(f"      - text: {quoted(c.text)}")
             L.append(f"        at: {c.at}")
             L.append(f"        dur: {c.dur}")
             L.append(f"        pos: {c.pos}")
@@ -662,6 +662,114 @@ def append_new(project: Path, seed: int = 0) -> list[str]:
             "thing in the file. Move any other settings above it, or run "
             "`uv run film go --rewrite` to start the edit over.")
     return [s.src for s in shots]
+
+
+# --------------------------------------------------------------------------
+# Putting captions into a film.yaml that a person has to go on reading
+# --------------------------------------------------------------------------
+
+
+def quoted(text: str) -> str:
+    """A string as a YAML double-quoted scalar, with its letters intact.
+
+    json.dumps quotes and escapes exactly the way YAML wants, which is
+    why it is used -- but it also escapes every non-ASCII character, so
+    `Kolobrzeg` with its proper letters came out as a row of \\u00f3.
+    That parses back correctly and is unreadable, in a file whose entire
+    purpose is being read by the person whose language it is in. The
+    file is written and read as UTF-8 at both ends.
+    """
+    return json.dumps(str(text), ensure_ascii=False)
+
+
+def _caption_lines(caps, indent: str) -> list[str]:
+    L = [f"{indent}captions:"]
+    for c in caps:
+        L.append(f"{indent}  - text: {quoted(c.text)}")
+        L.append(f"{indent}    at: {float(c.at):.2f}")
+        L.append(f"{indent}    dur: {float(c.dur):.2f}")
+        L.append(f"{indent}    pos: {c.pos}")
+    return L
+
+
+def add_captions(text: str, by_shot: dict[str, list]) -> str:
+    """Write captions into film.yaml AS TEXT, leaving everything else
+    exactly as it was found.
+
+    This used to go through yaml.safe_load and yaml.safe_dump, which is
+    correct YAML and the wrong thing entirely: comments are not data, so
+    every one of them was deleted. And `film go` runs captioning on its
+    own -- so the whole explanatory header `build` writes above, the one
+    that says what every number means, was gone before anybody had opened
+    the file once. Six of the eight films on the machine this was written
+    on had no comments left in them at all.
+
+    So: find each shot's block by its `- id:` line, find where that block
+    ends, and splice the captions in at the end of it. Nothing else in
+    the file is read, parsed or rewritten.
+
+    Appended after any captions already there, which is what the caller
+    promises. A shot whose id is not found is skipped rather than guessed
+    at.
+    """
+    lines = text.splitlines()
+
+    # Where each shot's block starts, and how far it is indented.
+    starts: list[tuple[int, str, str]] = []      # (line, id, indent)
+    for i, line in enumerate(lines):
+        m = re.match(r"^(\s*)-\s+id:\s*(\S+)\s*$", line)
+        if m:
+            starts.append((i, m.group(2).strip('"\''), m.group(1)))
+
+    inserts: dict[int, list[str]] = {}
+    for n, (at, sid, dash_indent) in enumerate(starts):
+        caps = by_shot.get(sid)
+        if not caps:
+            continue
+        # The block runs to the next shot, or to the first line at or
+        # left of the dash's own indent -- which is where `shots:` ends
+        # and whatever follows it begins.
+        end = starts[n + 1][0] if n + 1 < len(starts) else len(lines)
+        for j in range(at + 1, end):
+            stripped = lines[j].strip()
+            if not stripped:
+                continue                  # a blank line settles nothing
+            lead = len(lines[j]) - len(lines[j].lstrip())
+            # A comment counts, and has to. `film init` signs the file off
+            # with a `# 3 shots, about 16 seconds.` at column 0, and
+            # skipping every comment meant the last shot's block ran to
+            # the end of the file -- so its captions were written BELOW
+            # the footer, outside the shots list, where nothing would read
+            # them. An INDENTED comment is a note inside the shot and
+            # stays in it.
+            if lead <= len(dash_indent):
+                end = j
+                break
+        # A shot's own keys sit one level in from the dash: "  - id:" ->
+        # "    src:". Read it off the block rather than assuming two.
+        indent = dash_indent + "  "
+        for j in range(at + 1, end):
+            if lines[j].strip() and not lines[j].strip().startswith("#"):
+                indent = lines[j][:len(lines[j]) - len(lines[j].lstrip())]
+                break
+        while end > at + 1 and not lines[end - 1].strip():
+            end -= 1                      # before the blank line, not after
+
+        body = _caption_lines(caps, indent)
+        has_captions = any(
+            lines[j].strip() == "captions:" for j in range(at + 1, end))
+        if has_captions:
+            body = body[1:]               # the key is already there
+        inserts[end] = body
+
+    out: list[str] = []
+    for i, line in enumerate(lines):
+        if i in inserts:
+            out.extend(inserts.pop(i))
+        out.append(line)
+    for rest in inserts.values():         # captions on the very last shot
+        out.extend(rest)
+    return "\n".join(out) + "\n"
 
 
 def write(project: Path, force: bool = False, seed: int = 0,

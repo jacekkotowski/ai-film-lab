@@ -162,8 +162,9 @@ def blurred_fill(src: np.ndarray, win: Window, ow: int, oh: int,
     top = (oh - inner_h) // 2
     t = int(sh * top / oh)
     b = int(sh * (top + inner_h) / oh)
+    has_strips = t > 0 or b < sh
     strips = np.concatenate([small[:t].reshape(-1, 3),
-                             small[b:].reshape(-1, 3)]) if t or b < sh else small
+                             small[b:].reshape(-1, 3)]) if has_strips else small
     gain = FILL_LEVEL * float(inner.mean()) / max(float(strips.mean()), 1.0)
     gain = min(FILL_MAX_GAIN, max(FILL_MIN_GAIN, gain))
 
@@ -384,6 +385,19 @@ def _glow(frame: np.ndarray, strength: float) -> np.ndarray:
 
 
 _scratch_cache: dict = {}
+
+
+def forget_look_cache() -> None:
+    """Drop the grade's precomputed tables.
+
+    They are keyed by frame size, and one entry is not small: the grain
+    is eight tiles of float32 at the full frame, which at 1080x1920 is
+    66 MB. One render of each tier in one process -- which is exactly
+    what the bench does, peek then draft, over and over -- kept all
+    three alive forever. Nothing needs them between films.
+    """
+    _cache.clear()
+    _scratch_cache.clear()
 
 
 def _scratches(w: int, h: int, rng: np.random.Generator,
@@ -657,11 +671,14 @@ def ffprobe_bin() -> str:
     )
 
 
-def open_encoder(out: Path, w: int, h: int, fps: int, q: Quality,
-                 audio: Path | None, audio_offset: float):
+def open_encoder(out: Path, w: int, h: int, fps: int, q: Quality):
     """Video only. Sound is added afterwards by audio.build_soundtrack --
     doing it in one pass meant `-shortest` could cut the picture short
-    whenever the audio ran out first, which is the common case."""
+    whenever the audio ran out first, which is the common case.
+
+    It used to take `audio` and `audio_offset` and use neither, which
+    reads as though sound might still happen here. It cannot.
+    """
     args = [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error",
             "-f", "rawvideo", "-pix_fmt", "bgr24",
             "-s", f"{w}x{h}", "-r", str(fps), "-i", "-"]
@@ -694,11 +711,14 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
     if audio is not None and not audio.exists():
         raise SystemExit(f"Audio file not found: {audio}")
 
-    needs_sound = bool(film.audio or film.music) or any(
-        sh.kind == "video" for sh in film.shots) and film.keep_clip_audio
+    # Parenthesised, not because it was wrong -- `and` binds tighter, so
+    # this always meant what it says -- but because reading it required
+    # knowing that, and the cost of getting it wrong one day is a film
+    # that renders silent with nothing to say why.
+    needs_sound = bool(film.audio or film.music) or (
+        film.keep_clip_audio and any(sh.kind == "video" for sh in film.shots))
     video_target = out.with_name(out.stem + "__silent.mp4") if needs_sound else out
-    proc = open_encoder(video_target, ow, oh, fps, quality, audio,
-                        film.audio_offset)
+    proc = open_encoder(video_target, ow, oh, fps, quality)
     total = sum(frames_for(s.duration, fps) for s in film.shots)
     done = 0
     stopped_early = False
@@ -838,4 +858,5 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
                              quiet=quiet)
         finally:
             video_target.unlink(missing_ok=True)
+    forget_look_cache()
     return out

@@ -148,6 +148,66 @@ def atempo_chain(speed: float) -> list[str]:
     return out
 
 
+# Windows will not run a command longer than 32767 characters, and this
+# is the one command here that grows without limit: the filter graph
+# gains a chain of about 350 characters for every separate piece of
+# speech, and every piece is built TWICE -- once for what you hear and
+# once for the sidechain that ducks the music under it (see the note in
+# build_soundtrack about why the trigger is its own decode).
+#
+# Nine talking shots, which is one ordinary take cut at its pauses, is
+# already eighteen. A ten-minute take is routinely thirty pieces, so
+# sixty chains, and past the limit the whole film loses its soundtrack
+# for a reason no error message would ever have explained.
+#
+# Left generous, because the inline form is what has always worked and
+# what every version of ffmpeg accepts. The file form below is only for
+# the graphs that genuinely will not fit.
+COMMAND_LIMIT = 24000
+
+_graph_flag: list = []          # one probe per process, cached
+
+
+def graph_file_flag() -> str | None:
+    """How THIS ffmpeg takes a filter graph from a file, or None.
+
+    It is not one spelling. `-filter_complex_script` was the answer for
+    years and was removed in ffmpeg 7.1; the generic `-/filter_complex`
+    replaced it and does not exist before that. Measured here: 9.0.1
+    rejects the old one outright with "Unrecognized option", which is a
+    failure at argument-parsing time, before any work -- so asking is
+    cheap and guessing is not.
+
+    Asked with a tenth of a second of silence, once, and remembered.
+    """
+    if _graph_flag:
+        return _graph_flag[0]
+
+    from .render import ffmpeg_bin
+    import tempfile
+
+    answer = None
+    with tempfile.TemporaryDirectory() as d:
+        probe = Path(d) / "g.txt"
+        probe.write_text("[0:a]anull[a]", encoding="utf-8")
+        for flag in ("-/filter_complex", "-filter_complex_script"):
+            try:
+                r = subprocess.run(
+                    [ffmpeg_bin(), "-hide_banner", "-loglevel", "error",
+                     "-f", "lavfi", "-i", "anullsrc=d=0.1",
+                     flag, str(probe), "-map", "[a]", "-t", "0.1",
+                     "-f", "null", "-"],
+                    capture_output=True, text=True, errors="replace",
+                    timeout=30)
+            except (OSError, subprocess.SubprocessError):
+                continue
+            if r.returncode == 0:
+                answer = flag
+                break
+    _graph_flag.append(answer)
+    return answer
+
+
 def _glob_escape(s: str) -> str:
     """Filenames off a camera contain [ ] often enough to matter, and glob
     reads those as character classes."""
@@ -433,14 +493,39 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
     filters.append(f"[{final}]apad,atrim=0:{total:.3f},"
                   f"{norm}alimiter=limit=0.95[aout]")
 
-    args = [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error"]
-    args += inputs
-    args += ["-filter_complex", ";".join(filters),
-             "-map", "0:v", "-map", "[aout]",
-             "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
-             "-movflags", "+faststart", str(out)]
+    graph = ";".join(filters)
+    tail = ["-map", "0:v", "-map", "[aout]",
+            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+            "-movflags", "+faststart", str(out)]
+    head = [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error"] + inputs
 
-    r = subprocess.run(args, capture_output=True, text=True)
+    written: Path | None = None
+    if len(" ".join(head + tail)) + len(graph) < COMMAND_LIMIT:
+        args = head + ["-filter_complex", graph] + tail
+    else:
+        # Too long for a Windows command line -- see COMMAND_LIMIT. Hand
+        # ffmpeg the graph in a file instead.
+        written = out.with_name(out.stem + "__filters.txt")
+        written.parent.mkdir(parents=True, exist_ok=True)
+        written.write_text(graph.replace(";", ";\n"), encoding="utf-8")
+        flag = graph_file_flag()
+        if flag is None:
+            written.unlink(missing_ok=True)
+            raise SystemExit(
+                "This film has too many separate pieces of speech in it "
+                "for one ffmpeg command, and this ffmpeg is too old to "
+                "take the filter graph in a file.\n"
+                "Update it:  winget install --id Gyan.FFmpeg -e\n"
+                "Or join some shots up in film.yaml -- each `in:`/`out:` "
+                "pair on a talking clip is one of the pieces.")
+        args = head + [flag, str(written)] + tail
+
+    try:
+        r = subprocess.run(args, capture_output=True, text=True,
+                           errors="replace")
+    finally:
+        if written is not None:
+            written.unlink(missing_ok=True)
     if r.returncode != 0:
         raise SystemExit("ffmpeg failed building the soundtrack:\n"
                          + r.stderr.strip()[-700:])
