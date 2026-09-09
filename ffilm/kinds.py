@@ -43,6 +43,24 @@ DISCARDED_DIRNAME = "_discarded"
 # Everything inside media/ that is NOT material.
 ASIDE_DIRNAMES = (UNREADABLE_DIRNAME, DISCARDED_DIRNAME)
 
+
+def is_aside(path: str | Path, media: str | Path) -> bool:
+    """Is this file in one of the folders inside media/ that is not
+    material -- a take you discarded, a file that could not be read?
+
+    A function and not four separate re-implementations of the same
+    `set(...) & set(...)`, because that is exactly how the rule got
+    applied in some scans and not others: ingest skipped them, the guide
+    counted them as footage, `scaffold` picked a discarded take's audio
+    as the film's narration, and `voice` transcribed a fluffed take and
+    captioned its words onto the good one.
+    """
+    try:
+        parts = Path(path).relative_to(media).parts
+    except ValueError:
+        return False
+    return bool(set(ASIDE_DIRNAMES) & set(parts))
+
 # What may sit behind a title on a thumbnail. A superset of STILL, and
 # deliberately NOT part of it: a .gif in media/ would be found by ingest
 # and turned into a shot, and OpenCV cannot decode one, so that shot

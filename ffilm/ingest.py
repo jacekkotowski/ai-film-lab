@@ -14,6 +14,7 @@ ask me to build a sequence -- it is how the toolkit and I share an eye.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -23,6 +24,7 @@ import cv2
 import numpy as np
 
 from . import kinds
+from . import pix
 from .render import ffmpeg_bin, ffprobe_bin
 from .spec import Shot
 
@@ -40,6 +42,67 @@ HEIC_EXT = kinds.HEIC
 # look or a repair tool, and that call is always yours, not this
 # toolkit's. Named in kinds.py because guide.py scans media/ too.
 UNREADABLE_DIRNAME = kinds.UNREADABLE_DIRNAME
+
+
+# --------------------------------------------------------------------------
+# Naming the derived files
+# --------------------------------------------------------------------------
+
+
+def analysis_keys(rels: list[str]) -> dict[str, str]:
+    """A name for each media file's derived artefacts -- its proxy, its
+    cuts, its thumbnails, its extracted audio, its converted jpg.
+
+    All five used to be `<stem>.<ext>`, and media/ is scanned
+    recursively, so any two files sharing a stem shared all five:
+
+        media/dzien1/IMG_0042.MOV   and   media/dzien2/IMG_0042.mp4
+        IMG_0042.HEIC               and   IMG_0042.JPG
+
+    Both of those come off an ordinary phone or camera card, where
+    numbering restarts and the same counter appears in every folder. The
+    second file overwrote the first's proxy, and the film then showed
+    one clip where two were meant.
+
+    So the key is the stem where the stem is unique, and the stem plus a
+    little of the path's hash where it is not. Unique is the ordinary
+    case -- one flat media/ folder of differently-named files -- which
+    means every project that already exists keeps the exact names it has
+    and nothing is re-analysed for the sake of this.
+    """
+    seen: dict[str, int] = {}
+    for rel in rels:
+        stem = Path(rel).stem
+        seen[stem] = seen.get(stem, 0) + 1
+
+    keys: dict[str, str] = {}
+    for rel in rels:
+        stem = Path(rel).stem
+        if seen[stem] == 1:
+            keys[rel] = stem
+        else:
+            tag = hashlib.sha1(rel.encode("utf-8")).hexdigest()[:6]
+            keys[rel] = f"{stem}_{tag}"
+    return keys
+
+
+def key_of(project: Path, src: str) -> str:
+    """The key ingest gave this file, read back off the manifest.
+
+    Falls back to the bare stem, which is what a manifest written before
+    keys existed implies -- so an old project keeps working with no
+    re-ingest.
+    """
+    mf = project / "analysis" / "manifest.json"
+    try:
+        data = json.loads(mf.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return Path(src).stem
+    want = Path(src).as_posix()
+    for e in data.get("media", []):
+        if e.get("path") == want:
+            return e.get("key") or Path(src).stem
+    return Path(src).stem
 
 
 # --------------------------------------------------------------------------
@@ -170,15 +233,39 @@ def find_focus(img: np.ndarray) -> tuple[tuple[float, float], str]:
 # --------------------------------------------------------------------------
 
 
+# Nothing here may hang the whole ingest. ffmpeg on a truncated or
+# malformed file can sit forever without printing anything, and a
+# toolkit that stops responding with no message is worse than one that
+# says "I could not read that". Generous, because a long clip really
+# does take a while to walk: this is a stuck-process limit, not a
+# performance one.
+PROBE_TIMEOUT = 60          # reading metadata: seconds, or it is stuck
+PASS_TIMEOUT = 1800         # a whole pass over the audio or the picture
+
+
+def _run(args: list[str], timeout: int):
+    """subprocess.run, but a hung or missing ffmpeg is not a traceback.
+
+    Returns None when it could not be run or did not finish, which every
+    caller already has to handle for the non-zero-exit case anyway.
+    """
+    try:
+        return subprocess.run(args, capture_output=True, text=True,
+                              errors="replace", timeout=timeout)
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
 def probe(path: Path) -> dict:
     exe = ffprobe_bin()
-    out = subprocess.run(
-        [exe, "-v", "error", "-print_format", "json", "-show_format",
-         "-show_streams", str(path)],
-        capture_output=True, text=True)
-    if out.returncode != 0:
+    out = _run([exe, "-v", "error", "-print_format", "json", "-show_format",
+                "-show_streams", str(path)], PROBE_TIMEOUT)
+    if out is None or out.returncode != 0:
         return {}
-    return json.loads(out.stdout or "{}")
+    try:
+        return json.loads(out.stdout or "{}")
+    except ValueError:
+        return {}
 
 
 def video_info(path: Path) -> dict:
@@ -236,15 +323,15 @@ def convert_heic(src: Path, dst: Path) -> bool:
     if dst.exists() and dst.stat().st_mtime > src.stat().st_mtime:
         return True
     dst.parent.mkdir(parents=True, exist_ok=True)
-    r = subprocess.run(
+    r = _run(
         # -map 0:v:0 on purpose: a HEIC can carry more than one image
         # (thumbnails, depth maps, HDR gain maps). Take the first, which is
         # the photo, not whatever ffmpeg decides is "best".
         [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error",
          "-i", str(src), "-map", "0:v:0", "-frames:v", "1", "-q:v", "2",
          str(dst)],
-        capture_output=True, text=True)
-    return r.returncode == 0 and dst.exists()
+        PROBE_TIMEOUT)
+    return r is not None and r.returncode == 0 and dst.exists()
 
 
 # A proxy is a 480p stand-in for `peek` and `draft`, which are the rough
@@ -256,7 +343,7 @@ def convert_heic(src: Path, dst: Path) -> bool:
 PROXY_FPS = 30
 
 
-def make_proxy(src: Path, dst: Path, height: int = 480) -> None:
+def make_proxy(src: Path, dst: Path, height: int = 480) -> bool:
     """The 480p stand-in. Software decoding on purpose.
 
     -hwaccel looks like the obvious win here and is the opposite of one:
@@ -268,13 +355,18 @@ def make_proxy(src: Path, dst: Path, height: int = 480) -> None:
     different toolkit.
     """
     if dst.exists() and dst.stat().st_mtime > src.stat().st_mtime:
-        return
+        return True
     dst.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
+    # Not check=True. One file ffmpeg dislikes used to raise
+    # CalledProcessError out of the middle of the loop and take the whole
+    # ingest with it -- so forty good photographs were lost to one bad
+    # clip. The caller sets that file aside instead.
+    r = _run(
         [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error", "-i", str(src),
          "-vf", f"fps={PROXY_FPS},scale=-2:{height}",
          "-c:v", "libx264", "-preset", "veryfast",
-         "-crf", "28", "-g", "12", "-an", str(dst)], check=True)
+         "-crf", "28", "-g", "12", "-an", str(dst)], PASS_TIMEOUT)
+    return r is not None and r.returncode == 0 and dst.exists()
 
 
 def quarantine(path: Path, media: Path, where: str | None = None) -> Path:
@@ -300,11 +392,9 @@ def quarantine(path: Path, media: Path, where: str | None = None) -> Path:
 
 def loudness(path: Path) -> tuple[float, float] | None:
     """(mean, peak) level of the clip in dBFS, or None if it has no audio."""
-    r = subprocess.run(
-        [ffmpeg_bin(), "-hide_banner", "-i", str(path), "-vn",
-         "-af", "volumedetect", "-f", "null", "-"],
-        capture_output=True, text=True)
-    if r.returncode != 0:
+    r = _run([ffmpeg_bin(), "-hide_banner", "-i", str(path), "-vn",
+              "-af", "volumedetect", "-f", "null", "-"], PASS_TIMEOUT)
+    if r is None or r.returncode != 0:
         return None
     mean = re.search(r"mean_volume:\s*(-?[0-9.]+) dB", r.stderr)
     peak = re.search(r"max_volume:\s*(-?[0-9.]+) dB", r.stderr)
@@ -348,11 +438,10 @@ def detect_sound(path: Path, duration: float, floor: str | None = None,
     quiet_none = {"has": False, "ratio": 0.0, "in": 0.0, "out": duration,
                   "quiet": []}
     db = silence_floor(path) if floor is None else float(str(floor).rstrip("dB"))
-    r = subprocess.run(
-        [ffmpeg_bin(), "-hide_banner", "-i", str(path), "-vn",
-         "-af", f"silencedetect=noise={db}dB:d={min_gap}", "-f", "null", "-"],
-        capture_output=True, text=True)
-    if r.returncode != 0 or duration <= 0:
+    r = _run([ffmpeg_bin(), "-hide_banner", "-i", str(path), "-vn",
+              "-af", f"silencedetect=noise={db}dB:d={min_gap}",
+              "-f", "null", "-"], PASS_TIMEOUT)
+    if r is None or r.returncode != 0 or duration <= 0:
         return quiet_none                       # no audio stream at all
 
     starts = [float(m) for m in re.findall(r"silence_start: (-?[0-9.]+)", r.stderr)]
@@ -378,10 +467,11 @@ def detect_sound(path: Path, duration: float, floor: str | None = None,
 
 def detect_cuts(path: Path, threshold: float = 0.28) -> list[float]:
     """Shot boundaries, in seconds. Run this on the proxy -- much faster."""
-    r = subprocess.run(
-        [ffmpeg_bin(), "-hide_banner", "-i", str(path), "-filter:v",
-         f"select='gt(scene,{threshold})',showinfo", "-f", "null", "-"],
-        capture_output=True, text=True)
+    r = _run([ffmpeg_bin(), "-hide_banner", "-i", str(path), "-filter:v",
+              f"select='gt(scene,{threshold})',showinfo",
+              "-f", "null", "-"], PASS_TIMEOUT)
+    if r is None:
+        return []
     return sorted({round(float(m), 2)
                    for m in re.findall(r"pts_time:([0-9.]+)", r.stderr)})
 
@@ -403,7 +493,7 @@ def contact_sheet(entries: list[dict], thumbs_dir: Path, out: Path,
     tiles = []
     for e in entries:
         tp = thumbs_dir / e["thumb"]
-        img = cv2.imread(str(tp))
+        img = pix.imread(tp)
         if img is None:
             continue
         h, w = img.shape[:2]
@@ -436,12 +526,111 @@ def contact_sheet(entries: list[dict], thumbs_dir: Path, out: Path,
         while len(row) < cols:
             row.append(np.full_like(tiles[0], 24))
         rows.append(np.hstack(row))
-    cv2.imwrite(str(out), np.vstack(rows), [cv2.IMWRITE_JPEG_QUALITY, 88])
+    pix.imwrite(out, np.vstack(rows), [cv2.IMWRITE_JPEG_QUALITY, 88])
+
+
+# --------------------------------------------------------------------------
+# What order were these taken in?
+# --------------------------------------------------------------------------
+
+# EXIF tag 36867, DateTimeOriginal: when the shutter actually fired.
+_EXIF_TAKEN = 36867
+_EXIF_FORMAT = "%Y:%m:%d %H:%M:%S"
+
+
+def taken_at(path: Path, probed: dict | None = None) -> float | None:
+    """When this was photographed or filmed. None when nothing says.
+
+    NOT the file's modification time. A folder copied off a card has
+    every mtime within the same second, in whatever order the copy
+    happened to run -- which is no order at all, and worse than none,
+    because it looks like one.
+    """
+    from datetime import datetime
+
+    suffix = path.suffix.lower()
+    if suffix in STILL_EXT:
+        try:
+            from PIL import Image
+            with Image.open(path) as im:
+                exif = im.getexif()
+            when = exif.get(_EXIF_TAKEN) if exif else None
+            if when:
+                return datetime.strptime(str(when),
+                                         _EXIF_FORMAT).timestamp()
+        except Exception:
+            return None
+        return None
+
+    tags = (probed or {}).get("format", {}).get("tags", {}) or {}
+    when = tags.get("creation_time") or tags.get("com.apple.quicktime.creationdate")
+    if not when:
+        return None
+    try:
+        return datetime.fromisoformat(
+            str(when).replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
+
+
+def in_capture_order(files: list[Path], when: dict[Path, float | None]
+                     ) -> list[Path]:
+    """Chronological if every file says when it was taken; otherwise the
+    alphabetical order it already had.
+
+    All-or-nothing on purpose. A part-timed set sorted by time puts the
+    photographs in order and then dumps the screen recording that has no
+    timestamp somewhere arbitrary -- which is a worse answer than the
+    filenames, and a much harder one to argue with. Numbered filenames
+    (00_, 01_) still win over both: `scaffold` re-sorts on those after.
+    """
+    if not files or any(when.get(p) is None for p in files):
+        return files
+    return sorted(files, key=lambda p: (when[p], p.as_posix()))
 
 
 # --------------------------------------------------------------------------
 # The main entry point
 # --------------------------------------------------------------------------
+
+
+def _fingerprint(path: Path) -> list:
+    """Enough to say "this is the same file it was last time"."""
+    try:
+        st = path.stat()
+    except OSError:
+        return [0, 0.0]
+    return [st.st_size, round(st.st_mtime, 3)]
+
+
+def _previous(analysis: Path) -> dict[str, dict]:
+    """Last run's manifest, keyed by path, for reuse."""
+    try:
+        data = json.loads(
+            (analysis / "manifest.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {e["path"]: e for e in data.get("media", []) if e.get("path")}
+
+
+def _still_usable(entry: dict, project: Path, path: Path) -> bool:
+    """May last run's answer for this file stand?
+
+    Only when the file is byte-for-byte where it was, and everything the
+    entry points at is still on disk. Deleting analysis/ has always been
+    safe and has to stay safe.
+    """
+    if entry.get("fingerprint") != _fingerprint(path):
+        return False
+    if not entry.get("key"):
+        return False                       # written before keys existed
+    thumb = entry.get("thumb")
+    if thumb and not (project / "analysis" / "thumbs" / thumb).exists():
+        return False
+    proxy = entry.get("proxy")
+    if proxy and not (project / proxy).exists():
+        return False
+    return True
 
 
 def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
@@ -475,16 +664,47 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
     unreadable: list[str] = []
     quarantined: list[str] = []
     converted = 0
+    reused = 0
 
+    # Order. Photographs off a camera are named by a counter that says
+    # nothing about the day; the shutter time does. See in_capture_order
+    # for why this is all-or-nothing.
+    probes = {p: (probe(p) if p.suffix.lower() in Shot.VIDEO_EXT else {})
+              for p in files}
+    when = {p: taken_at(p, probes[p]) for p in files}
+    ordered = in_capture_order(files, when)
+    by_time = ordered is not files and ordered != files
+
+    keys = analysis_keys([p.relative_to(project).as_posix() for p in ordered])
+    was = _previous(analysis)
     entries: list[dict] = []
 
-    for n, path in enumerate(files, 1):
-        if not quiet:
-            print(f"  [{n:2d}/{len(files)}] {path.name}")
+    for n, source in enumerate(ordered, 1):
+        rel_source = source.relative_to(project).as_posix()
+        key = keys[rel_source]
 
-        source = path                        # what she actually dropped in
+        # Nothing about this file has changed since last time and every
+        # derived piece is still on disk. Ingest used to redo all of it
+        # on every run -- two full ffmpeg passes over the audio, a cut
+        # detection, a proxy, six thumbnails, a motion centroid -- so
+        # dropping one clip into a folder of forty cost all forty again.
+        old = was.get(rel_source)
+        if old is not None and _still_usable(old, project, source):
+            entry = dict(old)
+            entry["n"] = n
+            entries.append(entry)
+            reused += 1
+            if not quiet:
+                print(f"  [{n:2d}/{len(ordered)}] {source.name}   "
+                      f"(unchanged)")
+            continue
+
+        if not quiet:
+            print(f"  [{n:2d}/{len(ordered)}] {source.name}")
+
+        path = source                        # what she actually dropped in
         if path.suffix.lower() in HEIC_EXT:
-            jpg = analysis / "converted" / f"{path.stem}.jpg"
+            jpg = analysis / "converted" / f"{key}.jpg"
             if not convert_heic(path, jpg):
                 unreadable.append(path.name)
                 continue
@@ -492,23 +712,26 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
             converted += 1
 
         rel = path.relative_to(project).as_posix()
+        common = {"n": n, "path": rel, "key": key,
+                  "fingerprint": _fingerprint(source)}
+        if when.get(source) is not None:
+            common["taken"] = round(when[source], 1)
 
         if path.suffix.lower() in STILL_EXT:
-            img = cv2.imread(str(path), cv2.IMREAD_COLOR)
+            img = pix.imread(path, cv2.IMREAD_COLOR)
             if img is None:
                 unreadable.append(source.name)
                 continue
             focus, how = find_focus(img)
-            name = f"{n:02d}_{path.stem}.jpg"
-            cv2.imwrite(str(thumbs / name), thumb_of(img))
+            name = f"{key}.jpg"
+            pix.imwrite(thumbs / name, thumb_of(img))
             h, w = img.shape[:2]
             entries.append({
-                "n": n, "path": rel, "kind": "still", "thumb": name,
+                **common, "kind": "still", "thumb": name,
                 "width": w, "height": h, "aspect": round(w / h, 3),
                 "focus": [round(focus[0], 3), round(focus[1], 3)],
                 "focus_from": how,
-                **({"from": source.relative_to(project).as_posix()}
-                   if source is not path else {}),
+                **({"from": rel_source} if path is not source else {}),
             })
         else:
             info = video_info(path)
@@ -516,18 +739,25 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
                 # ffprobe found no video stream at all -- a moov-less mp4
                 # from a recording that was killed rather than stopped
                 # cleanly, most often. Photos get exactly this check via
-                # cv2.imread returning None; video had no equivalent, so
-                # this file used to reach make_proxy()'s `check=True` and
-                # take the whole ingest down with an unhandled
+                # imread returning None; video had no equivalent, so this
+                # file used to reach make_proxy()'s `check=True` and take
+                # the whole ingest down with an unhandled
                 # CalledProcessError instead of a clean skip.
                 quarantine(path, media)
                 unreadable.append(source.name)
                 quarantined.append(source.name)
                 continue
-            proxy = proxies / f"{path.stem}.mp4"
-            make_proxy(path, proxy)
+            proxy = proxies / f"{key}.mp4"
+            if not make_proxy(path, proxy):
+                # ffprobe was happy and ffmpeg was not. Set it aside the
+                # same way, rather than carrying on with no stand-in and
+                # failing later, in the middle of a peek.
+                quarantine(path, media)
+                unreadable.append(source.name)
+                quarantined.append(source.name)
+                continue
             cuts = detect_cuts(proxy)
-            (cuts_dir / f"{path.stem}.json").write_text(
+            (cuts_dir / f"{key}.json").write_text(
                 json.dumps(cuts, indent=1), encoding="utf-8")
 
             cap = cv2.VideoCapture(str(proxy))
@@ -537,10 +767,9 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
                 cap.set(cv2.CAP_PROP_POS_MSEC, 1000 * dur * (k + 0.5) / video_thumbs)
                 ok, fr = cap.read()
                 if ok:
-                    cv2.imwrite(str(thumbs / f"{n:02d}_{path.stem}_{k}.jpg"),
-                                thumb_of(fr, 320))
+                    pix.imwrite(thumbs / f"{key}_{k}.jpg", thumb_of(fr, 320))
                     if first is None:
-                        first = f"{n:02d}_{path.stem}_{k}.jpg"
+                        first = f"{key}_{k}.jpg"
             cap.release()
 
             sound = detect_sound(path, info["duration"])
@@ -551,7 +780,7 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
             # wherever you happened to be sitting.
             spot = speaker_focus(proxy)
             entries.append({
-                "n": n, "path": rel, "kind": "video",
+                **common, "kind": "video",
                 "thumb": first or "", "proxy": proxy.relative_to(project).as_posix(),
                 "cuts": cuts, "sound": sound,
                 **({"focus": list(spot), "focus_from": "speaker"}
@@ -560,6 +789,13 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
             })
 
     contact_sheet(entries, thumbs, analysis / "contact.jpg")
+
+    if by_time and not quiet:
+        print("\n  Ordered by when they were taken, not by filename "
+              "(every file said).")
+    if reused and not quiet:
+        print(f"  {reused} file(s) were unchanged and were not looked at "
+              f"again.")
 
     # Printed even when quiet -- `quiet` means "skip the file-by-file
     # listing", not "hide the fact that something of hers is missing".
@@ -602,5 +838,5 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
 
 def proxy_for(project: Path, src: str) -> str | None:
     """The 480p stand-in for a video, if ingest has made one."""
-    p = project / "analysis" / "proxies" / (Path(src).stem + ".mp4")
+    p = project / "analysis" / "proxies" / (key_of(project, src) + ".mp4")
     return p.relative_to(project).as_posix() if p.exists() else None

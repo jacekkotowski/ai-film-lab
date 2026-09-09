@@ -77,9 +77,7 @@ def _newest(folder: Path, exts: set[str]) -> float:
     # project holding nothing but one broken take looked like a project
     # with footage in it.
     times = [_mtime(f) for f in folder.rglob("*")
-             if f.suffix.lower() in exts
-             and not set(kinds.ASIDE_DIRNAMES)
-             & set(f.relative_to(folder).parts)]
+             if f.suffix.lower() in exts and not kinds.is_aside(f, folder)]
     return max(times) if times else 0.0
 
 
@@ -169,6 +167,39 @@ def known_projects() -> list[Path]:
                   key=_mtime, reverse=True)
 
 
+def lastfilm_path() -> Path:
+    return projects_dir().parent / ".lastfilm"
+
+
+def remember(project: Path) -> None:
+    """The film you are on, so the next `uv run film` comes back to it.
+
+    Called from every place that CHANGES which film you are on, which
+    used to be only two of the four: making one and dropping files on
+    FILM.bat wrote it, but switching with [F] and naming one with -p did
+    not. So you could switch to a second film, work in it, close the
+    window, and be handed the first one again next time.
+    """
+    try:
+        if project.parent.resolve() == projects_dir().resolve():
+            lastfilm_path().write_text(project.name, encoding="utf-8")
+    except OSError:
+        pass
+
+
+def last_project() -> Path | None:
+    """The film named in .lastfilm, if it is still there."""
+    last = lastfilm_path()
+    if not last.exists():
+        return None
+    try:
+        name = last.read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    cand = projects_dir() / name
+    return cand if name and cand.is_dir() else None
+
+
 def current_project() -> Path | None:
     """The project we should be talking about, with no -p given.
 
@@ -180,12 +211,9 @@ def current_project() -> Path | None:
     if (cwd / "media").is_dir() or (cwd / "film.yaml").exists():
         return cwd.resolve()
 
-    last = projects_dir().parent / ".lastfilm"
-    if last.exists():
-        name = last.read_text(encoding="utf-8").strip()
-        cand = projects_dir() / name
-        if cand.is_dir():
-            return cand
+    cand = last_project()
+    if cand is not None:
+        return cand
     found = known_projects()
     return found[0] if found else None
 
@@ -520,8 +548,10 @@ def _make_project() -> Path | None:
     if _run(args) != 0:
         return None
     made = projects_dir() / name
-    (projects_dir().parent / ".lastfilm").write_text(name, encoding="utf-8")
-    return made if made.is_dir() else None
+    if made.is_dir():
+        remember(made)
+        return made
+    return None
 
 
 def walk(project: Path | None = None) -> None:
@@ -530,6 +560,8 @@ def walk(project: Path | None = None) -> None:
 
     if project is None:
         project = current_project()
+    else:
+        remember(project)
     if project is None:
         if not interactive:
             print("No project yet. Start one with:  uv run film new my_movie")
@@ -619,6 +651,7 @@ def walk(project: Path | None = None) -> None:
             picked = _pick_project(project)
             if picked is not None:
                 project, last_title = picked, None
+                remember(project)
             continue
         if answer == "c" and claude:
             _ask_claude(project)

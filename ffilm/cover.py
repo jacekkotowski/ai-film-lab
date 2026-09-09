@@ -44,6 +44,7 @@ import cv2
 import numpy as np
 
 from . import kinds
+from . import pix
 from .spec import headers, pretty_name, title_of
 
 # YouTube rejects a custom thumbnail over 2MB. Being told that by a web
@@ -284,7 +285,8 @@ def build_card(project: Path, width: int, height: int,
                     width, height, "bottom", font)
     out = card_path(project)
     out.parent.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(str(out), frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+    if not pix.imwrite(out, frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95]):
+        return None
     return out
 
 
@@ -340,7 +342,7 @@ def read(image: Path) -> np.ndarray:
     Somebody who has one good picture and it happens to be a gif should
     not have to find that out from an error message.
     """
-    img = cv2.imread(str(image), cv2.IMREAD_COLOR)
+    img = pix.imread(image, cv2.IMREAD_COLOR)
     if img is not None:
         return img
     try:
@@ -466,12 +468,19 @@ def compose(image: Path | None, title: str, w: int, h: int,
 
 def save(frame: np.ndarray, out: Path) -> int:
     """Write it, and keep shrinking the quality until it is small enough
-    to actually upload."""
+    to actually upload.
+
+    Every write is checked. It used to `stat()` whatever imwrite left
+    behind, which on a path OpenCV would not open meant a
+    FileNotFoundError -- raised at the very end of `film final`, after
+    the whole film had rendered, and reported as an internal bug.
+    """
     out.parent.mkdir(parents=True, exist_ok=True)
+    size = 0
     for quality in (92, 85, 78, 70, 60):
-        cv2.imwrite(str(out), frame,
-                    [int(cv2.IMWRITE_JPEG_QUALITY), quality])
+        if not pix.imwrite(out, frame, [int(cv2.IMWRITE_JPEG_QUALITY), quality]):
+            raise SystemExit(f"Could not write the cover to {out}")
         size = out.stat().st_size
         if size <= MAX_BYTES:
             return size
-    return out.stat().st_size
+    return size

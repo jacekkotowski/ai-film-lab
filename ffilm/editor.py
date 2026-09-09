@@ -316,6 +316,10 @@ function caps(box,s,i){
     e.stopPropagation();
     const j=+inp.dataset.c,k=inp.dataset.k;
     s.captions[j][k] = (k==="at"||k==="dur")?parseFloat(inp.value)||0:inp.value;
+    // Without this, retyping a caption left the page still claiming the
+    // video below was up to date -- the one thing this page exists to
+    // tell you truthfully.
+    freshness();
   }));
   box.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click",e=>{
     e.stopPropagation(); s.captions.splice(+b.dataset.rm,1); render();}));
@@ -359,6 +363,11 @@ async function save(quiet){
   const r=await fetch("api/save",{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify(S)});
   const j=await r.json();
+  // The file moved under us. Say it loudly and keep saying it -- this is
+  // the one message that must not scroll away, because acting on it
+  // wrongly loses somebody's work.
+  if(j.stale){ alert(j.error); setStatus("NOT saved — "+j.error); return false; }
+  if(j.ok && j.stamp) S.stamp = j.stamp;
   if(!quiet) setStatus(j.ok?("Saved "+new Date().toLocaleTimeString()):("NOT saved — "+j.error));
   return j.ok;
 }
@@ -426,14 +435,24 @@ def thumb_map(project: Path) -> dict[str, str]:
 
 
 def state(project: Path) -> dict:
+    from .moves import choose_moves
+
     film = Film.load(project / "film.yaml")
+    # Settle `auto` into the concrete move the renderer would have picked,
+    # by the same rule and the same seed -- never two from one family in a
+    # row. The bench has no `auto` in its dropdown, so it used to write
+    # every auto shot back as the literal word `drift_right`: one click of
+    # Save turned a varied film into the same move all the way down, and
+    # nothing said so. Doing it here means what you see selected in the
+    # dropdown is what you would have watched.
+    choose_moves(film.shots)
     thumbs = thumb_map(project)
     shots = []
     for s in film.shots:
         shots.append({
             "id": s.id, "src": s.src, "kind": s.kind,
             "duration": round(s.duration, 2), "tin": round(s.tin, 2),
-            "speed": s.speed, "move": s.move if s.move != "auto" else "drift_right",
+            "speed": s.speed, "move": s.move,
             "ease": s.ease, "amount": s.amount,
             "focus": list(s.focus or (0.5, 0.5)), "note": s.note,
             "thumb": thumbs.get(s.src, ""),
@@ -450,7 +469,20 @@ def state(project: Path) -> dict:
         })
     return {"fps": film.fps, "width": film.width, "height": film.height,
             "audio": film.audio, "shots": shots,
+            # When the file was last written, carried out to the browser
+            # and handed back on Save. CLAUDE.md says outright that
+            # Notepad++ and Claude may be editing this same file while
+            # the bench is open -- and the bench used to write over
+            # whatever it found, with no way to tell it had.
+            "stamp": stamp(project),
             "moves": MOVES, "eases": sorted(EASINGS)}
+
+
+def stamp(project: Path) -> float:
+    try:
+        return round((project / "film.yaml").stat().st_mtime, 3)
+    except OSError:
+        return 0.0
 
 
 def dump(project: Path, data: dict) -> str:
@@ -617,10 +649,27 @@ def serve(project: Path, port: int = 8731, open_browser: bool = True) -> None:
                 n = int(self.headers.get("Content-Length", 0))
                 data = json.loads(self.rfile.read(n) or b"{}")
                 try:
+                    # Somebody else wrote to film.yaml while this page was
+                    # open -- Notepad++, Claude, another bench. Refuse
+                    # rather than overwrite: the work you can see on this
+                    # page is still on this page, and the work you cannot
+                    # see is the work that would have been lost.
+                    now = stamp(project)
+                    was = float(data.get("stamp") or 0.0)
+                    if was and now and abs(now - was) > 0.001:
+                        return self._send(200, json.dumps({
+                            "ok": False, "stale": True,
+                            "error": "film.yaml was changed by something "
+                                     "else since this page loaded. Nothing "
+                                     "was written. Reload to pick up that "
+                                     "version -- your changes on this page "
+                                     "will be lost, so copy anything you "
+                                     "need first."}))
                     text = dump(project, data)
                     (project / "film.yaml").write_text(text, encoding="utf-8")
                     Film.load(project / "film.yaml")       # validate what we wrote
-                    return self._send(200, json.dumps({"ok": True}))
+                    return self._send(200, json.dumps(
+                        {"ok": True, "stamp": stamp(project)}))
                 except SystemExit as e:
                     return self._send(200, json.dumps({"ok": False, "error": str(e)}))
                 except Exception as e:

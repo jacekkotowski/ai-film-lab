@@ -29,6 +29,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+from . import pix
 from .moves import window_at, window_past_end
 from .spec import Caption, Film, Look, Shot, Window, frames_for
 
@@ -231,7 +232,7 @@ def prepare_source(img: np.ndarray, ow: int, oh: int, max_scale: float) -> np.nd
 
 class StillSource:
     def __init__(self, path: Path, ow: int, oh: int, max_scale: float):
-        img = cv2.imread(str(path), cv2.IMREAD_COLOR)
+        img = pix.imread(path, cv2.IMREAD_COLOR)
         if img is None:
             raise SystemExit(f"Could not read image: {path}")
         self.img = prepare_source(img, ow, oh, max_scale)
@@ -595,6 +596,32 @@ def draw_captions(frame: np.ndarray, shot: Shot, t: float,
 # --------------------------------------------------------------------------
 
 
+def say(text: str) -> bool:
+    """Print progress, and never let printing it end a render.
+
+    Measured, from last_error.txt on the machine this was written on:
+
+        film draft -p Evening_2026-09-05
+        render.py line 779, in render
+            sys.stderr.write(f"\\r  {quality.name} ...")
+        OSError: [Errno 22] Invalid argument
+
+    The pictures were being generated correctly. A cosmetic write to a
+    console handle Windows had stopped accepting took the whole render
+    down with it -- minutes of work, for the progress bar. Whatever the
+    reason (a console closed underneath us, a redirected handle, a
+    codepage), the answer is the same: the film matters and the
+    percentage does not. Returns False once writing has stopped working,
+    so the caller can give up quietly rather than fail on every frame.
+    """
+    try:
+        sys.stderr.write(text)
+        sys.stderr.flush()
+        return True
+    except (OSError, ValueError):
+        return False
+
+
 def ffmpeg_bin() -> str:
     exe = shutil.which("ffmpeg")
     if not exe:
@@ -776,9 +803,9 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
                 done += 1
                 if not quiet and done % 8 == 0:
                     pct = 100 * done / total
-                    sys.stderr.write(f"\r  {quality.name}  {pct:5.1f}%  "
-                                     f"[{shot.id}] ")
-                    sys.stderr.flush()
+                    if not say(f"\r  {quality.name}  {pct:5.1f}%  "
+                               f"[{shot.id}] "):
+                        quiet = True        # the console has gone. Carry on.
 
             # Now the dissolve is over, the outgoing shot can go.
             if prev_src is not None:
@@ -795,10 +822,9 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
         proc.wait()
 
     if not quiet:
-        sys.stderr.write(f"\r  {quality.name}  100.0%{' ' * 24}\n")
+        say(f"\r  {quality.name}  100.0%{' ' * 24}\n")
         if stopped_early and film.audio:
-            sys.stderr.write(
-                "  note: the voiceover is shorter than the video, so the "
+            say("  note: the voiceover is shorter than the video, so the "
                 "clip was cut to match the audio. Lengthen the last shot(s), "
                 "or trim media to the voiceover's length, if that's not "
                 "what you want.\n")

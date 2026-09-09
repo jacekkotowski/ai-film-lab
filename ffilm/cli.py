@@ -41,9 +41,6 @@ from .render import QUALITIES, render
 from .spec import Film
 from .spec import title_of as spec_title_of
 
-DEFAULT_PROJECT = "projects/film_001"
-
-
 def toolkit_root() -> Path:
     """Where ffilm itself lives, no matter which folder the terminal is in."""
     return Path(__file__).resolve().parent.parent
@@ -57,29 +54,45 @@ def find_project(arg: str | None) -> Path:
     this is what makes `uv run film ingest` work with no arguments when
     you are sitting inside your own project directory in RStudio.
 
-    Only if that fails do we fall back to interpreting the name as
-    relative to AI-Film's own projects/ folder.
+    Failing that, the film you were last on. That is what `uv run film`
+    has always used, and this did not: it fell back to a hardcoded
+    `projects/film_001` that has never existed on anybody's disk, so
+    `uv run film peek` with no -p failed by naming an imaginary folder.
     """
     cwd = Path.cwd()
     if arg is None and ((cwd / "media").is_dir() or (cwd / "film.yaml").exists()):
         return cwd.resolve()
 
-    given = arg or DEFAULT_PROJECT
-    p = Path(given)
+    if arg is None:
+        last = guide.last_project()
+        if last is not None:
+            return last.resolve()
+        started = guide.known_projects()
+        if started:
+            return started[0].resolve()
+        raise SystemExit(
+            "No film to work on yet.\n"
+            "Start one:      uv run film new my_movie\n"
+            "or be walked through it:   uv run film")
 
-    candidates = [cwd] if arg is None else []
-    candidates.append(p)
+    p = Path(arg)
+    candidates = [p]
     if not p.is_absolute():
         candidates.append(toolkit_root() / p)
         candidates.append(toolkit_root() / "projects" / p.name)
 
     for c in candidates:
         if (c / "media").is_dir() or (c / "film.yaml").exists():
-            return c.resolve()
+            found = c.resolve()
+            guide.remember(found)
+            return found
 
+    started = [q.name for q in guide.known_projects()]
+    known = ("\n\nFilms you have started:\n"
+             + "\n".join(f"  - {s}" for s in started[:12])) if started else ""
     raise SystemExit(
-        f"No project found for {given!r}.\n"
-        f"Looked in:\n" + "\n".join(f"  - {c}" for c in candidates) +
+        f"No project found for {arg!r}.\n"
+        f"Looked in:\n" + "\n".join(f"  - {c}" for c in candidates) + known +
         f"\n\nIf this is a brand new project, create it first:\n"
         f"  uv run film new {p.name or 'my_movie'}\n"
         f"...or make sure it has a media\\ subfolder with your photos in it."
@@ -1046,7 +1059,7 @@ def cmd_drop(args) -> None:
             else:
                 photos += 1
 
-    (toolkit_root() / ".lastfilm").write_text(root.name, encoding="utf-8")
+    guide.remember(root)
     shape = "widescreen" if args.wide else "vertical"
     print(f"Copied into {root.name}  [{shape}]:  {photos} photo(s), "
           f"{clips} clip(s), {tracks} music track(s).")
@@ -1063,6 +1076,7 @@ def cmd_new(args) -> None:
     vertical = not args.wide
     root = make_project(toolkit_root() / "projects" / name,
                         vertical=vertical)
+    guide.remember(root)
     shape = "1080x1920 vertical (YouTube Shorts)" if vertical else "1920x1080"
     print(f"Created {root}   [{shape}]")
     print(f"  photos + clips  ->  {root / 'media'}")

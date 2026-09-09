@@ -94,8 +94,6 @@ class VoiceSource:
     audio_path: Path        # extracted wav or original audio file
     label: str               # for messages: the file this came from
     shot_srcs: list[str]     # film.yaml `src:` values this audio covers
-    time_offset: float = 0.0  # seconds to add: this clip's start, in the
-                              # ORIGINAL file, if only part of it is used
 
 
 def voice_sources(project: Path) -> list[VoiceSource]:
@@ -109,27 +107,50 @@ def voice_sources(project: Path) -> list[VoiceSource]:
     3. Otherwise, every video clip that has its own audio track gets its
        audio extracted and transcribed separately -- this is "captions
        for me talking in the clips" with no extra recording needed.
+
+    Rule 2 is right for a voice memo and quietly wrong for a piece of
+    music dropped into media/ instead of music/ -- two folders side by
+    side, and an easy mistake. It still wins, because a file somebody put
+    in media/ is material; but it now says out loud which file it took
+    and what it therefore did NOT listen to, so the answer to "why are my
+    captions the lyrics" is on screen instead of being guessed at.
+
+    Nothing in media/_discarded/ or media/_unreadable/ is ever a source.
+    A take you fluffed and asked to redo used to be transcribed anyway,
+    and its words captioned onto the take you kept.
     """
+    from . import ingest as ingest_mod
+
     media = project / "media"
     cache = project / "analysis" / "audio"
+    here = [p for p in sorted(media.rglob("*"))
+            if p.is_file() and not kinds.is_aside(p, media)]
 
-    named = sorted(media.glob("voiceover.*"))
+    named = [p for p in here if p.name.lower().startswith("voiceover.")]
     if named:
         return [VoiceSource(named[0], named[0].name, [])]
 
-    standalone = [p for p in sorted(media.rglob("*"))
-                 if p.suffix.lower() in AUDIO_EXT]
+    clips = [p for p in here if p.suffix.lower() in VIDEO_EXT]
+    standalone = [p for p in here if p.suffix.lower() in AUDIO_EXT]
     if standalone:
+        if len(standalone) > 1:
+            print(f"  {len(standalone)} audio files in media\\ -- listening to "
+                  f"{standalone[0].name} (first alphabetically).")
+        if clips:
+            print(f"  Listening to {standalone[0].name}, NOT to the sound in "
+                  f"your {len(clips)} clip(s).")
+            print("  A standalone audio file in media\\ is taken as the "
+                  "narration. If that")
+            print("  file is music, move it to the music\\ folder next door "
+                  "and run this again.")
         return [VoiceSource(standalone[0], standalone[0].name, [])]
 
     sources = []
-    for p in sorted(media.rglob("*")):
-        if p.suffix.lower() not in VIDEO_EXT:
-            continue
+    for p in clips:
         if not has_audio_track(p):
             continue
         rel = p.relative_to(project).as_posix()
-        wav = cache / f"{p.stem}.wav"
+        wav = cache / f"{ingest_mod.key_of(project, rel)}.wav"
         sources.append(VoiceSource(extract_audio(p, wav), p.name, [rel]))
     return sources
 

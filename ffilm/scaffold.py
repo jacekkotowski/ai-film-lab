@@ -250,8 +250,12 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
         raise SystemExit("Run `uv run film ingest` first.")
     manifest = json.loads(mpath.read_text(encoding="utf-8"))
 
-    audio = next((p for p in sorted((project / "media").rglob("*"))
-                  if p.suffix.lower() in AUDIO_EXT), None)
+    # A narration track lying in media/. Never one from _discarded/ or
+    # _unreadable/ -- a take set aside is not the film's soundtrack.
+    media_dir = project / "media"
+    audio = next((p for p in sorted(media_dir.rglob("*"))
+                  if p.suffix.lower() in AUDIO_EXT
+                  and not kinds.is_aside(p, media_dir)), None)
 
     # Read the filename hint for every still up front -- this decides
     # ORDER (explicit numbers first, else alphabetical) and ROLE
@@ -292,49 +296,14 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
                        any(t["role"] == "quote" for t in middle) and
                        len(middle) > 1)
 
+    # One file at a time, through the one function that knows what a file
+    # becomes. See shots_for.
     shots: list[Shot] = []
     meta: list[dict] = []
     for t in ordered:
-        e, role, clean = t["entry"], t["role"], t["clean"]
-        if e["kind"] == "still":
-            if role in ("open", "close", "open_close"):
-                dur = OPENER_CLOSER_SECONDS
-                mv = "static"
-            elif role == "quote":
-                dur = QUOTE_SECONDS
-                mv = "static"
-            else:
-                dur = FACE_SECONDS if e.get("focus_from") == "face" else STILL_SECONDS
-                mv = "auto"
-            s = Shot(src=e["path"], kind="still", duration=dur, move=mv,
-                     focus=tuple(e.get("focus", (0.5, 0.5))),
-                     id=f"s{len(shots) + 1:02d}")
-            if role == "quote":
-                s.captions.append(Caption(text=_title_from_stem(clean), at=0.3,
-                                          dur=max(1.0, dur - 0.6), pos="center"))
-            shots.append(s)
-            meta.append({"entry": e, "role": role})
-        else:
-            segments = video_segments(e)
-            talking = is_talking(e)
-            spd = _speed_for(e["path"])
-            spot = _video_focus(e)
-            for k, (a, b) in enumerate(segments, 1):
-                s = Shot(src=e["path"], kind="video", duration=(b - a) / spd,
-                         tin=a, tout=b, speed=spd,
-                         move=(TALKING_MOVES[(len(shots)) % len(TALKING_MOVES)]
-                               if talking else "auto"),
-                         amount=TALKING_AMOUNT if talking else 1.0,
-                         focus=spot,
-                         id=f"s{len(shots) + 1:02d}",
-                         # Only where a pause was cut out of one take. A
-                         # hard cut on the same face a second later reads
-                         # as a stumble; everywhere else, cuts are right.
-                         dissolve=DISSOLVE if (talking and k > 1) else 0.0)
-                shots.append(s)
-                meta.append({"entry": e, "in": a, "out": b, "role": role,
-                             "talking": talking, "part": k,
-                             "parts": len(segments)})
+        made, made_meta = shots_for(t["entry"], len(shots) + 1)
+        shots.extend(made)
+        meta.extend(made_meta)
 
     if not shots:
         raise SystemExit("No usable media found. Is anything in media/ ?")
@@ -579,12 +548,26 @@ def fit_to_target(shots: list[Shot], meta: list[dict],
     return notes
 
 
-def shots_for(entry: dict, first_id: int) -> tuple[list[Shot], list[dict]]:
-    """The shot(s) one media file becomes. Shared by writing a film from
-    scratch and adding to one that already exists."""
+def shots_for(entry: dict, first_id: int,
+              run: int | None = None) -> tuple[list[Shot], list[dict]]:
+    """The shot(s) one media file becomes.
+
+    The ONLY place that decides this. `build` used to hold a second copy
+    of the whole thing, and the two had already drifted apart: the copy
+    in `build` stepped through TALKING_MOVES on the running length of the
+    WHOLE film, this one on the length of its own little list. So `film
+    init` and `film go` (which appends through here) gave the same clip
+    different camera moves, and every future change of taste had to be
+    made twice or be half made.
+
+    `run` is how many shots the film already has, which is what the
+    talking-head move rotation steps on. It defaults to `first_id - 1`,
+    which is the same thing whenever ids are simply counted from one.
+    """
     shots, meta = [], []
     stem = Path(entry["path"]).stem
     role, _num, clean = _hint(stem)
+    run = (first_id - 1) if run is None else run
 
     if entry["kind"] == "still":
         if role in ("open", "close", "open_close"):
@@ -608,10 +591,11 @@ def shots_for(entry: dict, first_id: int) -> tuple[list[Shot], list[dict]]:
         spd = _speed_for(entry["path"])
         spot = _video_focus(entry)
         for k, (a, b) in enumerate(segments, 1):
+            here = run + len(shots)
             shots.append(Shot(src=entry["path"], kind="video",
                               duration=(b - a) / spd,
                               tin=a, tout=b, speed=spd,
-                              move=(TALKING_MOVES[len(shots) % len(TALKING_MOVES)]
+                              move=(TALKING_MOVES[here % len(TALKING_MOVES)]
                                     if talking else "auto"),
                               amount=TALKING_AMOUNT if talking else 1.0,
                               focus=spot,
@@ -649,7 +633,8 @@ def append_new(project: Path, seed: int = 0) -> list[str]:
     shots: list[Shot] = []
     meta: list[dict] = []
     for e in fresh:
-        s, m = shots_for(e, next_id + len(shots))
+        s, m = shots_for(e, next_id + len(shots),
+                         run=len(film.shots) + len(shots))
         shots.extend(s)
         meta.extend(m)
     if not shots:
