@@ -13,8 +13,8 @@ Nothing here touches ffmpeg or a file. These are the numbers only.
 import re
 
 from ffilm.audio import (CLICK_FADE, DENOISE, NOISE_GATE, SPEECH_NORM,
-                         VOICE_FLOOR_HZ, atempo_chain, speech_chain,
-                         voice_tone)
+                         VOICE_FLOOR_HZ, atempo_chain, duck_threshold,
+                         speech_chain, voice_tone)
 from ffilm.caption_fit import fit_per_clip
 from ffilm.spec import Film, Shot
 from ffilm.voice import Line, VoiceSource
@@ -419,3 +419,30 @@ def test_the_soundtrack_stands_where_the_picture_stands():
         naive.append(t)
         t += d
     assert max(abs(p - n) for p, n in zip(picture, naive)) > 0.02
+
+
+# --------------------------------------------------------------------------
+# Ducking that means decibels
+# --------------------------------------------------------------------------
+
+
+def test_asking_for_more_duck_gets_more_duck():
+    """It used not to. music_duck set only the ratio against a threshold
+    14dB under the voice, so the whole knob was worth 3dB and every
+    setting ducked hard -- measured 8.1dB at 0.1 and 10.8dB at 0.5."""
+    thresholds = [duck_threshold(d) for d in (0.1, 0.3, 0.5, 0.8, 1.0)]
+    assert thresholds == sorted(thresholds, reverse=True), \
+        "a deeper duck must mean a lower threshold"
+    assert thresholds[0] / thresholds[-1] > 3.0, "the knob still does nothing"
+
+
+def test_the_duck_is_clamped_to_its_own_range():
+    assert duck_threshold(-1.0) == duck_threshold(0.0)
+    assert duck_threshold(9.9) == duck_threshold(1.0)
+
+
+def test_a_full_duck_puts_the_threshold_well_under_a_speaking_voice():
+    from ffilm.audio import DUCK_MAX_DB, KEY_LEVEL_DB
+    import math
+    at_full = 20 * math.log10(duck_threshold(1.0))
+    assert at_full < KEY_LEVEL_DB - DUCK_MAX_DB

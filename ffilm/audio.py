@@ -209,6 +209,42 @@ def graph_file_flag() -> str | None:
     return answer
 
 
+# The ducking. How far the music gets out of the way while you talk.
+#
+# A compressor reduces by (how far the key is above the threshold) x
+# (1 - 1/ratio). `music_duck` used to set only the ratio, against a fixed
+# threshold of 0.02 -- which is -34 dBFS, about 14dB BELOW a voice that
+# speechnorm has just brought up to a normal level. The key was therefore
+# always far into gain reduction before the ratio was consulted at all,
+# and the ratio term saturates. Measured, against a real spoken take:
+#
+#     music_duck 0.10   ->   8.1 dB
+#     music_duck 0.50   ->  10.8 dB
+#     music_duck 1.00   ->  11.2 dB
+#
+# The whole knob was worth 3dB, and every setting of it ducked hard. That
+# is the "the music is almost absent" -- and it only became obvious once
+# the pauses were really being cut, because a film that is nearly all
+# speech is a film that is nearly always ducked.
+#
+# So the threshold is what music_duck sets now, and the ratio is fixed.
+# The key is the one level in this file that is predictable: whatever the
+# microphone did, speechnorm brings the voice to about -20 dBFS, which is
+# what KEY_LEVEL_DB is. Everything else follows from the compressor's own
+# arithmetic, so `music_duck` means decibels again.
+DUCK_RATIO = 4.0
+DUCK_MAX_DB = 16.0        # what music_duck: 1.0 asks for
+KEY_LEVEL_DB = -20.0      # where speechnorm leaves a speaking voice
+
+
+def duck_threshold(duck: float) -> float:
+    """The sidechain threshold, as a linear amplitude, for a given
+    `music_duck`. Pure, so the arithmetic is checked in a test."""
+    want = DUCK_MAX_DB * max(0.0, min(1.0, duck))
+    head = want / (1.0 - 1.0 / DUCK_RATIO)
+    return float(10.0 ** ((KEY_LEVEL_DB - head) / 20.0))
+
+
 def _glob_escape(s: str) -> str:
     """Filenames off a camera contain [ ] often enough to matter, and glob
     reads those as character classes."""
@@ -293,6 +329,35 @@ def _has_audio(path: Path) -> bool:
 # normalise -> gate chain when all it has to know is WHEN somebody is
 # talking. That is 34.7%, and unlike this it does not move anything.
 # --------------------------------------------------------------------------
+
+
+# Giving each piece a second of lead-in to settle on: tried, measured,
+# did not work.
+#
+# The reasoning was sound as far as it went. Every filter in the chain
+# carries state and two start in the worst place for a splice --
+# speechnorm is an expander that has not heard the voice yet, and agate
+# starts OPEN and takes its release to shut -- so each piece begins with
+# the room lifted as far as it goes and nothing gating it away. One take
+# kept whole has one of those, under the opening music fade. The same
+# take cut at its 34 pauses has 35, one on every join.
+#
+# The lead-in fixed the gate and broke the expander. The audio before a
+# piece is the pause that was cut, so it is room tone -- and feeding an
+# expander a second of room tone is asking it to open further, not to
+# settle. Measured on a real film, room-tone step at the joins:
+#
+#     before      median 11.5dB, 90th pct 21.6dB, worst 36.4dB
+#     with lead   median 10.5dB, 90th pct 19.3dB, worst 23.6dB
+#
+# A decibel. The two effects cancelled.
+#
+# The fault is not the cold start, it is that the voice chain runs once
+# PER PIECE at all: 35 independent gain trajectories over one continuous
+# recording. The fix is to run it once per TAKE and cut the result --
+# which also removes the 55% of this file's cost that the -ss note above
+# measured, since the expensive filters would run once instead of twice
+# per piece. That is a bigger change than this comment.
 
 
 def speech_chain(start: float, end: float | None, delay: int,
@@ -520,14 +585,11 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
                           f"dropout_transition=0[sp_key]")
             key = "sp_key"
 
-        # A compressor reduces by (level_above_threshold) * (1 - 1/ratio),
-        # so the ratio saturates fast: 14 buys barely more than 6 and just
-        # makes the music vanish. At the 0.45 default this lands around
-        # 12-14dB under speech, which is about where broadcast sits -- the
-        # music stays present, it just stops competing.
-        ratio = 1.0 + 9.0 * film.music_duck
+        # See duck_threshold: music_duck sets the THRESHOLD, which is what
+        # actually decides the depth, and the ratio is fixed.
         filters.append(f"[{music_label}][{key}]sidechaincompress="
-                      f"threshold=0.02:ratio={ratio:.1f}:attack=5:"
+                      f"threshold={duck_threshold(film.music_duck):.5f}:"
+                      f"ratio={DUCK_RATIO:.1f}:attack=5:"
                       f"release=350:makeup=1[ducked]")
         # Music FIRST. amix anchors its output to its first input, and the
         # speech streams are `adelay`-ed to start partway in -- putting a
