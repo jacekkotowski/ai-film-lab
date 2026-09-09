@@ -47,304 +47,389 @@ shots:
 
   - id: s01
     src: media/rec_20260909-204941.mp4
-    in: "00:00.00"
-    out: "05:10.33"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    in: "00:02.45"
+    out: "00:08.80"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.586, 0.376]
-    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
-    captions:
-      - text: "My parents never used the word."
-        at: 1.98
-        dur: 2.06
-        pos: lower_third
-      - text: "Love."
-        at: 4.05
-        dur: 0.94
-        pos: lower_third
-      - text: "They were ashamed of it."
-        at: 5.68
-        dur: 1.54
-        pos: lower_third
-      - text: "Hate words were easier."
-        at: 8.54
-        dur: 1.71
-        pos: lower_third
-      - text: "One was home."
-        at: 11.03
-        dur: 1.25
-        pos: lower_third
-      - text: "The other was in the cellar."
-        at: 12.43
-        dur: 1.96
-        pos: lower_third
-      - text: "I was running up and down the stairs,"
-        at: 17.67
-        dur: 2.83
-        pos: lower_third
-      - text: "negotiating peace."
-        at: 20.50
-        dur: 1.11
-        pos: lower_third
-      - text: "My father told me,"
-        at: 23.72
-        dur: 1.38
-        pos: lower_third
-      - text: "“Say sorry even if you were right.”"
-        at: 25.10
-        dur: 3.31
-        pos: lower_third
-      - text: "This was not love."
-        at: 30.42
-        dur: 1.21
-        pos: lower_third
-      - text: "People are ashamed of tenderness."
-        at: 34.20
-        dur: 2.43
-        pos: lower_third
-      - text: "I want to love."
-        at: 37.25
-        dur: 1.49
-        pos: lower_third
-      - text: "I love you."
-        at: 40.25
-        dur: 1.61
-        pos: lower_third
-      - text: "The heart races."
-        at: 41.87
-        dur: 3.26
-        pos: lower_third
-      - text: "It is a risk."
-        at: 57.87
-        dur: 0.53
-        pos: lower_third
-      - text: "Once, she knew I was going to say it."
-        at: 58.90
-        dur: 2.71
-        pos: lower_third
-      - text: "“Forget me,” she said."
-        at: 63.26
-        dur: 1.45
-        pos: lower_third
-      - text: "“It will be easier.”"
-        at: 64.71
-        dur: 1.19
-        pos: lower_third
-      - text: "For three months she had been weak."
-        at: 65.91
-        dur: 4.50
-        pos: lower_third
-      - text: "Tuberculosis suspected."
-        at: 76.25
-        dur: 1.83
-        pos: lower_third
-      - text: "Tall and hunched."
-        at: 79.28
-        dur: 3.20
-        pos: lower_third
-      - text: "A bent birch tree."
-        at: 82.48
-        dur: 1.56
-        pos: lower_third
-      - text: "Coughing."
-        at: 84.54
-        dur: 0.50
-        pos: lower_third
-      - text: "I brought her tangerines."
-        at: 85.05
-        dur: 3.61
-        pos: lower_third
-      - text: "And classes,"
-        at: 88.67
-        dur: 1.73
-        pos: lower_third
-      - text: "literature on tapes."
-        at: 91.16
-        dur: 1.20
-        pos: lower_third
-      - text: "We listened."
-        at: 93.75
-        dur: 0.73
-        pos: lower_third
-      - text: "I stayed  hours when she was sick."
-        at: 96.13
-        dur: 2.35
-        pos: lower_third
-      - text: "January."
-        at: 99.38
-        dur: 0.50
-        pos: lower_third
-      - text: "February."
-        at: 100.75
-        dur: 0.56
-        pos: lower_third
-      - text: "March."
-        at: 102.05
-        dur: 0.45
-        pos: lower_third
-      - text: "I thought April was perfect."
-        at: 105.13
-        dur: 2.13
-        pos: lower_third
-      - text: "Cherry and apple trees blooming."
-        at: 116.87
-        dur: 2.93
-        pos: lower_third
-      - text: "Petals in the air."
-        at: 120.61
-        dur: 1.15
-        pos: lower_third
-      - text: "I love you."
-        at: 124.13
-        dur: 1.38
-        pos: lower_third
-      - text: "I didn't say it."
-        at: 126.50
-        dur: 1.43
-        pos: lower_third
-      - text: "I was there."
-        at: 128.18
-        dur: 0.98
-        pos: lower_third
-      - text: "Perhaps that is love."
-        at: 130.02
-        dur: 1.88
-        pos: lower_third
-      - text: "Until she did not need me."
-        at: 133.07
-        dur: 2.48
-        pos: lower_third
-      - text: "Again, my father told me."
-        at: 141.60
-        dur: 2.00
-        pos: lower_third
-      - text: "You are a boy, boys do not complain."
-        at: 143.60
-        dur: 3.26
-        pos: lower_third
-      - text: "I studied, noone believed in me"
-        at: 147.95
-        dur: 3.04
-        pos: lower_third
-      - text: "That I would pass entrance exams."
-        at: 151.00
-        dur: 3.38
-        pos: lower_third
-      - text: "Only to prove I deserve."
-        at: 155.75
-        dur: 2.53
-        pos: lower_third
-      - text: "I thought this was love."
-        at: 158.28
-        dur: 3.68
-        pos: lower_third
-      - text: "Then I decided,"
-        at: 162.82
-        dur: 2.38
-        pos: lower_third
-      - text: "love does not exist."
-        at: 165.20
-        dur: 1.59
-        pos: lower_third
-      - text: "Yet."
-        at: 170.30
-        dur: 0.44
-        pos: lower_third
-      - text: "I think I saw it once."
-        at: 171.03
-        dur: 2.09
-        pos: lower_third
-      - text: "We were doing Combat Medical Training."
-        at: 174.07
-        dur: 2.43
-        pos: lower_third
-      - text: "The casualty was unconscious."
-        at: 178.14
-        dur: 3.18
-        pos: lower_third
-      - text: "One medic was doing everything correctly."
-        at: 181.33
-        dur: 4.50
-        pos: lower_third
-      - text: "Airway."
-        at: 191.69
-        dur: 0.59
-        pos: lower_third
-      - text: "Bleeding."
-        at: 192.68
-        dur: 0.44
-        pos: lower_third
-      - text: "Move him."
-        at: 193.76
-        dur: 0.78
-        pos: lower_third
-      - text: "The casualty's head bumped against the stretcher."
-        at: 195.43
-        dur: 3.20
-        pos: lower_third
-      - text: "He didn't notice."
-        at: 199.74
-        dur: 1.03
-        pos: lower_third
-      - text: "The other one did."
-        at: 200.78
-        dur: 4.50
-        pos: lower_third
-      - text: "Warm hands on his cheeks."
-        at: 209.07
-        dur: 2.48
-        pos: lower_third
-      - text: "Brushing the dirt away."
-        at: 212.78
-        dur: 1.31
-        pos: lower_third
-      - text: "One hand gently under his head."
-        at: 215.04
-        dur: 2.80
-        pos: lower_third
-      - text: "“Easy…”"
-        at: 220.20
-        dur: 0.43
-        pos: lower_third
-      - text: "“I've got you.”"
-        at: 221.37
-        dur: 1.25
-        pos: lower_third
-      - text: "“Stay with me.”"
-        at: 223.77
-        dur: 1.00
-        pos: lower_third
-      - text: "The casualty couldn't answer."
-        at: 234.07
-        dur: 2.11
-        pos: lower_third
-      - text: "But he kept talking to him."
-        at: 236.69
-        dur: 1.33
-        pos: lower_third
-      - text: "The commander noticed."
-        at: 238.43
-        dur: 1.51
-        pos: lower_third
-      - text: "One man saw a casualty."
-        at: 239.94
-        dur: 2.96
-        pos: lower_third
-      - text: "The other saw a human being."
-        at: 244.99
-        dur: 1.88
-        pos: lower_third
-      - text: "And I think…"
-        at: 248.61
-        dur: 1.73
-        pos: lower_third
-      - text: "that's love."
-        at: 251.29
-        dur: 0.83
-        pos: lower_third
+    note: "part 1 of 35 -- one take with the long pauses cut out. Every word is kept"
 
-# 1 shots, about 259 seconds.
+  - id: s02
+    src: media/rec_20260909-204941.mp4
+    in: "00:10.65"
+    out: "00:17.65"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 2 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s03
+    src: media/rec_20260909-204941.mp4
+    in: "00:19.80"
+    out: "00:26.50"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 3 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s04
+    src: media/rec_20260909-204941.mp4
+    in: "00:28.55"
+    out: "00:34.55"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 4 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s05
+    src: media/rec_20260909-204941.mp4
+    in: "00:36.50"
+    out: "00:38.35"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 5 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s06
+    src: media/rec_20260909-204941.mp4
+    in: "00:40.95"
+    out: "00:47.05"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 6 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s07
+    src: media/rec_20260909-204941.mp4
+    in: "00:48.15"
+    out: "00:51.65"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 7 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s08
+    src: media/rec_20260909-204941.mp4
+    in: "00:52.75"
+    out: "00:54.75"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 8 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s09
+    src: media/rec_20260909-204941.mp4
+    in: "00:56.40"
+    out: "00:58.80"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 9 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s10
+    src: media/rec_20260909-204941.mp4
+    in: "01:08.95"
+    out: "01:14.30"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 10 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s11
+    src: media/rec_20260909-204941.mp4
+    in: "01:15.85"
+    out: "01:19.45"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 11 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s12
+    src: media/rec_20260909-204941.mp4
+    in: "01:27.20"
+    out: "01:31.00"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 12 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s13
+    src: media/rec_20260909-204941.mp4
+    in: "01:32.00"
+    out: "01:34.30"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 13 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s14
+    src: media/rec_20260909-204941.mp4
+    in: "01:35.90"
+    out: "01:42.80"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 14 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s15
+    src: media/rec_20260909-204941.mp4
+    in: "01:44.05"
+    out: "01:53.90"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 15 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s16
+    src: media/rec_20260909-204941.mp4
+    in: "01:55.40"
+    out: "02:03.75"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 16 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s17
+    src: media/rec_20260909-204941.mp4
+    in: "02:05.80"
+    out: "02:09.25"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 17 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s18
+    src: media/rec_20260909-204941.mp4
+    in: "02:16.45"
+    out: "02:26.50"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 18 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s19
+    src: media/rec_20260909-204941.mp4
+    in: "02:28.75"
+    out: "02:31.05"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 19 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s20
+    src: media/rec_20260909-204941.mp4
+    in: "02:32.00"
+    out: "02:38.65"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 20 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s21
+    src: media/rec_20260909-204941.mp4
+    in: "02:39.75"
+    out: "02:43.05"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 21 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s22
+    src: media/rec_20260909-204941.mp4
+    in: "02:50.25"
+    out: "02:56.75"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 22 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s23
+    src: media/rec_20260909-204941.mp4
+    in: "02:57.90"
+    out: "03:05.75"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 23 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s24
+    src: media/rec_20260909-204941.mp4
+    in: "03:06.90"
+    out: "03:10.40"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 24 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s25
+    src: media/rec_20260909-204941.mp4
+    in: "03:12.10"
+    out: "03:20.55"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 25 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s26
+    src: media/rec_20260909-204941.mp4
+    in: "03:24.30"
+    out: "03:32.30"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 26 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s27
+    src: media/rec_20260909-204941.mp4
+    in: "03:33.80"
+    out: "03:38.30"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 27 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s28
+    src: media/rec_20260909-204941.mp4
+    in: "03:46.20"
+    out: "04:01.50"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 28 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s29
+    src: media/rec_20260909-204941.mp4
+    in: "04:06.75"
+    out: "04:09.90"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 29 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s30
+    src: media/rec_20260909-204941.mp4
+    in: "04:11.25"
+    out: "04:21.75"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 30 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s31
+    src: media/rec_20260909-204941.mp4
+    in: "04:24.10"
+    out: "04:27.55"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 31 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s32
+    src: media/rec_20260909-204941.mp4
+    in: "04:28.45"
+    out: "04:30.05"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 32 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s33
+    src: media/rec_20260909-204941.mp4
+    in: "04:40.85"
+    out: "04:52.75"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 33 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s34
+    src: media/rec_20260909-204941.mp4
+    in: "04:54.15"
+    out: "05:02.95"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 34 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s35
+    src: media/rec_20260909-204941.mp4
+    in: "05:04.50"
+    out: "05:07.85"
+    speed: 1.4              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.586, 0.376]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 35 of 35 -- one take with the long pauses cut out. Every word is kept"
+
+# 35 shots, about 171 seconds.
 # Speech captions are left out on purpose -- run
 # `uv run film caption` once you're happy with the shots,
 # or watch it once and add what actually needs saying.
