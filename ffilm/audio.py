@@ -228,14 +228,71 @@ def _dur(path: Path) -> float:
         return 0.0
 
 
+_audio_seen: dict[str, bool] = {}
+
+
 def _has_audio(path: Path) -> bool:
-    from .render import ffmpeg_bin, ffprobe_bin
-    exe = ffprobe_bin()
+    """Does this file carry sound at all?
+
+    Cached by path. It is asked once per SHOT, and nine shots off one
+    take is nine identical ffprobe processes to answer one question about
+    one file. Whether a file has an audio stream does not change while a
+    film is being built.
+    """
+    key = str(path)
+    if key in _audio_seen:
+        return _audio_seen[key]
+    from .render import ffprobe_bin
     r = subprocess.run(
-        [exe, "-v", "error", "-select_streams", "a", "-show_entries",
-         "stream=index", "-of", "csv=p=0", str(path)],
+        [ffprobe_bin(), "-v", "error", "-select_streams", "a",
+         "-show_entries", "stream=index", "-of", "csv=p=0", str(path)],
         capture_output=True, text=True)
-    return bool(r.stdout.strip())
+    _audio_seen[key] = bool(r.stdout.strip())
+    return _audio_seen[key]
+
+
+# --------------------------------------------------------------------------
+# Not skipping ahead: `-ss` before `-i`, tried, measured, and rejected
+#
+# Every spoken piece is a separate `-i` of the same file and ffmpeg
+# decodes each one from the top, so it looks like obvious waste. On one
+# real ten-shot film the audio decoded to build one soundtrack is 1599
+# seconds where 337 would do -- the ducking sidechain builds the same
+# pieces a second time, so a 157 second take is walked from the start
+# eighteen times to reach nine windows scattered through it. A 4.7x
+# saving, apparently, for one flag.
+#
+# It is worth 0.8%. Measured, same film, same machine, everything else
+# identical:
+#
+#     everything as it is now                     17.9s
+#     with -ss before every -i                    17.7s
+#     with no ducking (half the filter chains)    11.7s   -34.7%
+#     with speech_lift off (no denoise/norm/gate) 14.3s   -20.1%
+#     with loudnorm off                            9.0s   -49.6%
+#
+# The decode was never the cost. Half the time is loudnorm and most of
+# the rest is the voice chain, run twice. Skipping 80% of the decoding
+# changes almost nothing.
+#
+# And it is not free. `-ss` before `-i` rebases the input's clock, so the
+# trim has to measure from wherever the first frame after the seek landed
+# -- which is usually exact and is not always. Across a whole film, two
+# of six pieces came back about one AAC frame out (19ms, and 29ms on the
+# other film tested), with the local correlation against the unseeked
+# build falling to 0.26 in the middle of loud speech while the rest of
+# the film sat at 1.000. `-copyts`, which should have made `atrim` immune
+# by keeping the original timestamps, did not fix it.
+#
+# 19ms is a quarter of a frame at 24fps and is audible on a face. That is
+# the exact failure this file and spec.frames_for exist to prevent, and
+# it is not buyable for 0.8%.
+#
+# If this is ever worth revisiting, the cost is in the two places named
+# above, not here: the sidechain trigger runs the full denoise ->
+# normalise -> gate chain when all it has to know is WHEN somebody is
+# talking. That is 34.7%, and unlike this it does not move anything.
+# --------------------------------------------------------------------------
 
 
 def speech_chain(start: float, end: float | None, delay: int,
@@ -254,6 +311,11 @@ def speech_chain(start: float, end: float | None, delay: int,
       tone   floor and warmth, then the level lift
       fades  measured on the POST-tempo length
       delay  put it where it belongs on the finished timeline
+
+    The trim is written against the SOURCE's own clock, from the head of
+    the file. Nothing above this function is allowed to change what that
+    means -- see the note on `-ss` above for what happened when something
+    did.
     """
     chain: list[str] = []
     if end is None:
@@ -379,6 +441,9 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
         nonlocal idx
         labels = []
         for i, (src, start, end, delay, speed) in enumerate(specs):
+            # Decoded from the head of the file, on purpose. See the note
+            # above about `-ss`: skipping ahead saves 0.8% and moves the
+            # speech by up to 29ms.
             chain = speech_chain(start, end, delay, speed, film.speech_lift)
             lbl = f"{prefix}{i}"
             filters.append(f"[{idx}:a]" + ",".join(chain) + f"[{lbl}]")

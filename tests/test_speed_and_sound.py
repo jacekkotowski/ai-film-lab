@@ -125,6 +125,53 @@ def test_the_delay_is_last_so_it_moves_the_finished_stream():
 
 
 # --------------------------------------------------------------------------
+# The trim is measured on the SOURCE's clock, from the head of the file
+#
+# `-ss` before `-i` was tried here, to stop ffmpeg decoding a whole take
+# from the top once per spoken piece. Measured on two real films it was
+# worth 0.8% -- the cost is loudnorm and the voice chain, never the
+# decode -- and it moved two of six pieces by 19 and 29ms, which is a
+# quarter of a frame, on a face. The note in audio.py has the figures.
+#
+# These pin the shape that made the difference visible, so that anything
+# which starts the decode late has to change a test that says why not.
+# --------------------------------------------------------------------------
+
+
+def trim_of(chain):
+    for c in chain:
+        if c.startswith("atrim"):
+            return c
+    return None
+
+
+def test_the_trim_is_written_on_the_sources_own_clock():
+    """Not on a clock rebased by a seek. A shot 90 seconds into a take
+    trims at 90 seconds, and the number in film.yaml is that number."""
+    chain = speech_chain(90.0, 97.0, 4500, 1.2, lift=True)
+    assert trim_of(chain) == "atrim=start=90.000:end=97.000"
+
+
+def test_the_window_kept_is_exactly_as_long_as_it_was_asked_for():
+    """A trim that kept the wrong length would shorten the speech, and a
+    shortened piece of speech is every later shot out of sync."""
+    for start, end in ((0.0, 7.0), (90.0, 97.0), (133.67, 135.62)):
+        m = re.fullmatch(r"atrim=start=([\d.]+):end=([\d.]+)",
+                         trim_of(speech_chain(start, end, 0, 1.0, lift=True)))
+        assert abs((float(m.group(2)) - float(m.group(1)))
+                   - (end - start)) < 1e-3, (start, end)
+
+
+def test_a_narration_track_at_offset_zero_is_never_trimmed():
+    assert trim_of(speech_chain(0.0, None, 0, 1.0, lift=True)) is None
+
+
+def test_a_narration_track_with_an_offset_trims_from_it():
+    assert trim_of(speech_chain(30.0, None, 0, 1.0, lift=True)) \
+        == "atrim=start=30.000"
+
+
+# --------------------------------------------------------------------------
 # The voice: EQ, never pitch
 # --------------------------------------------------------------------------
 
