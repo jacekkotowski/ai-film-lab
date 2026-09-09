@@ -180,7 +180,8 @@ film and a slideshow.
 the point of it, so all of it stays, top to tail.
 
 **The dead air comes out.** Any pause longer than about a second is cut,
-leaving a quarter-second breath either side so no word gets clipped.
+leaving a three-tenths-of-a-second breath either side so no word gets
+clipped.
 Short pauses stay, because speech without them sounds panicked. Each
 remaining piece becomes its own shot, which is why the framing shifts on
 every cut — that's what makes it read as an edit rather than a stumble.
@@ -202,7 +203,7 @@ not a pause. And if trimming ever wanted to remove more than a third of a
 take, it decides the detection was wrong and keeps the take whole.
 
 **The music gets out of the way while you talk** and comes back up in the
-gaps. That's `music_duck:` in `film.yaml` — `0.3` by default, `0` to
+gaps. That's `music_duck:` in `film.yaml` — `0.5` by default, `0` to
 switch it off, higher to push the music further down.
 
 **A silent clip is treated as B-roll** and sampled for a few good
@@ -228,7 +229,9 @@ talking alone is already longer than the target, it says so in
 # pictures were cut to the bone and nothing you said was touched.
 ```
 
-Worth knowing: a Short is 60 seconds. Above that it is a normal video.
+Worth knowing: YouTube stops calling it a Short past three minutes.
+Sixty seconds is the length people actually watch to the end of, which
+is why the walk-through offers it.
 
 ## If something looks wrong before you start
 
@@ -585,20 +588,44 @@ uv run film check -p my_movie
 
 Every render quietly saves your `film.yaml` first, but only when it
 actually changed. So there's a list of every version you've ever looked
-at, newest at the top:
+at — and one command to go back:
 
 ```powershell
-git log --oneline -- projects\my_movie\film.yaml
+uv run film undo -p my_movie
 ```
 
-Each line starts with a short code. To go back to one of them:
+That's it. You're back on the last version you watched, and the one you
+just abandoned is kept next to it as `film.yaml.bak`, so undoing the
+undo is possible too. To see them all and pick a particular one:
 
 ```powershell
-git show a6511a2:projects/my_movie/film.yaml > projects/my_movie/film.yaml
+uv run film undo -p my_movie --list
 ```
 
-Then `uv run film peek -p my_movie` and you're looking at the old
-version again. Nothing else in your work is touched, and your photos and
-clips are never in here — git tracks the *edit*, not the footage.
+```powershell
+uv run film undo -p my_movie --to a6511a2
+```
+
+The walk-through offers this as soon as there's somewhere to go back to,
+so you don't have to remember the command. Your photos and clips are
+never involved — this tracks the *edit*, not the footage.
+
+## Did anything get left out?
+
+```powershell
+uv run film check -p my_movie
+```
+
+Besides checking the file loads, this now names any file in `media\`
+that no shot uses — the photograph you dropped in after the edit was
+already written, for instance. To add those at the end while keeping
+everything you've tuned:
+
+```powershell
+uv run film go -p my_movie
+```
+
+It also warns when a widescreen clip in a vertical film is about to crop
+the person off, and tells you the one line that fixes it (`fill: blur`).
 
 That's the whole system.

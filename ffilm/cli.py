@@ -95,7 +95,7 @@ def find_project(arg: str | None) -> Path:
         f"No project found for {arg!r}.\n"
         f"Looked in:\n" + "\n".join(f"  - {c}" for c in candidates) + known +
         f"\n\nIf this is a brand new project, create it first:\n"
-        f"  uv run film new {p.name or 'my_movie'}\n"
+        f"  uv run film new {_arg(p.name or 'my_movie')}\n"
         f"...or make sure it has a media\\ subfolder with your photos in it."
     )
 
@@ -477,6 +477,17 @@ def cmd_go(args) -> None:
     print(f"\nDone -> {project / 'out' / (q + '.mp4')}")
 
 
+def _arg(text: str) -> str:
+    """A value as it must be TYPED. Quoted when it has a space in it.
+
+    Every command this prints is printed to be retyped, and a film called
+    `Zima nad morzem` printed bare reads as a project called Zima and
+    three stray arguments -- which fails for a reason nobody would guess
+    from looking at it.
+    """
+    return f'"{text}"' if " " in text else text
+
+
 def unused_media(project: Path, film) -> list[str]:
     """Files in media/ that no shot in the film uses.
 
@@ -581,11 +592,16 @@ def cmd_check(args) -> None:
             print(f"       {m}")
         if len(missing) > 20:
             print(f"       ... and {len(missing) - 20} more")
-        print("\n     Footage that arrived after the edit was written is the "
-              "usual reason.")
-        print("     To add them at the end, keeping everything you have "
-              "tuned:")
-        print(f"       uv run film go -p {project.name}")
+        print("\n     Two reasons this happens: footage that arrived after "
+              "the edit was")
+        print("     written, and pictures left out to hit a --target "
+              "length. Either way,")
+        print("     to put them back at the end, keeping everything you "
+              "have tuned:")
+        # Quoted. A film called `Zima nad morzem` printed bare reads as a
+        # project called Zima plus three stray arguments -- the same
+        # mistake guide.Step.pretty exists to avoid.
+        print(f"       uv run film go -p {_arg(project.name)}")
 
     for note in framing_notes(film):
         print(f"  {note}" if note.startswith("[") else note)
@@ -1097,8 +1113,8 @@ def cmd_undo(args) -> None:
         print(f"Saved versions of {project.name}\\film.yaml, newest first:\n")
         for i, (sha, what) in enumerate(saved, 1):
             print(f"  [{i}]  {sha}  {what}")
-        print(f"\nTo go back to one:  uv run film undo -p {project.name} "
-              f"--to {saved[-1][0]}")
+        print(f"\nTo go back to one:  uv run film undo -p "
+              f"{_arg(project.name)} --to {saved[-1][0]}")
         return
 
     if args.to:
@@ -1106,7 +1122,7 @@ def cmd_undo(args) -> None:
         if pick is None:
             raise SystemExit(
                 f"No saved version starting {args.to!r}.\n"
-                f"  uv run film undo -p {project.name} --list   shows them.")
+                f"  uv run film undo -p {_arg(project.name)} --list   shows them.")
     else:
         # No argument: the one before the version on disk now. That is
         # what "undo" means, and it is the only thing anybody types.
@@ -1121,7 +1137,8 @@ def cmd_undo(args) -> None:
     if text == now:
         print(f"film.yaml is already exactly version {pick[0]}. "
               f"Nothing to undo.")
-        print(f"  uv run film undo -p {project.name} --list   shows the rest.")
+        print(f"  uv run film undo -p {_arg(project.name)} --list   "
+              f"shows the rest.")
         return
 
     # The version being replaced is kept where the guide can find it, so
@@ -1343,6 +1360,11 @@ def main() -> None:
                    help="throw away the existing film.yaml and write a fresh "
                         "one from the media (the old one is kept as .bak)")
     p.add_argument("--final", action="store_true", help="render final, not draft")
+    # cmd_go already looked for this with getattr and never found it,
+    # because nothing declared it -- so `go` always opened a player,
+    # which is right in front of a person and wrong from a script.
+    p.add_argument("--no-open", action="store_true",
+                   help="do not open the film when it is rendered")
 
     p = sub.add_parser("doctor", help="check everything is in place")
     p.add_argument("--project", "-p", default=None)

@@ -71,5 +71,5 @@ Every render commits your `film.yaml` if it changed, so any version you
 have ever watched can be brought back:
 
 ```powershell
-git log --oneline -- projects/my_movie/film.yaml
+uv run film undo -p my_movie
 ```

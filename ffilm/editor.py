@@ -17,7 +17,12 @@ Claude on the same file interchangeably.
 
 One warning it also prints on screen: saving rewrites film.yaml, so
 `#` comments are lost. Use `note:` fields instead -- those are data and
-survive.
+survive. (Only the BENCH does this. `film caption` used to as well, and
+does not any more -- see scaffold.add_captions.)
+
+It also refuses to save over a film.yaml that changed while the page was
+open, rather than silently winning: Notepad++ and Claude may well be in
+the same file, and CLAUDE.md says outright that they will be.
 """
 
 from __future__ import annotations

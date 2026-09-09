@@ -13,8 +13,9 @@ Three things can make sound, and all three need to end up in the file:
 
   3. A music bed (`music:`, or just drop a file in the project's
      music/ folder). Trimmed -- or looped -- to the film's exact
-     length, faded in and out, and held at `music_volume` (0.4 by
-     default) so it sits under the talking instead of fighting it.
+     length, faded in and out, and held at `music_volume` (0.6 by
+     default) -- and ducked out of the way while anyone is talking,
+     which is what lets it be that loud in the gaps.
 
 Built as a second pass with one ffmpeg call after the video is
 rendered. That is deliberate: the video's true length is known by

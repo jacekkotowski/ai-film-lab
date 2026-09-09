@@ -30,7 +30,9 @@ as something you authored.
 `analysis/cuts/`.
 
 **Step C — write the edit.** You rewrite `film.yaml`: ordering, durations,
-moves, captions. Run `uv run film check` afterwards, always.
+moves, captions. Run `uv run film check` afterwards, always — it also
+names any file in `media/` that ended up in no shot, and says when a wide
+clip is about to lose its subject to a tall frame.
 
 If you did have to touch `ffilm/`, run the tests too — they are fast and
 they exist because every rule in them broke in front of me once:
@@ -46,6 +48,10 @@ make small edits to `film.yaml`. **Return to Step D.** This loop is the
 whole system; expect to go round it many times.
 
 **Step F — ship.** `uv run film final`, only when I ask. It is the slow one.
+
+If a change made it worse, `uv run film undo` puts back the last
+`film.yaml` I watched, and keeps the one it replaced as `film.yaml.bak`.
+`uv run film undo --list` shows every saved version.
 
 I may also be editing `film.yaml` in the browser bench
 (`uv run film edit`) or in Notepad++ while you work. If the file may have
@@ -122,8 +128,16 @@ GETTING THE MATERIAL
 
 LOOKING AT THE MATERIAL
   ffilm/ingest.py     media -> contact sheet, manifest, proxies, where
-                      the sound and the pauses are
+                      the sound and the pauses are. Cached per file, so
+                      one new clip does not re-analyse forty old ones.
+                      Everything derived is named by analysis_keys(),
+                      never by the bare filename -- IMG_0042 appears in
+                      every folder on a camera card
   ffilm/kinds.py      what counts as a photo, a clip, a track. One list.
+  ffilm/pix.py        read/write a still whatever it is called. OpenCV
+                      cannot open a non-ASCII path on Windows and says
+                      so by returning None. Never call cv2.imread or
+                      cv2.imwrite directly; call these
 
 SOUND AND WORDS
   ffilm/audio.py      speech + narration + music -> one track. Ducking,
@@ -143,7 +157,8 @@ THE WAY IN
   ffilm/guide.py      `uv run film` -- what do I do next? Also what
                       FILM.bat runs.
   ffilm/editor.py     the browser bench (`film edit`)
-  ffilm/history.py    every render commits film.yaml, so there is an undo
+  ffilm/history.py    every render commits film.yaml, so there is an
+                      undo -- `film undo`, and the guide offers it
   ffilm/pack.py       a zip you can carry to another computer
 
 

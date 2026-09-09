@@ -29,11 +29,25 @@ TIMEOUT = 10        # seconds. A hung git must not hang a render.
 
 
 def _git(cwd: Path, *args: str):
+    """Run git and read what it said, as UTF-8.
+
+    Not text=True. That decodes with the machine's locale codepage, and
+    git writes UTF-8 -- so on a Polish Windows a film called `Zima nad
+    morzem` came back out of `git log` as `Zima nad morzem Ä…Ä™`.
+
+    Cosmetic in the listing, and not cosmetic at all in `restore`, which
+    returns a film.yaml: every accented letter in every caption would
+    have been mangled on the way back in, by the one command whose whole
+    job is undoing damage.
+    """
     try:
-        return subprocess.run(["git", "-C", str(cwd), *args],
-                              capture_output=True, text=True, timeout=TIMEOUT)
+        r = subprocess.run(["git", "-C", str(cwd), *args],
+                           capture_output=True, timeout=TIMEOUT)
     except (OSError, subprocess.SubprocessError):
         return None
+    r.stdout = (r.stdout or b"").decode("utf-8", errors="replace")
+    r.stderr = (r.stderr or b"").decode("utf-8", errors="replace")
+    return r
 
 
 def repo_root(start: Path) -> Path | None:
