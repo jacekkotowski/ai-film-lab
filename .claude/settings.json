@@ -3,7 +3,12 @@
     "allow": [
       "Bash(uv run --extra dev pytest)",
       "Bash(uv run --extra dev pytest -q)",
+      "Bash(uv run film check *)",
+      "Bash(uv run film peek *)",
+      "Bash(uv run film draft *)",
       "Bash(uv --version)",
+      "Bash(./.venv/Scripts/python.exe *)",
+      "Bash(.venv/Scripts/python.exe *)",
 
       "Bash(ffprobe *)",
       "Bash(ffmpeg *)",
@@ -17,12 +22,38 @@
       "Bash(grep *)",
       "Bash(rg *)",
       "Bash(find *)",
+      "Bash(for *)",
 
       "Bash(git status)",
       "Bash(git status *)",
       "Bash(git log *)",
       "Bash(git diff *)",
-      "Bash(git show *)"
+      "Bash(git show *)",
+
+      "PowerShell(uv run --extra dev pytest*)",
+      "PowerShell(uv run film check*)",
+      "PowerShell(uv run film peek*)",
+      "PowerShell(uv run film draft*)",
+      "PowerShell(uv --version)",
+      "PowerShell(.\\.venv\\Scripts\\python.exe *)",
+      "PowerShell(& $py *)",
+      "PowerShell(ffprobe *)",
+      "PowerShell(ffmpeg *)",
+      "PowerShell(Get-ChildItem*)",
+      "PowerShell(Get-Content*)",
+      "PowerShell(Get-Item*)",
+      "PowerShell(Test-Path*)",
+      "PowerShell(Select-String*)",
+      "PowerShell(Measure-Object*)",
+      "PowerShell(Resolve-Path*)",
+      "PowerShell(git status*)",
+      "PowerShell(git log*)",
+      "PowerShell(git diff*)",
+      "PowerShell(git show*)",
+
+      "Read(//c/Users/jacek/code/ai-film-lab/**)",
+      "Glob(//c/Users/jacek/code/ai-film-lab/**)",
+      "Grep(//c/Users/jacek/code/ai-film-lab/**)"
     ]
   }
 }
