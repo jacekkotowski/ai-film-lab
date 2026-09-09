@@ -14,6 +14,7 @@ cli.py  --  the commands you type.
     uv run film edit                open the editing bench in your browser
     uv run film new <name>          start a new project folder
     uv run film check               validate film.yaml without rendering
+    uv run film undo                back to a version you already watched
     uv run film library             the music + cover pictures every film uses
 """
 
@@ -476,6 +477,86 @@ def cmd_go(args) -> None:
     print(f"\nDone -> {project / 'out' / (q + '.mp4')}")
 
 
+def unused_media(project: Path, film) -> list[str]:
+    """Files in media/ that no shot in the film uses.
+
+    The single worst thing this toolkit can do is leave something of
+    yours out and say nothing, and until now nothing checked. `ingest`
+    reports what it could not READ; nothing reported what it read fine
+    and then never put on screen -- which is what happens to a photograph
+    you dropped in after `init` had already written the edit, or to one
+    you numbered `13_` in a film whose numbering stops at 12.
+    """
+    media = project / "media"
+    if not media.is_dir():
+        return []
+    used = set()
+    for s in film.shots:
+        used.add(Path(s.src).name.lower())
+        # A shot may point at a proxy or at a converted HEIC; both are
+        # named for the original, so the stem is what identifies it.
+        used.add(Path(s.src).stem.lower())
+    out = []
+    for p in sorted(media.rglob("*")):
+        if not p.is_file() or kinds.is_aside(p, media):
+            continue
+        if p.suffix.lower() not in kinds.MEDIA:
+            continue
+        if p.name.lower() in used or p.stem.lower() in used:
+            continue
+        out.append(p.relative_to(project).as_posix())
+    return out
+
+
+# A wide clip in a tall frame keeps 32% of its width. That is fine on a
+# landscape with room to lose and wrong on a face, and `fill: blur`
+# already exists for exactly this -- it just had no way of being
+# suggested. Only worth saying when the subject is near an edge, because
+# that is when cropping actually takes part of them away.
+EDGE = 0.28
+
+
+def framing_notes(film) -> list[str]:
+    """Where the crop is about to cost something, said before the render.
+
+    Everything needed for this was already on the shot -- the frame's
+    shape, the clip's shape, the focus point -- and nothing put the three
+    together, so `fill: blur` was a feature you had to already know about
+    to find.
+    """
+    if film.height <= film.width:
+        return []                      # a tall picture in a wide frame is fine
+    out = []
+    for s in film.shots:
+        if s.kind != "video" or (s.fill or film.fill) == "blur":
+            continue
+        try:
+            src = film.resolve(s.src)
+            import cv2
+            cap = cv2.VideoCapture(str(src))
+            w = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+            h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+            cap.release()
+        except Exception:
+            continue
+        if not w or not h or w <= h:
+            continue
+        fx = (s.focus or (0.5, 0.5))[0]
+        if EDGE < fx < 1.0 - EDGE:
+            continue
+        out.append(
+            f"[{s.id}] a {int(w)}x{int(h)} clip in a {film.width}x"
+            f"{film.height} frame keeps about "
+            f"{100 * (film.width / film.height) / (w / h):.0f}% of its "
+            f"width, and the subject is at {fx:.2f} -- near the edge that "
+            f"gets cut off.")
+    if out:
+        out.append("    Add `fill: blur` at the top of film.yaml to keep "
+                   "the picture whole")
+        out.append("    on a blurred copy of itself instead of cropping it.")
+    return out
+
+
 def cmd_check(args) -> None:
     project = find_project(args.project)
     film = load(project, "final")
@@ -491,6 +572,24 @@ def cmd_check(args) -> None:
     for s in film.shots:
         caps = f"  {len(s.captions)} caption(s)" if s.captions else ""
         print(f"  {s.id}  {s.duration:5.1f}s  {s.move:<12} {s.src}{caps}")
+
+    missing = unused_media(project, film)
+    if missing:
+        print(f"\n  !! {len(missing)} file(s) in media\\ are in NO shot, so "
+              f"they will not\n     appear in the film:")
+        for m in missing[:20]:
+            print(f"       {m}")
+        if len(missing) > 20:
+            print(f"       ... and {len(missing) - 20} more")
+        print("\n     Footage that arrived after the edit was written is the "
+              "usual reason.")
+        print("     To add them at the end, keeping everything you have "
+              "tuned:")
+        print(f"       uv run film go -p {project.name}")
+
+    for note in framing_notes(film):
+        print(f"  {note}" if note.startswith("[") else note)
+
     guide.print_next(project)
 
 
@@ -972,6 +1071,80 @@ def cmd_pack(args) -> None:
           "FILM.bat.")
 
 
+def cmd_undo(args) -> None:
+    """Go back to a film.yaml you have already watched.
+
+    Every render saves the film.yaml it is about to render, if it changed
+    -- see history.py. That has been true from the start and there was no
+    way to use it that did not involve typing
+
+        git show a6511a2:projects/my_movie/film.yaml > projects/...
+
+    which is not a thing to ask of somebody who is tired and has just
+    made their film worse.
+    """
+    project = find_project(args.project)
+    saved = history.versions(project)
+    if not saved:
+        raise SystemExit(
+            f"No saved versions of {project.name}\\film.yaml yet.\n"
+            f"Every render saves one, if the file changed since the last "
+            f"one -- so there will be some after you have been round the "
+            f"loop once or twice.\n"
+            f"(This needs git. If `git --version` says nothing, that is why.)")
+
+    if args.list:
+        print(f"Saved versions of {project.name}\\film.yaml, newest first:\n")
+        for i, (sha, what) in enumerate(saved, 1):
+            print(f"  [{i}]  {sha}  {what}")
+        print(f"\nTo go back to one:  uv run film undo -p {project.name} "
+              f"--to {saved[-1][0]}")
+        return
+
+    if args.to:
+        pick = next((v for v in saved if v[0].startswith(args.to)), None)
+        if pick is None:
+            raise SystemExit(
+                f"No saved version starting {args.to!r}.\n"
+                f"  uv run film undo -p {project.name} --list   shows them.")
+    else:
+        # No argument: the one before the version on disk now. That is
+        # what "undo" means, and it is the only thing anybody types.
+        pick = saved[1] if len(saved) > 1 else saved[0]
+
+    text = history.restore(project, pick[0])
+    if text is None:
+        raise SystemExit(f"Could not read {pick[0]} back out of git.")
+
+    yml = project / "film.yaml"
+    now = yml.read_text(encoding="utf-8") if yml.exists() else ""
+    if text == now:
+        print(f"film.yaml is already exactly version {pick[0]}. "
+              f"Nothing to undo.")
+        print(f"  uv run film undo -p {project.name} --list   shows the rest.")
+        return
+
+    # The version being replaced is kept where the guide can find it, so
+    # undoing an undo is one command and not an act of faith.
+    keep = yml.with_name("film.yaml.bak")
+    if now:
+        keep.write_text(now, encoding="utf-8")
+    yml.write_text(text, encoding="utf-8")
+    try:
+        film = Film.load(yml)
+    except SystemExit as e:
+        yml.write_text(now, encoding="utf-8")
+        raise SystemExit(f"That version will not load, so nothing was "
+                         f"changed:\n\n  {e}")
+
+    print(f"Back to {pick[0]}  --  {pick[1]}")
+    print(f"  {len(film.shots)} shots, {film.duration:.1f}s")
+    if now:
+        print(f"  what you had is kept as {keep.name}, in case you want it "
+              f"back")
+    guide.print_next(project)
+
+
 def cmd_doctor(args) -> None:
     project = find_project(args.project)
     print(f"Checking {project.name} ...\n")
@@ -1174,6 +1347,13 @@ def main() -> None:
     p = sub.add_parser("doctor", help="check everything is in place")
     p.add_argument("--project", "-p", default=None)
 
+    p = sub.add_parser("undo", help="go back to a film.yaml you already watched")
+    p.add_argument("--project", "-p", default=None)
+    p.add_argument("--list", action="store_true",
+                   help="show the saved versions instead of going back")
+    p.add_argument("--to", default=None,
+                   help="a particular one, by the code `--list` shows")
+
     p = sub.add_parser("shape", help="switch between vertical and widescreen")
     p.add_argument("--project", "-p", default=None)
     g = p.add_mutually_exclusive_group(required=True)
@@ -1271,6 +1451,8 @@ def main() -> None:
             cmd_go(args)
         elif args.cmd == "doctor":
             cmd_doctor(args)
+        elif args.cmd == "undo":
+            cmd_undo(args)
         elif args.cmd == "shape":
             cmd_shape(args)
         elif args.cmd == "drop":

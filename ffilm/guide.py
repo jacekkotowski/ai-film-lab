@@ -43,6 +43,7 @@ class Step:
     folders: list[Path] = field(default_factory=list)   # opened for you
     done: bool = False                           # nothing left to do -- stop here
     shell: list[str] = field(default_factory=list)   # not a `film` command
+    ask_length: bool = False                     # offer --target before running
 
     @property
     def pretty(self) -> str:
@@ -302,7 +303,8 @@ def next_steps(project: Path) -> list[Step]:
         return [
             Step("Build the whole film in one go", ["go"] + p,
                  why="Looks at your material, writes the edit, adds captions "
-                     "from your talking, and renders a draft you can watch."),
+                     "from your talking, and renders a draft you can watch.",
+                 ask_length=True),
             Step("...or take it one step at a time, starting here",
                  ["ingest"] + p,
                  why="Finds the faces and the interesting part of each picture."),
@@ -385,6 +387,19 @@ def next_steps(project: Path) -> list[Step]:
                               "Nothing is letterboxed."))
     steps.append(Step("...or change something", ["edit"] + p,
                       why="Then peek again. Round and round -- that is the job."))
+
+    # Only once there is somewhere to go back TO. Every render saves the
+    # film.yaml it rendered, and until now the only way to use that was a
+    # git command with a path in it -- which is not a thing to ask of
+    # somebody who has just made their film worse and knows it.
+    from . import history
+    if len(history.versions(project, limit=2)) > 1:
+        steps.append(Step("...or put it back the way it was",
+                          ["undo"] + p,
+                          why="Back to the last film.yaml you watched. Every "
+                              "render saves one. What you have now is kept "
+                              "as film.yaml.bak, so this is undoable too."))
+
     if final_ok:
         steps.insert(0, Step("Done. final.mp4 is up to date -- upload it",
                              folders=[out], done=True,
@@ -479,6 +494,41 @@ def _run(args: list[str]) -> int:
     sys.stdout.flush()          # or our lines land after the child's
     r = subprocess.run([sys.executable, "-m", "ffilm.cli", *args])
     return r.returncode
+
+
+# What to offer when somebody has not said. A Short is the thing this is
+# for, and sixty seconds is the length people actually watch to the end
+# of. Nothing is forced: ENTER takes it, and typing 0 turns it off.
+SUGGESTED_SECONDS = 60
+
+
+def _ask_length(args: list[str]) -> list[str]:
+    """Offer a length before building, once, where the decision is.
+
+    `--target` has existed and worked from the start, and the guide never
+    mentioned it -- so the ordinary result of dropping twenty-five
+    photographs in a folder was a two-minute film, which is not a Short
+    and which nobody reaches the end of. Shortening it afterwards means
+    knowing that a flag exists.
+
+    Never shortens speech, whatever is typed here -- see
+    scaffold.fit_to_target. This only ever touches the pictures.
+    """
+    if "--target" in args:
+        return args
+    print(f"\n  How long should it be? Pictures are shortened to fit; "
+          f"nothing you\n  said is ever cut.")
+    a = _ask(f"\n  ENTER for about {SUGGESTED_SECONDS} seconds, "
+             f"a number of seconds, or 0 for no limit:  ")
+    if a.lower().startswith("q"):
+        return args
+    if a.strip() == "":
+        return args + ["--target", str(SUGGESTED_SECONDS)]
+    try:
+        want = float(a.replace(",", "."))
+    except ValueError:
+        return args + ["--target", str(SUGGESTED_SECONDS)]
+    return args if want <= 0 else args + ["--target", f"{want:g}"]
 
 
 def _claude_ready() -> bool:
@@ -672,7 +722,8 @@ def walk(project: Path | None = None) -> None:
             for f in chosen.folders:
                 open_folder(f)
             continue
-        if _run(chosen.args) != 0:
+        run_args = _ask_length(chosen.args) if chosen.ask_length else chosen.args
+        if _run(run_args) != 0:
             # A take that did not save is the ordinary case here, not a
             # broken installation -- you fluffed it, something grabbed the
             # camera, you closed the window. Ending the whole walk-through

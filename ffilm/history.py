@@ -76,3 +76,50 @@ def snapshot(project: Path, label: str) -> str | None:
 
     sha = _git(root, "rev-parse", "--short", "HEAD")
     return sha.stdout.strip() if sha and sha.returncode == 0 else "committed"
+
+
+def versions(project: Path, limit: int = 12) -> list[tuple[str, str]]:
+    """Every saved version of this film.yaml, newest first, as
+    (short sha, what was being rendered when it was saved).
+
+    The snapshots have always been there; there was no way to see them
+    that did not involve typing a git command with a path in it. The
+    person this toolkit is for is not going to do that.
+    """
+    yml = project / "film.yaml"
+    root = repo_root(project)
+    if root is None or not yml.exists():
+        return []
+    try:
+        rel = yml.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return []
+    r = _git(root, "log", f"-{limit}", "--format=%h\t%s", "--", rel)
+    if r is None or r.returncode != 0:
+        return []
+    out = []
+    for line in r.stdout.splitlines():
+        sha, _, subject = line.partition("\t")
+        if sha:
+            out.append((sha.strip(), subject.strip()))
+    return out
+
+
+def restore(project: Path, sha: str) -> str | None:
+    """Put a saved version of film.yaml back. Returns its text, or None.
+
+    Writes nothing that will not load: the caller checks. Nothing else in
+    the repository is touched -- this reads one file out of one commit.
+    """
+    yml = project / "film.yaml"
+    root = repo_root(project)
+    if root is None:
+        return None
+    try:
+        rel = yml.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return None
+    r = _git(root, "show", f"{sha}:{rel}")
+    if r is None or r.returncode != 0 or not r.stdout:
+        return None
+    return r.stdout
