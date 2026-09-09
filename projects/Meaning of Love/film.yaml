@@ -54,6 +54,19 @@ shots:
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.586, 0.376]
     note: "part 1 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "My parents never used the word."
+        at: 0.00
+        dur: 1.77
+        pos: lower_third
+      - text: "Love."
+        at: 1.72
+        dur: 0.81
+        pos: lower_third
+      - text: "They were ashamed of it."
+        at: 3.12
+        dur: 1.32
+        pos: lower_third
 
   - id: s02
     src: media/rec_20260909-204941.mp4
@@ -65,6 +78,19 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 2 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Hate words were easier."
+        at: 0.00
+        dur: 1.47
+        pos: lower_third
+      - text: "One was home."
+        at: 1.84
+        dur: 1.07
+        pos: lower_third
+      - text: "The other was in the cellar."
+        at: 3.04
+        dur: 1.68
+        pos: lower_third
 
   - id: s03
     src: media/rec_20260909-204941.mp4
@@ -76,6 +102,15 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 3 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I was running up and down the stairs,"
+        at: 1.00
+        dur: 2.42
+        pos: lower_third
+      - text: "negotiating peace."
+        at: 3.43
+        dur: 0.95
+        pos: lower_third
 
   - id: s04
     src: media/rec_20260909-204941.mp4
@@ -87,6 +122,15 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 4 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "My father told me,"
+        at: 0.00
+        dur: 1.18
+        pos: lower_third
+      - text: "“Say sorry even if you were right.”"
+        at: 1.12
+        dur: 2.84
+        pos: lower_third
 
   - id: s05
     src: media/rec_20260909-204941.mp4
@@ -98,6 +142,11 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 5 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "This was not love."
+        at: 0.00
+        dur: 1.04
+        pos: lower_third
 
   - id: s06
     src: media/rec_20260909-204941.mp4
@@ -109,6 +158,15 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 6 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "People are ashamed of tenderness."
+        at: 0.06
+        dur: 2.08
+        pos: lower_third
+      - text: "I want to love."
+        at: 2.68
+        dur: 1.28
+        pos: lower_third
 
   - id: s07
     src: media/rec_20260909-204941.mp4
@@ -120,6 +178,15 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 7 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I love you."
+        at: 0.11
+        dur: 1.38
+        pos: lower_third
+      - text: "The heart races."
+        at: 1.49
+        dur: 1.01
+        pos: lower_third
 
   - id: s08
     src: media/rec_20260909-204941.mp4
@@ -153,6 +220,15 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 10 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "It is a risk."
+        at: 0.35
+        dur: 0.45
+        pos: lower_third
+      - text: "Once, she knew I was going to say it."
+        at: 1.24
+        dur: 2.32
+        pos: lower_third
 
   - id: s11
     src: media/rec_20260909-204941.mp4
@@ -164,6 +240,15 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 11 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "“Forget me,” she said."
+        at: 0.04
+        dur: 1.24
+        pos: lower_third
+      - text: "“It will be easier.”"
+        at: 1.29
+        dur: 1.02
+        pos: lower_third
 
   - id: s12
     src: media/rec_20260909-204941.mp4
@@ -175,6 +260,11 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 12 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "For three months she had been weak."
+        at: 0.00
+        dur: 2.71
+        pos: lower_third
 
   - id: s13
     src: media/rec_20260909-204941.mp4
@@ -186,6 +276,11 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 13 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Tuberculosis suspected."
+        at: 0.00
+        dur: 1.57
+        pos: lower_third
 
   - id: s14
     src: media/rec_20260909-204941.mp4
@@ -197,6 +292,19 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 14 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Tall and hunched."
+        at: 0.00
+        dur: 2.74
+        pos: lower_third
+      - text: "A bent birch tree."
+        at: 2.20
+        dur: 1.34
+        pos: lower_third
+      - text: "Coughing."
+        at: 3.96
+        dur: 0.43
+        pos: lower_third
 
   - id: s15
     src: media/rec_20260909-204941.mp4
@@ -208,6 +316,23 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 15 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I brought her tangerines."
+        at: 0.00
+        dur: 3.10
+        pos: lower_third
+      - text: "And classes,"
+        at: 1.68
+        dur: 1.48
+        pos: lower_third
+      - text: "literature on tapes."
+        at: 3.81
+        dur: 1.03
+        pos: lower_third
+      - text: "We listened."
+        at: 6.04
+        dur: 0.62
+        pos: lower_third
 
   - id: s16
     src: media/rec_20260909-204941.mp4
@@ -219,6 +344,23 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 16 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I stayed  hours when she was sick."
+        at: 0.00
+        dur: 2.01
+        pos: lower_third
+      - text: "January."
+        at: 2.75
+        dur: 0.43
+        pos: lower_third
+      - text: "February."
+        at: 3.93
+        dur: 0.48
+        pos: lower_third
+      - text: "March."
+        at: 5.04
+        dur: 0.38
+        pos: lower_third
 
   - id: s17
     src: media/rec_20260909-204941.mp4
@@ -230,6 +372,11 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 17 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I thought April was perfect."
+        at: 0.26
+        dur: 1.82
+        pos: lower_third
 
   - id: s18
     src: media/rec_20260909-204941.mp4
@@ -241,6 +388,15 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 18 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Cherry and apple trees blooming."
+        at: 2.71
+        dur: 2.51
+        pos: lower_third
+      - text: "Petals in the air."
+        at: 5.91
+        dur: 0.99
+        pos: lower_third
 
   - id: s19
     src: media/rec_20260909-204941.mp4
@@ -252,6 +408,11 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 19 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I love you."
+        at: 0.15
+        dur: 1.18
+        pos: lower_third
 
   - id: s20
     src: media/rec_20260909-204941.mp4
@@ -263,6 +424,19 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 20 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I didn't say it."
+        at: 0.00
+        dur: 1.22
+        pos: lower_third
+      - text: "I was there."
+        at: 1.30
+        dur: 0.84
+        pos: lower_third
+      - text: "Perhaps that is love."
+        at: 2.87
+        dur: 1.61
+        pos: lower_third
 
   - id: s21
     src: media/rec_20260909-204941.mp4
@@ -274,6 +448,11 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 21 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Until she did not need me."
+        at: 0.00
+        dur: 2.12
+        pos: lower_third
 
   - id: s22
     src: media/rec_20260909-204941.mp4
@@ -285,6 +464,15 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 22 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Again, my father told me."
+        at: 0.00
+        dur: 1.71
+        pos: lower_third
+      - text: "You are a boy, boys do not complain."
+        at: 1.48
+        dur: 2.80
+        pos: lower_third
 
   - id: s23
     src: media/rec_20260909-204941.mp4
@@ -296,6 +484,15 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 23 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I studied, noone believed in me"
+        at: 0.00
+        dur: 2.61
+        pos: lower_third
+      - text: "That I would pass entrance exams."
+        at: 2.36
+        dur: 2.90
+        pos: lower_third
 
   - id: s24
     src: media/rec_20260909-204941.mp4
@@ -307,6 +504,11 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 24 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Only to prove I deserve."
+        at: 0.00
+        dur: 2.17
+        pos: lower_third
 
   - id: s25
     src: media/rec_20260909-204941.mp4
@@ -318,6 +520,19 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 25 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I thought this was love."
+        at: 0.00
+        dur: 3.15
+        pos: lower_third
+      - text: "Then I decided,"
+        at: 2.34
+        dur: 2.04
+        pos: lower_third
+      - text: "love does not exist."
+        at: 4.39
+        dur: 1.37
+        pos: lower_third
 
   - id: s26
     src: media/rec_20260909-204941.mp4
@@ -329,6 +544,19 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 26 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Yet."
+        at: 0.04
+        dur: 0.38
+        pos: lower_third
+      - text: "I think I saw it once."
+        at: 0.67
+        dur: 1.79
+        pos: lower_third
+      - text: "We were doing Combat Medical Training."
+        at: 3.27
+        dur: 2.08
+        pos: lower_third
 
   - id: s27
     src: media/rec_20260909-204941.mp4
@@ -340,6 +568,11 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 27 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "The casualty was unconscious."
+        at: 0.00
+        dur: 2.72
+        pos: lower_third
 
   - id: s28
     src: media/rec_20260909-204941.mp4
@@ -351,6 +584,31 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 28 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "One medic was doing everything correctly."
+        at: 0.00
+        dur: 4.50
+        pos: lower_third
+      - text: "Airway."
+        at: 2.74
+        dur: 0.51
+        pos: lower_third
+      - text: "Bleeding."
+        at: 3.58
+        dur: 0.38
+        pos: lower_third
+      - text: "Move him."
+        at: 4.51
+        dur: 0.67
+        pos: lower_third
+      - text: "The casualty's head bumped against the stretcher."
+        at: 5.94
+        dur: 2.74
+        pos: lower_third
+      - text: "He didn't notice."
+        at: 9.64
+        dur: 0.88
+        pos: lower_third
 
   - id: s29
     src: media/rec_20260909-204941.mp4
@@ -362,6 +620,11 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 29 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "The other one did."
+        at: 0.00
+        dur: 2.25
+        pos: lower_third
 
   - id: s30
     src: media/rec_20260909-204941.mp4
@@ -373,6 +636,19 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 30 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Warm hands on his cheeks."
+        at: 0.00
+        dur: 2.12
+        pos: lower_third
+      - text: "Brushing the dirt away."
+        at: 2.91
+        dur: 1.12
+        pos: lower_third
+      - text: "One hand gently under his head."
+        at: 4.86
+        dur: 2.40
+        pos: lower_third
 
   - id: s31
     src: media/rec_20260909-204941.mp4
@@ -384,6 +660,15 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 31 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "“Easy…”"
+        at: 0.10
+        dur: 0.37
+        pos: lower_third
+      - text: "“I've got you.”"
+        at: 1.10
+        dur: 1.07
+        pos: lower_third
 
   - id: s32
     src: media/rec_20260909-204941.mp4
@@ -395,6 +680,11 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 32 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "“Stay with me.”"
+        at: 0.05
+        dur: 0.85
+        pos: lower_third
 
   - id: s33
     src: media/rec_20260909-204941.mp4
@@ -406,6 +696,23 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 33 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "The casualty couldn't answer."
+        at: 0.03
+        dur: 1.81
+        pos: lower_third
+      - text: "But he kept talking to him."
+        at: 2.27
+        dur: 1.14
+        pos: lower_third
+      - text: "The commander noticed."
+        at: 3.76
+        dur: 1.29
+        pos: lower_third
+      - text: "One man saw a casualty."
+        at: 5.06
+        dur: 2.54
+        pos: lower_third
 
   - id: s34
     src: media/rec_20260909-204941.mp4
@@ -417,6 +724,19 @@ shots:
     focus: [0.586, 0.376]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 34 of 35 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "The other saw a human being."
+        at: 0.00
+        dur: 1.61
+        pos: lower_third
+      - text: "And I think…"
+        at: 2.99
+        dur: 1.48
+        pos: lower_third
+      - text: "that's love."
+        at: 5.29
+        dur: 0.71
+        pos: lower_third
 
   - id: s35
     src: media/rec_20260909-204941.mp4
