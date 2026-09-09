@@ -20,7 +20,7 @@ resolution: [1080, 1920]   # vertical, for YouTube Shorts
 #        has one, otherwise your library/music/ folder.
 music_volume: 0.6      # the level when nobody is talking
 music_fade: 2.0        # seconds of fade in and out
-music_duck: 0.5        # how far the music drops while you talk
+music_duck: 0.25       # how far the music drops while you talk
                        # 0 = never drops. 1 = gets right out of the way
 
 look:
