@@ -14,7 +14,7 @@ import re
 
 from ffilm.audio import (CLICK_FADE, DENOISE, NOISE_GATE, SPEECH_NORM,
                          VOICE_FLOOR_HZ, atempo_chain, duck_threshold,
-                         speech_chain, voice_tone)
+                         place_chain, speech_chain, voice_tone, voiced_chain)
 from ffilm.caption_fit import fit_per_clip
 from ffilm.spec import Film, Shot
 from ffilm.voice import Line, VoiceSource
@@ -446,3 +446,95 @@ def test_a_full_duck_puts_the_threshold_well_under_a_speaking_voice():
     import math
     at_full = 20 * math.log10(duck_threshold(1.0))
     assert at_full < KEY_LEVEL_DB - DUCK_MAX_DB
+
+
+# --------------------------------------------------------------------------
+# Voicing the take once, and cutting the pieces out of the result
+#
+# The voice chain used to run per spoken piece, so every piece started
+# speechnorm (an expander that has not heard the voice yet, and opens at
+# full gain on room tone) and agate (which starts OPEN) cold. One take
+# kept whole has one such burst, under the opening music fade. The same
+# take cut at its 34 pauses had 35, one on every join -- measured, a
+# room-tone step across the joins of median 11.5dB and worst 36.4dB.
+#
+# Now the take is voiced once and the pieces are cut from it. What these
+# pin is the half that must not move: the piece is the same length, in
+# the same place, as it always was.
+# --------------------------------------------------------------------------
+
+
+VOICE_FILTERS = (DENOISE, SPEECH_NORM, NOISE_GATE)
+
+
+def test_the_voice_is_shaped_once_per_take_not_once_per_piece():
+    once = voiced_chain(1.0, lift=True)
+    piece = place_chain(40.0, 46.0, 4000, 1.0)
+    for f in VOICE_FILTERS:
+        assert f in once, f
+        assert f not in piece, f
+    assert not any("highpass" in c or "equalizer" in c for c in piece)
+
+
+def test_nothing_in_a_piece_carries_state_across_a_cut():
+    """That is the whole fix. A trim, a fade, a delay -- and the fade is
+    the only one that touches a sample, for 20ms at each end."""
+    piece = place_chain(40.0, 46.0, 4000, 1.2)
+    allowed = ("atrim", "asetpts", "afade", "adelay")
+    for c in piece:
+        assert c.startswith(allowed), c
+
+
+def test_the_speed_is_applied_once_with_the_voice():
+    """Ahead of the normaliser, as speech_chain always did it, so the
+    normaliser's rise and fall are measured on the heard timeline."""
+    once = voiced_chain(1.4, lift=True)
+    assert "atempo=1.400000" in once
+    assert once.index("atempo=1.400000") < once.index(SPEECH_NORM)
+    assert not any("atempo" in c for c in place_chain(40.0, 46.0, 0, 1.4))
+
+
+def test_a_piece_is_cut_on_the_voiced_takes_own_clock():
+    """The voiced take is already sped up, so a moment at t in the
+    recording is at t/speed in it."""
+    chain = place_chain(42.0, 49.0, 0, 1.4)
+    m = re.fullmatch(r"atrim=start=([\d.]+):end=([\d.]+)", chain[0])
+    assert abs(float(m.group(1)) - 42.0 / 1.4) < 1e-3
+    assert abs(float(m.group(2)) - 49.0 / 1.4) < 1e-3
+
+
+def test_the_piece_is_the_same_length_it_was_before():
+    """A piece that changed length would move every shot after it."""
+    for start, end, speed in ((2.45, 8.80, 1.4), (0.0, 5.0, 1.0),
+                              (133.67, 135.62, 1.2)):
+        was = fade_out_at(speech_chain(start, end, 0, speed, lift=True))
+        now = fade_out_at(place_chain(start, end, 0, speed))
+        if was is None:
+            assert now is None, (start, end, speed)
+        else:
+            assert abs(was - now) < 1e-3, (start, end, speed)
+
+
+def test_the_piece_lands_where_it_always_landed():
+    for delay in (0, 4000, 96500):
+        chain = place_chain(40.0, 46.0, delay, 1.2)
+        if delay:
+            assert chain[-1] == f"adelay={delay}|{delay}"
+        else:
+            assert not any("adelay" in c for c in chain)
+
+
+def test_speech_lift_false_still_means_exactly_as_recorded():
+    once = voiced_chain(1.0, lift=False)
+    assert not any(f in once for f in VOICE_FILTERS)
+    assert not any("highpass" in c or "equalizer" in c for c in once)
+
+
+def test_a_narration_track_is_not_trimmed_at_the_end():
+    chain = place_chain(0.0, None, 0, 1.0)
+    assert not any(c.startswith("atrim") for c in chain)
+    assert fade_out_at(chain) is None
+
+
+def test_a_sliver_still_gets_no_fades():
+    assert fade_out_at(place_chain(3.0, 3.1, 0, 1.0)) is None

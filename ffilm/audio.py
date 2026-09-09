@@ -25,6 +25,7 @@ truncated by `-shortest` guessing wrong.
 
 from __future__ import annotations
 
+import hashlib
 import subprocess
 from pathlib import Path
 
@@ -360,6 +361,149 @@ def _has_audio(path: Path) -> bool:
 # per piece. That is a bigger change than this comment.
 
 
+# Bumped whenever the voice chain below changes, so a take voiced by an
+# older version is made again rather than reused.
+VOICE_VERSION = 1
+
+
+def voiced_chain(speed: float, lift: bool) -> list[str]:
+    """The filters that shape a VOICE, applied ONCE to a whole take.
+
+    This used to run per spoken piece, inside speech_chain, and that is
+    what put a burst of noise on every join. Each piece was its own
+    stream, so each one started these filters cold:
+
+      speechnorm  is an expander. On a fresh stream it has not heard the
+                  voice yet and opens at full gain -- on a piece that
+                  begins in a pause, that is the room lifted as far as it
+                  will go. The note on SPEECH_NORM already has a name for
+                  the sound: "a waterfall between the sentences".
+      agate       starts OPEN and takes its release, 250ms, to shut. So
+                  the waterfall was not gated away; it was let through.
+      afftdn      tracks the noise floor, and has to find it again from
+                  nothing every time.
+
+    One take kept whole has one such burst, at the very start, under the
+    opening music fade, where nobody notices. The same take cut at its 34
+    pauses has 35 of them, one on every cut. Measured on a real film, the
+    step in room-tone level across a join: median 11.5dB, worst 36.4dB.
+
+    Giving each piece a second of lead-in to settle on was tried first and
+    is worth one decibel -- the audio before a piece is the pause that was
+    cut, so it is room tone, and feeding an expander room tone asks it to
+    open further. It fixed the gate and broke the expander.
+
+    So the take is voiced once, whole, and the pieces are cut out of the
+    result. One continuous gain trajectory over one continuous recording,
+    which is what it always should have been: the recording IS continuous,
+    and only the picture was cut.
+
+    `speed` is applied here, ahead of the normaliser, for the reason
+    speech_chain always did it in that order -- so the normaliser's rise
+    and fall are measured against the timeline you will actually hear.
+    Which means the voiced take is on the SPED timeline, and a moment at
+    `t` in the recording is at `t / speed` in it. See place_chain.
+    """
+    chain = ["aresample=44100"]
+    if abs(speed - 1.0) > 1e-3:
+        chain += atempo_chain(speed)
+    if lift:
+        # Order is the whole trick: clean, then lift, then close the gaps.
+        # Denoise first so the expander has less hiss to find, gate last
+        # so anything it did find is shut off between sentences. All of it
+        # rides with `speech_lift`, so `speech_lift: false` still means
+        # "exactly as I recorded it".
+        chain += voice_tone()
+        chain.append(DENOISE)
+        chain.append(SPEECH_NORM)
+        chain.append(NOISE_GATE)
+    return chain
+
+
+def place_chain(start: float, end: float | None, delay: int,
+                speed: float) -> list[str]:
+    """Cut one piece out of an already-voiced take and put it where it
+    belongs on the finished timeline.
+
+    Nothing here carries state across a cut, which is the point: a trim,
+    a couple of milliseconds of fade so the splice does not tick, and a
+    delay. Everything that could produce a transient has already run,
+    once, over the whole take.
+
+    The times are divided by `speed` because the voiced take is on the
+    sped timeline -- see voiced_chain. The piece therefore comes out
+    (end - start) / speed long and lands at `delay`, which is exactly
+    what it was before, so nothing about the sync moves.
+    """
+    a = start / speed
+    b = None if end is None else end / speed
+    chain: list[str] = []
+    if b is None:
+        if a:
+            chain.append(f"atrim=start={a:.4f}")
+    else:
+        chain.append(f"atrim=start={a:.4f}:end={b:.4f}")
+    chain.append("asetpts=PTS-STARTPTS")
+
+    # A few milliseconds at each end. Cutting a pause out of a take
+    # splices two waveforms together mid-air, and without this the join
+    # is an audible tick.
+    if b is not None and (b - a) > 0.2:
+        chain.append(f"afade=t=in:st=0:d={CLICK_FADE}")
+        chain.append(f"afade=t=out:st={b - a - CLICK_FADE:.3f}:"
+                     f"d={CLICK_FADE}")
+    if delay:
+        chain.append(f"adelay={delay}|{delay}")
+    return chain
+
+
+def voiced_path(film, src: Path, speed: float, lift: bool) -> Path:
+    """Where a voiced take is kept. Derived, like a proxy: analysis/ can
+    be deleted at any time and it is simply made again."""
+    from . import ingest as ingest_mod
+    try:
+        rel = src.resolve().relative_to(film.root.resolve()).as_posix()
+        key = ingest_mod.key_of(film.root, rel)
+    except (ValueError, OSError):
+        key = hashlib.sha1(str(src).encode("utf-8")).hexdigest()[:10]
+    tag = f"{speed:.3f}".replace(".", "")
+    lift_tag = "lift" if lift else "raw"
+    return (film.root / "analysis" / "voice" /
+            f"{key}__{tag}__{lift_tag}__v{VOICE_VERSION}.wav")
+
+
+def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
+    """The whole take with the voice chain run over it once, as a file.
+
+    None when it could not be made, and then the caller falls back to
+    doing it per piece -- which is worse, and is still a film.
+
+    Cached on the source file's own timestamp, so a take is voiced once
+    however many pieces come out of it and however many times you render.
+    """
+    dst = voiced_path(film, src, speed, lift)
+    try:
+        if dst.exists() and dst.stat().st_mtime > src.stat().st_mtime:
+            return dst
+    except OSError:
+        pass
+    from .render import ffmpeg_bin
+    try:
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        r = subprocess.run(
+            [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error",
+             "-i", str(src), "-vn",
+             "-filter:a", ",".join(voiced_chain(speed, lift)),
+             "-c:a", "pcm_s16le", str(dst)],
+            capture_output=True, text=True, errors="replace", timeout=1800)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if r.returncode != 0 or not dst.exists() or dst.stat().st_size < 1024:
+        dst.unlink(missing_ok=True)
+        return None
+    return dst
+
+
 def speech_chain(start: float, end: float | None, delay: int,
                  speed: float, lift: bool) -> list[str]:
     """The filters one spoken source passes through, in order.
@@ -501,6 +645,22 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
         if nar.exists():
             specs.append((nar, film.audio_offset, None, 0, 1.0))
 
+    # Voice each distinct (take, speed) ONCE, and cut the pieces out of
+    # the result. The recording is continuous; only the picture was cut.
+    # See voiced_chain for what running these filters per piece did to
+    # every join.
+    voiced: dict[tuple[str, float], Path] = {}
+    for src, _s, _e, _d, speed in specs:
+        k = (str(src), round(speed, 3))
+        if k in voiced:
+            continue
+        made = voiced_take(film, src, speed, film.speech_lift)
+        if made is not None:
+            voiced[k] = made
+    if voiced and not quiet:
+        print(f"  voice: {len(voiced)} take(s) shaped once, "
+              f"{len(specs)} piece(s) cut from them")
+
     def emit(prefix: str) -> list[str]:
         """Add one input and one filter chain per speech source."""
         nonlocal idx
@@ -509,10 +669,18 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
             # Decoded from the head of the file, on purpose. See the note
             # above about `-ss`: skipping ahead saves 0.8% and moves the
             # speech by up to 29ms.
-            chain = speech_chain(start, end, delay, speed, film.speech_lift)
+            ready = voiced.get((str(src), round(speed, 3)))
+            if ready is not None:
+                use, chain = ready, place_chain(start, end, delay, speed)
+            else:
+                # Could not voice the take. Do it the old way rather than
+                # drop the speech: a join that ticks beats a silent film.
+                use = src
+                chain = speech_chain(start, end, delay, speed,
+                                     film.speech_lift)
             lbl = f"{prefix}{i}"
             filters.append(f"[{idx}:a]" + ",".join(chain) + f"[{lbl}]")
-            inputs.extend(["-i", str(src)])
+            inputs.extend(["-i", str(use)])
             idx += 1
             labels.append(lbl)
         return labels
@@ -601,6 +769,27 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
     else:
         mix_in = ([music_label] if music_label else []) + \
                  ([speech] if speech else [])
+        if not music_label and speech:
+            # An anchor: silence, from zero, the length of the film.
+            #
+            # amix takes its start from its FIRST input, and every speech
+            # stream has been `adelay`-ed to begin partway in. With music
+            # in the mix the music is first and starts at zero, so this
+            # never came up. With no music -- an empty library, a film
+            # with none of its own -- the first input is a delayed piece
+            # of speech, and the whole soundtrack came out early by the
+            # length of the opening title card. Every word, for the whole
+            # film, against a picture that did not move.
+            #
+            # Found by building a soundtrack with the music switched off
+            # to measure something else: 146.17s of audio under 150.25s
+            # of picture, with the speech starting at 0.00s instead of
+            # 4.00s.
+            inputs.extend(["-f", "lavfi",
+                           "-i", f"anullsrc=r=44100:cl=stereo:d={total:.3f}"])
+            filters.append(f"[{idx}:a]asetpts=PTS-STARTPTS[anchor]")
+            idx += 1
+            mix_in = ["anchor"] + mix_in
         if len(mix_in) == 1:
             final = mix_in[0]
         else:
