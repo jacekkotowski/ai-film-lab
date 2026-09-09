@@ -414,12 +414,122 @@ def silence_floor(path: Path) -> float:
     by maybe 10-15dB around its mean; room tone sits far below. A generous
     margin under the mean lands between the two, and the clamp stops a very
     loud or very quiet recording from producing a silly threshold.
+
+    Kept for `--floor` and for anything that still wants one number. The
+    pause finder no longer uses it -- see quiet_stretches for why a single
+    threshold could not do this job.
     """
     lv = loudness(path)
     if lv is None:
         return -32.0
     mean, _peak = lv
     return max(-60.0, min(-30.0, mean - 18.0))
+
+
+# How long a slice of audio to judge at a time. Short enough to land a cut
+# on a real beat, long enough that one loud sample is not a whole verdict.
+LEVEL_WINDOW = 0.05
+
+# The analysis rate. Speech lives well under 8kHz and this is only ever
+# measuring loudness, so 16k is plenty -- and it is the same rate voice.py
+# already extracts at.
+LEVEL_RATE = 16000
+
+# Where the line between "room" and "talking" goes, as a fraction of the
+# way from one to the other, in dB. Measured on a real take: room at -47,
+# speech at -16, so this puts it at -36 -- comfortably above the room and
+# 20dB under the voice.
+QUIET_FRACTION = 0.35
+
+# Under this much difference between the quietest and the loudest of a
+# take, there is nothing to tell apart: a clip of constant traffic, or one
+# recorded so hot that the room and the voice are the same size. Keep it
+# whole rather than guess. Same principle as MAX_TRIM in scaffold.
+NEEDS_RANGE_DB = 12.0
+
+
+def _pcm(path: Path, rate: int = LEVEL_RATE):
+    """The audio as mono samples, or None. One decode, no temp file.
+
+    Its own subprocess call and not `_run`, which asks for text: samples
+    are bytes, and decoding them as UTF-8 would not merely mangle a
+    message, it would change the numbers.
+    """
+    try:
+        r = subprocess.run(
+            [ffmpeg_bin(), "-v", "error", "-i", str(path), "-vn",
+             "-ac", "1", "-ar", str(rate), "-f", "s16le", "-"],
+            capture_output=True, timeout=PASS_TIMEOUT)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if r.returncode != 0 or len(r.stdout) < 2:
+        return None
+    raw = r.stdout
+    return np.frombuffer(raw[:len(raw) // 2 * 2], dtype="<i2")
+
+
+def window_levels(pcm, rate: int = LEVEL_RATE,
+                  window: float = LEVEL_WINDOW) -> np.ndarray:
+    """How loud each slice of the take is, in dBFS. Pure, so the rule it
+    feeds can be tested on made-up audio instead of on a recording."""
+    n = max(1, int(rate * window))
+    m = len(pcm) // n
+    if m < 1:
+        return np.zeros(0)
+    block = np.asarray(pcm[:m * n], dtype=np.float64).reshape(m, n)
+    rms = np.sqrt((block ** 2).mean(axis=1))
+    return 20.0 * np.log10(np.maximum(rms, 1e-9) / 32768.0)
+
+
+def quiet_stretches(levels: np.ndarray, min_gap: float,
+                    window: float = LEVEL_WINDOW
+                    ) -> tuple[list[tuple[float, float]], float]:
+    """The pauses in a take, and the level they were judged against.
+
+    Why this is not ffmpeg's silencedetect any more, measured on a real
+    310-second take that came back with NO pauses at all and was left
+    whole -- 310 seconds of one shot, room tone and all:
+
+        the room, per 50ms window     -46 dBFS RMS   but  -33 dBFS PEAK
+        the voice                     -20 dBFS RMS   and  -10 dBFS PEAK
+        threshold silence_floor gave  -39 dBFS
+
+    silencedetect compares PEAK samples: every sample must sit under the
+    threshold for the whole gap. The room's peaks are -33, the threshold
+    was -39, so not one moment of that take ever counted as quiet. The
+    threshold was not wrong by a little -- it was measured on RMS and
+    applied to peaks, which are a different quantity, about 10dB apart.
+
+    Judging the same take on RMS finds 34 pauses of a second and a half or
+    more, 119 seconds of them, the longest 11.4 seconds.
+
+    So: measure each window's RMS, find where the room is and where the
+    voice is in that take's own distribution, and put the line between
+    them. Nothing here is a fixed level, because a level cannot survive
+    one person's quiet flat and another person's noisy kitchen.
+    """
+    if levels.size == 0:
+        return [], -32.0
+    floor = float(np.percentile(levels, 10))
+    voice = float(np.percentile(levels, 90))
+    if voice - floor < NEEDS_RANGE_DB:
+        # Nothing to tell apart. Keep the take whole.
+        return [], floor
+    line = floor + (voice - floor) * QUIET_FRACTION
+
+    quiet: list[tuple[float, float]] = []
+    below = levels < line
+    start = None
+    for i, b in enumerate(below):
+        if b and start is None:
+            start = i
+        elif not b and start is not None:
+            if (i - start) * window >= min_gap:
+                quiet.append((start * window, i * window))
+            start = None
+    if start is not None and (len(below) - start) * window >= min_gap:
+        quiet.append((start * window, len(below) * window))
+    return quiet, line
 
 
 def detect_sound(path: Path, duration: float, floor: str | None = None,
@@ -437,21 +547,23 @@ def detect_sound(path: Path, duration: float, floor: str | None = None,
     """
     quiet_none = {"has": False, "ratio": 0.0, "in": 0.0, "out": duration,
                   "quiet": []}
-    db = silence_floor(path) if floor is None else float(str(floor).rstrip("dB"))
-    r = _run([ffmpeg_bin(), "-hide_banner", "-i", str(path), "-vn",
-              "-af", f"silencedetect=noise={db}dB:d={min_gap}",
-              "-f", "null", "-"], PASS_TIMEOUT)
-    if r is None or r.returncode != 0 or duration <= 0:
+    if duration <= 0:
+        return quiet_none
+
+    pcm = _pcm(path)
+    if pcm is None or pcm.size == 0:
         return quiet_none                       # no audio stream at all
 
-    starts = [float(m) for m in re.findall(r"silence_start: (-?[0-9.]+)", r.stderr)]
-    ends = [float(m) for m in re.findall(r"silence_end: (-?[0-9.]+)", r.stderr)]
+    levels = window_levels(pcm)
+    if floor is None:
+        found, db = quiet_stretches(levels, min_gap)
+    else:
+        # An explicit level, from `--floor`. Honour it exactly.
+        db = float(str(floor).rstrip("dB"))
+        found, _ = quiet_stretches(
+            np.where(levels < db, -120.0, 0.0), min_gap)
 
-    quiet: list[tuple[float, float]] = []
-    for i, s in enumerate(starts):
-        e = ends[i] if i < len(ends) else duration   # silence running to the end
-        quiet.append((max(0.0, s), min(duration, e)))
-
+    quiet = [(max(0.0, s), min(duration, e)) for s, e in found]
     ratio = max(0.0, 1.0 - sum(e - s for s, e in quiet) / duration)
     if ratio < 0.02:
         return quiet_none
@@ -594,6 +706,18 @@ def in_capture_order(files: list[Path], when: dict[Path, float | None]
 # --------------------------------------------------------------------------
 
 
+# Bumped whenever what ingest WORKS OUT about a file changes, as opposed
+# to the file itself. The cache keys on the file, so without this a
+# improvement to the analysis would never reach anything already
+# analysed: the pause finder was rewritten and every take on the disk
+# would have gone on using the answer the old one got.
+#
+# 1  the original
+# 2  pauses found on windowed RMS instead of ffmpeg's peak-based
+#    silencedetect -- see quiet_stretches
+ANALYSIS_VERSION = 2
+
+
 def _fingerprint(path: Path) -> list:
     """Enough to say "this is the same file it was last time"."""
     try:
@@ -620,6 +744,8 @@ def _still_usable(entry: dict, project: Path, path: Path) -> bool:
     entry points at is still on disk. Deleting analysis/ has always been
     safe and has to stay safe.
     """
+    if entry.get("analysis") != ANALYSIS_VERSION:
+        return False                       # we know more than we did then
     if entry.get("fingerprint") != _fingerprint(path):
         return False
     if not entry.get("key"):
@@ -713,7 +839,8 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
 
         rel = path.relative_to(project).as_posix()
         common = {"n": n, "path": rel, "key": key,
-                  "fingerprint": _fingerprint(source)}
+                  "fingerprint": _fingerprint(source),
+                  "analysis": ANALYSIS_VERSION}
         if when.get(source) is not None:
             common["taken"] = round(when[source], 1)
 
