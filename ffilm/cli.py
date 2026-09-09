@@ -127,6 +127,28 @@ def make_project(root: Path, vertical: bool = False) -> Path:
     return root
 
 
+def keep_a_copy(project: Path) -> Path | None:
+    """Put the current film.yaml aside before something overwrites it.
+
+    `go --rewrite` did this and `init --force` did not, so the same act --
+    throw away the edit and write a fresh one from the media -- was
+    recoverable by one command and not by the other. Nothing about which
+    command you reached for should decide whether your work survives.
+
+    A render also commits film.yaml (see history.py), so `film undo` can
+    reach further back than this. This is the copy you can see.
+    """
+    yml = project / "film.yaml"
+    if not yml.exists():
+        return None
+    bak = yml.with_name("film.yaml.bak")
+    try:
+        bak.write_text(yml.read_text(encoding="utf-8"), encoding="utf-8")
+    except OSError:
+        return None
+    return bak
+
+
 def load(project: Path, quality: str) -> Film:
     yml = project / "film.yaml"
     if not yml.exists():
@@ -269,9 +291,14 @@ def cmd_ingest(args) -> None:
 
 def cmd_init(args) -> None:
     project = find_project(args.project)
+    # --force throws away an edit. Keep it where she can find it, the same
+    # way `go --rewrite` always has.
+    bak = keep_a_copy(project) if args.force else None
     out = scaffold.write(project, force=args.force, seed=args.seed,
                          target=args.target)
     print(f"Wrote {out}")
+    if bak is not None:
+        print(f"  the edit you had is kept as {bak.name}")
     text = out.read_text(encoding="utf-8")
     if "NOTE: a quote_ card was placed by guesswork" in text:
         print("\nHeads up: I couldn't tell where your quote_ card belongs "
@@ -432,9 +459,8 @@ def cmd_go(args) -> None:
         else:
             print("      (your edits survive. --rewrite starts over from the media)")
     else:
-        if existing:
-            bak = yml.with_name("film.yaml.bak")
-            bak.write_text(yml.read_text(encoding="utf-8"), encoding="utf-8")
+        bak = keep_a_copy(project)
+        if bak is not None:
             print(f"[2/4] rewriting the edit  (old one kept as {bak.name})")
         else:
             print("[2/4] writing the edit")
