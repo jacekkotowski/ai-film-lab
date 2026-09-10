@@ -177,7 +177,9 @@ projects/<name>/
   media/          originals. READ ONLY.
   music/          one background track -- overrides library/music/
   cover/          this film's own thumbnail picture -- overrides
-                  library/cover/, and its filename becomes the title.
+                  library/cover/. Its FILENAME IS NOT THE TITLE: the
+                  film is called what this folder is called, unless
+                  film.yaml carries a `title:`.
                   Scanned by NOTHING -- put one here, not in media/,
                   or it becomes a shot in the film
   script.txt      what `film record` scrolls at you while you talk.

@@ -14,13 +14,15 @@ analysis/ so that film.yaml can point at it as an ordinary still. It is
 still not made from `cover/` by accident: it is made because a shot in
 film.yaml asks for it, and you can delete that shot.
 
-There are two folders it may come from, and the difference is the whole
-design. This film's own `cover/` is for a picture chosen FOR this film,
-so its filename is taken as the title. `library/cover/` is the shelf --
-one landscape picture and one portrait one, filled in once, used by
-every film you will ever make. On that path nobody chooses anything: the
-picture is whichever of the two is the film's shape, and the title is
-what the film is called.
+There are two folders it may come from. This film's own `cover/` is for
+a picture chosen FOR this film. `library/cover/` is the shelf -- one
+landscape picture and one portrait one, filled in once, used by every
+film you will ever make, and the picture taken is whichever of the two
+is the film's shape.
+
+Neither of them names the film. The title is what the FOLDER is called,
+unless film.yaml says otherwise -- see title_from for what happened when
+the picture's filename had a say.
 
 Deliberately thin. The type is drawn by `render.draw_captions` -- the
 same font, the same shadow, the same wrapping as the words in the film
@@ -45,7 +47,7 @@ import numpy as np
 
 from . import kinds
 from . import pix
-from .spec import headers, pretty_name, title_of
+from .spec import headers, title_of
 
 # YouTube rejects a custom thumbnail over 2MB. Being told that by a web
 # form after the render, the upload and the description is a bad moment,
@@ -141,18 +143,28 @@ def title_from(backdrop: Backdrop, given: str | None, project: Path) -> str:
     """The words on the thumbnail, most deliberate answer first.
 
     `--title` is somebody typing it now. `title:` in film.yaml is
-    somebody having typed it once. A picture dropped into this film's own
-    cover/ folder was named by hand and is usually already the words. And
-    failing all three, the film is called what its folder is called --
-    which is the automatic path, and the one nobody has to know about.
+    somebody having typed it once. Failing both, the film is called what
+    its FOLDER is called -- which is the automatic path, and the one
+    nobody has to know about.
+
+    The picture's own filename used to sit in the middle of that list, on
+    the theory that a file dropped into this film's cover/ folder was
+    named by hand and is usually already the words. It is not. A backdrop
+    arrives named by whatever exported it -- `distopia.png` out of ON1,
+    `IMG_0042.jpg` off a card -- and the theory turned a film called
+    "I love you" into a film called "Distopia", on the thumbnail AND on
+    the opening four seconds, without a word about why.
+
+    The folder name is the one thing here that was definitely typed by a
+    person who was naming THIS FILM at the time: `film new` asks for it
+    and nothing else. So it wins. Somebody who does want the picture's
+    name gets there by typing it -- `title:` in film.yaml, once.
     """
     if given is not None:
         return given
     said = headers(project / "film.yaml").get("title")
     if said:
         return str(said)
-    if backdrop.path is not None and not backdrop.shared:
-        return pretty_name(backdrop.path.stem)
     return title_of(project)
 
 

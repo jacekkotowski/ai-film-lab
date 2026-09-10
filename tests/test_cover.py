@@ -182,17 +182,18 @@ def test_an_explicit_title_beats_everything(tmp_path):
     assert title_from(mine(img), "Something else", tmp_path) == "Something else"
 
 
-def test_a_title_in_film_yaml_beats_the_filename(tmp_path):
+def test_a_title_in_film_yaml_beats_the_folder_name(tmp_path):
     (tmp_path / "film.yaml").write_text("title: What I Meant", encoding="utf-8")
     img = tmp_path / "Zima nad morzem.jpg"
     assert title_from(mine(img), None, tmp_path) == "What I Meant"
 
 
-def test_the_filename_becomes_the_title(tmp_path):
-    """Still true for a picture put in THIS film's cover/ folder: it was
-    named by hand, for this film."""
-    img = tmp_path / "Zima nad morzem.jpg"
-    assert title_from(mine(img), None, tmp_path) == "Zima nad morzem"
+def test_the_folder_name_beats_the_pictures_filename(tmp_path):
+    """The film is called what the FOLDER is called. A backdrop arrives
+    named by whatever exported it, and `distopia.png` in the cover/
+    folder of a film called "I love you" used to rename the film."""
+    img = tmp_path / "distopia.png"
+    assert title_from(mine(img), None, tmp_path) == cover.title_of(tmp_path)
 
 
 def test_a_shelf_pictures_filename_is_not_the_title(tmp_path):
@@ -208,8 +209,10 @@ def test_with_no_picture_at_all_the_film_is_called_after_its_folder(tmp_path):
     assert title_from(Backdrop(), None, tmp_path) == cover.title_of(tmp_path)
 
 
-def test_underscores_in_a_folder_name_become_a_title():
-    assert cover.pretty_name("late_evening_walk") == "Late Evening Walk"
+def test_underscores_in_a_folder_name_become_a_title(tmp_path):
+    folder = tmp_path / "late_evening_walk"
+    folder.mkdir()
+    assert title_from(Backdrop(), None, folder) == "Late Evening Walk"
 
 
 def test_an_empty_title_is_respected_not_replaced(tmp_path):

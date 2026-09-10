@@ -51,7 +51,23 @@ CLICK_FADE = 0.02      # seconds of fade at each end of a speech segment
 # recorded too quietly, and leaves the gaps at -66dB. The voice itself
 # measures the same either way -- -16.3dB before and after, so this costs
 # nothing where it matters.
-SPEECH_NORM = "speechnorm=p=0.7:e=6:r=0.0003:l=1"
+# e was 6, and before that 25. Both were wrong in the same way: the
+# expander was being asked to be the thing that RESCUES a quiet take, and
+# an expander cannot do that without also lifting the room. It gives its
+# gain to whatever is quiet, and between two words the quiet thing is the
+# room. Measured on a real take, one second of room tone against the
+# voice on the same take:
+#
+#     e=6, no measured gain     room -63.8   voice -17.1   SNR 46.7
+#     take measured first, e=2  room -71.9   voice -18.6   SNR 53.3
+#
+# 6.6dB of background, gone, for 1.5dB of level -- which loudnorm puts
+# back at the end anyway. The rescue is `take_gain_db` below: a flat gain
+# that lifts the voice and the room together and so cannot change the
+# ratio between them. What is left for the expander is what it is
+# actually for -- the difference between a sentence you leaned into and
+# one you tailed off -- and e=2 is enough for that.
+SPEECH_NORM = "speechnorm=p=0.7:e=2:r=0.0003:l=1"
 
 # Before the expansion: take the hiss out, so there is less of it to
 # lift. Broadband, gentle, and it does not touch the voice.
@@ -88,7 +104,19 @@ SPEECH_NORM = "speechnorm=p=0.7:e=6:r=0.0003:l=1"
 # Caveat worth knowing: tracking needs a little audio to converge, and
 # `speech_chain` trims per shot. A shot starting mid-word gives it no
 # room tone to learn from, so it does less. Less is the safe direction.
-DENOISE = "afftdn=nf=-50:tn=1"
+# nf is ABSOLUTE dBFS, and that used to be the whole problem: the right
+# number depends on how loud the take was, and nothing knew. It is safe
+# now for a reason that is worth saying plainly -- the denoiser runs
+# AFTER `take_gain_db` has brought the take to LEVEL_TARGET_LUFS, so
+# every take reaching it is at the same level, and one number is finally
+# right for all of them. Measured across takes attenuated 0/-12/-20/-28
+# dB, the chain now comes out identical: voice -18.6, room -71.9,
+# sibilance -15.0 relative, every time.
+#
+# -45 rather than -50 because it removes about 4dB more and costs 0.1dB
+# of sibilance. `tn=1` stays: it tracks the floor as it goes, so a take
+# recorded in a different room still lands somewhere sensible.
+DENOISE = "afftdn=nf=-45:tn=1"
 
 # After the expansion: close the gaps completely. This has to come after,
 # not before -- a gate ahead of the normaliser is pointless, because
@@ -361,12 +389,83 @@ def _has_audio(path: Path) -> bool:
 # per piece. That is a bigger change than this comment.
 
 
+# Where a spoken take is brought to before anything else touches it.
+#
+# -20 LUFS because that is what KEY_LEVEL_DB already assumes a speaking
+# voice is, and what the gate threshold was tuned against. Those two
+# numbers were documented as things speechnorm "brings the voice to
+# about", which was true of a take recorded at a sensible level and false
+# of every other one: a take 20dB down came out of the old chain at -30,
+# and one 28dB down at -41, below the gate's own threshold -- so the gate
+# ate the voice instead of the room. Measuring first makes both constants
+# true by construction rather than by hope.
+LEVEL_TARGET_LUFS = -20.0
+
+# How far this is allowed to move a take. A gate below which we assume
+# there is no voice in here to find -- an ambient clip with no speech
+# would otherwise have its room tone amplified to a roar -- and a ceiling
+# so that a take recorded catastrophically low fails audibly rather than
+# arriving as 40dB of hiss.
+LEVEL_MAX_LIFT_DB = 30.0
+LEVEL_MAX_CUT_DB = -20.0
+LEVEL_FLOOR_LUFS = -60.0
+
+
+def take_gain_db(src: Path) -> float:
+    """How much to turn this whole take up (or down) so that the voice in
+    it sits at LEVEL_TARGET_LUFS.
+
+    Measured with ebur128, whose integrated loudness is GATED: it ignores
+    anything well below the average, which is to say it measures the
+    talking and not the pauses. That is exactly the number wanted here,
+    and it is why this is not `volumedetect` -- a take that is half
+    silence would drag a plain mean down and get the gain to compensate.
+
+    A whole extra decode of the take. It costs about 0.4s on a 270s file
+    and it only happens when the take is about to be voiced anyway, which
+    is once, cached. 0.0 when the measurement fails or finds nothing that
+    sounds like a voice -- and then the chain is exactly what it was.
+    """
+    from .render import ffmpeg_bin
+    try:
+        r = subprocess.run(
+            [ffmpeg_bin(), "-hide_banner", "-nostats", "-i", str(src),
+             "-af", "ebur128=framelog=quiet", "-f", "null", "-"],
+            capture_output=True, text=True, errors="replace", timeout=1800)
+    except (OSError, subprocess.SubprocessError):
+        return 0.0
+    found = None
+    for line in r.stderr.splitlines():
+        line = line.strip()
+        if line.startswith("I:") and line.endswith("LUFS"):
+            try:
+                found = float(line.split()[1])
+            except (ValueError, IndexError):
+                pass
+    return level_gain(found)
+
+
+def level_gain(measured_lufs: float | None) -> float:
+    """The measurement turned into a gain. Pure, so the two ways this
+    can be dangerous are checked in a test rather than in a render.
+
+    None, or quieter than LEVEL_FLOOR_LUFS, means nothing here sounds
+    like somebody talking -- an ambient clip, a take where the microphone
+    was never armed -- and the answer is to leave it alone. Amplifying
+    that to -20 LUFS would be turning a room into a roar.
+    """
+    if measured_lufs is None or measured_lufs < LEVEL_FLOOR_LUFS:
+        return 0.0
+    want = LEVEL_TARGET_LUFS - measured_lufs
+    return max(LEVEL_MAX_CUT_DB, min(LEVEL_MAX_LIFT_DB, want))
+
+
 # Bumped whenever the voice chain below changes, so a take voiced by an
 # older version is made again rather than reused.
-VOICE_VERSION = 1
+VOICE_VERSION = 2
 
 
-def voiced_chain(speed: float, lift: bool) -> list[str]:
+def voiced_chain(speed: float, lift: bool, gain_db: float = 0.0) -> list[str]:
     """The filters that shape a VOICE, applied ONCE to a whole take.
 
     This used to run per spoken piece, inside speech_chain, and that is
@@ -403,17 +502,31 @@ def voiced_chain(speed: float, lift: bool) -> list[str]:
     and fall are measured against the timeline you will actually hear.
     Which means the voiced take is on the SPED timeline, and a moment at
     `t` in the recording is at `t / speed` in it. See place_chain.
+
+    `gain_db` comes from take_gain_db and is the reason the three
+    absolute numbers after it (DENOISE's nf, NOISE_GATE's threshold,
+    KEY_LEVEL_DB) are allowed to be absolute at all.
     """
     chain = ["aresample=44100"]
     if abs(speed - 1.0) > 1e-3:
         chain += atempo_chain(speed)
     if lift:
-        # Order is the whole trick: clean, then lift, then close the gaps.
-        # Denoise first so the expander has less hiss to find, gate last
-        # so anything it did find is shut off between sentences. All of it
-        # rides with `speech_lift`, so `speech_lift: false` still means
-        # "exactly as I recorded it".
+        # Order is the whole trick: floor and warmth, bring the take to a
+        # known level, clean, even out what is left, close the gaps.
+        #
+        # The gain goes FIRST, before the denoiser, and that ordering is
+        # the point of it: everything downstream is tuned in dBFS, and
+        # putting the gain ahead of them is what makes one setting serve
+        # a take shouted at a phone and a take murmured at a laptop. It
+        # is a flat gain, so it moves the voice and the room together and
+        # cannot change the ratio between them -- which is exactly what
+        # the expander it replaces could not promise.
+        #
+        # All of it rides with `speech_lift`, so `speech_lift: false`
+        # still means "exactly as I recorded it".
         chain += voice_tone()
+        if abs(gain_db) > 0.05:
+            chain.append(f"volume={gain_db:.2f}dB")
         chain.append(DENOISE)
         chain.append(SPEECH_NORM)
         chain.append(NOISE_GATE)
@@ -488,12 +601,17 @@ def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
     except OSError:
         pass
     from .render import ffmpeg_bin
+    # Measured before the chain is built, because the chain contains the
+    # answer. Only when the voice is being shaped at all -- `speech_lift:
+    # false` means the take is passed through as recorded, and moving its
+    # level would be moving it.
+    gain = take_gain_db(src) if lift else 0.0
     try:
         dst.parent.mkdir(parents=True, exist_ok=True)
         r = subprocess.run(
             [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error",
              "-i", str(src), "-vn",
-             "-filter:a", ",".join(voiced_chain(speed, lift)),
+             "-filter:a", ",".join(voiced_chain(speed, lift, gain)),
              "-c:a", "pcm_s16le", str(dst)],
             capture_output=True, text=True, errors="replace", timeout=1800)
     except (OSError, subprocess.SubprocessError):
@@ -501,11 +619,18 @@ def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
     if r.returncode != 0 or not dst.exists() or dst.stat().st_size < 1024:
         dst.unlink(missing_ok=True)
         return None
+    # A voiced take is a whole uncompressed copy of the recording -- 40MB
+    # for four minutes. Bumping VOICE_VERSION would otherwise leave every
+    # previous version of every take on the disk forever.
+    for stale in dst.parent.glob(_glob_escape(dst.name.split("__v")[0])
+                                 + "__v*.wav"):
+        if stale != dst:
+            stale.unlink(missing_ok=True)
     return dst
 
 
 def speech_chain(start: float, end: float | None, delay: int,
-                 speed: float, lift: bool) -> list[str]:
+                 speed: float, lift: bool, gain_db: float = 0.0) -> list[str]:
     """The filters one spoken source passes through, in order.
 
     Pure on purpose: no ffmpeg, no files, no Film. Every number in the
@@ -539,15 +664,15 @@ def speech_chain(start: float, end: float | None, delay: int,
 
     if lift:
         # A voice recorded at arm's length on a phone sits about 30dB
-        # below a mastered music track. Bring it up to a normal speaking
-        # level FIRST, so everything after this -- the ducking, the music
-        # level, the loudness -- is set against a voice that is there.
-        # Order is the whole trick: clean, then lift, then close the
-        # gaps. Denoise first so the expander has less hiss to find,
-        # gate last so anything it did find is shut off between
-        # sentences. All three ride with `speech_lift`, so
-        # `speech_lift: false` still means "exactly as I recorded it".
+        # below a mastered music track. Bring it to a known level FIRST,
+        # so everything after this -- the denoiser, the gate, the
+        # ducking, the loudness -- is set against a voice that is where
+        # they all assume it is. Same order and the same constants as
+        # voiced_chain, which is the path this one stands in for; see
+        # there for why the gain comes before the denoiser.
         chain += voice_tone()
+        if abs(gain_db) > 0.05:
+            chain.append(f"volume={gain_db:.2f}dB")
         chain.append(DENOISE)
         chain.append(SPEECH_NORM)
         chain.append(NOISE_GATE)
@@ -661,6 +786,8 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
         print(f"  voice: {len(voiced)} take(s) shaped once, "
               f"{len(specs)} piece(s) cut from them")
 
+    fallback_gain: dict[str, float] = {}
+
     def emit(prefix: str) -> list[str]:
         """Add one input and one filter chain per speech source."""
         nonlocal idx
@@ -675,9 +802,19 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
             else:
                 # Could not voice the take. Do it the old way rather than
                 # drop the speech: a join that ticks beats a silent film.
+                # Still measured, and measured once per take however many
+                # pieces come out of it -- the level the rest of this file
+                # assumes has to be true on this path too.
                 use = src
+                if film.speech_lift:
+                    key_g = str(src)
+                    if key_g not in fallback_gain:
+                        fallback_gain[key_g] = take_gain_db(src)
+                    g = fallback_gain[key_g]
+                else:
+                    g = 0.0
                 chain = speech_chain(start, end, delay, speed,
-                                     film.speech_lift)
+                                     film.speech_lift, g)
             lbl = f"{prefix}{i}"
             filters.append(f"[{idx}:a]" + ",".join(chain) + f"[{lbl}]")
             inputs.extend(["-i", str(use)])

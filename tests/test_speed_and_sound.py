@@ -12,9 +12,13 @@ Nothing here touches ffmpeg or a file. These are the numbers only.
 
 import re
 
-from ffilm.audio import (CLICK_FADE, DENOISE, NOISE_GATE, SPEECH_NORM,
+from pytest import approx
+
+from ffilm.audio import (CLICK_FADE, DENOISE, LEVEL_MAX_LIFT_DB,
+                         LEVEL_TARGET_LUFS, NOISE_GATE, SPEECH_NORM,
                          VOICE_FLOOR_HZ, atempo_chain, duck_threshold,
-                         place_chain, speech_chain, voice_tone, voiced_chain)
+                         level_gain, place_chain, speech_chain, voice_tone,
+                         voiced_chain)
 from ffilm.caption_fit import fit_per_clip
 from ffilm.spec import Film, Shot
 from ffilm.voice import Line, VoiceSource
@@ -538,3 +542,52 @@ def test_a_narration_track_is_not_trimmed_at_the_end():
 
 def test_a_sliver_still_gets_no_fades():
     assert fade_out_at(place_chain(3.0, 3.1, 0, 1.0)) is None
+
+
+# --------------------------------------------------------------------------
+# Bringing a take to a known level
+#
+# Every absolute number downstream of this -- afftdn's nf, the gate's
+# threshold, KEY_LEVEL_DB -- is only correct because this ran first.
+# --------------------------------------------------------------------------
+
+def test_a_quiet_take_is_lifted_to_the_target():
+    assert level_gain(-42.0) == approx(22.0)
+
+
+def test_a_loud_take_is_turned_down():
+    assert level_gain(-8.0) == approx(-12.0)
+
+
+def test_a_take_already_at_the_target_is_left_alone():
+    assert level_gain(LEVEL_TARGET_LUFS) == approx(0.0)
+
+
+def test_a_clip_with_no_voice_in_it_is_not_amplified():
+    """An ambient clip measures near silence. Bringing that to -20 LUFS
+    would turn a room into a roar, so it is left exactly as it is."""
+    assert level_gain(-70.0) == 0.0
+    assert level_gain(None) == 0.0
+
+
+def test_the_lift_has_a_ceiling():
+    """A take recorded catastrophically low should arrive quiet and
+    obviously wrong, not as forty decibels of hiss."""
+    assert level_gain(-59.0) == LEVEL_MAX_LIFT_DB
+
+
+def test_the_level_is_set_before_anything_absolute_reads_it():
+    """The ordering IS the fix. afftdn's nf and the gate's threshold are
+    both dBFS, so a take that has not been levelled yet reads wrong to
+    both of them."""
+    chain = voiced_chain(1.0, lift=True, gain_db=14.2)
+    vol = next(i for i, f in enumerate(chain) if f.startswith("volume="))
+    assert vol < next(i for i, f in enumerate(chain) if "afftdn" in f)
+    assert vol < next(i for i, f in enumerate(chain) if "agate" in f)
+    assert vol < next(i for i, f in enumerate(chain) if "speechnorm" in f)
+
+
+def test_speech_lift_false_still_means_untouched():
+    """Moving the level of a take is moving the take."""
+    chain = voiced_chain(1.0, lift=False, gain_db=14.2)
+    assert not any(f.startswith("volume=") for f in chain)
