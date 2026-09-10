@@ -14,11 +14,18 @@ import re
 
 from pytest import approx
 
-from ffilm.audio import (CLICK_FADE, DENOISE, LEVEL_MAX_LIFT_DB,
-                         LEVEL_TARGET_LUFS, NOISE_GATE, SPEECH_NORM,
-                         VOICE_FLOOR_HZ, atempo_chain, duck_threshold,
-                         level_gain, place_chain, speech_chain, voice_tone,
-                         voiced_chain)
+from ffilm.audio import (CLICK_FADE, DEFAULT_TUNING, GATE_FRACTION,
+                         LEVEL_MAX_LIFT_DB, LEVEL_TARGET_LUFS, SPEECH_NORM,
+                         TRUST_RANGE_DB, VOICE_FLOOR_HZ, Tuning, atempo_chain,
+                         duck_threshold, level_gain, place_chain, speech_chain,
+                         tuning_for, voice_tone, voiced_chain)
+
+
+def at(chain, name):
+    """Where a filter sits in a chain, found by NAME. The two thresholds
+    now carry this take's own numbers, so matching on the whole string
+    would be matching on the material."""
+    return next(i for i, f in enumerate(chain) if f.startswith(name))
 from ffilm.caption_fit import fit_per_clip
 from ffilm.spec import Film, Shot
 from ffilm.voice import Line, VoiceSource
@@ -203,7 +210,7 @@ def test_the_expander_is_not_allowed_to_lift_the_room():
 
 def test_the_hiss_is_taken_out_before_it_is_amplified():
     chain = speech_chain(0.0, 5.0, 0, 1.0, lift=True)
-    assert chain.index(DENOISE) < chain.index(SPEECH_NORM)
+    assert at(chain, "afftdn") < at(chain, "speechnorm")
 
 
 def test_the_gate_closes_after_the_expansion_not_before():
@@ -211,7 +218,7 @@ def test_the_gate_closes_after_the_expansion_not_before():
     through gets expanded anyway. Measured: placed first it changed the
     room tone by exactly 0.0dB; placed last, by -48.6dB."""
     chain = speech_chain(0.0, 5.0, 0, 1.0, lift=True)
-    assert chain.index(NOISE_GATE) > chain.index(SPEECH_NORM)
+    assert at(chain, "agate") > at(chain, "speechnorm")
 
 
 def test_the_tone_shaping_arrives_with_the_lift():
@@ -468,15 +475,15 @@ def test_a_full_duck_puts_the_threshold_well_under_a_speaking_voice():
 # --------------------------------------------------------------------------
 
 
-VOICE_FILTERS = (DENOISE, SPEECH_NORM, NOISE_GATE)
+VOICE_FILTERS = ("afftdn", "speechnorm", "agate")
 
 
 def test_the_voice_is_shaped_once_per_take_not_once_per_piece():
     once = voiced_chain(1.0, lift=True)
     piece = place_chain(40.0, 46.0, 4000, 1.0)
     for f in VOICE_FILTERS:
-        assert f in once, f
-        assert f not in piece, f
+        assert any(c.startswith(f) for c in once), f
+        assert not any(c.startswith(f) for c in piece), f
     assert not any("highpass" in c or "equalizer" in c for c in piece)
 
 
@@ -580,7 +587,8 @@ def test_the_level_is_set_before_anything_absolute_reads_it():
     """The ordering IS the fix. afftdn's nf and the gate's threshold are
     both dBFS, so a take that has not been levelled yet reads wrong to
     both of them."""
-    chain = voiced_chain(1.0, lift=True, gain_db=14.2)
+    chain = voiced_chain(1.0, lift=True,
+                         tuning=Tuning(14.2, -45.0, -30.5))
     vol = next(i for i, f in enumerate(chain) if f.startswith("volume="))
     assert vol < next(i for i, f in enumerate(chain) if "afftdn" in f)
     assert vol < next(i for i, f in enumerate(chain) if "agate" in f)
@@ -589,5 +597,71 @@ def test_the_level_is_set_before_anything_absolute_reads_it():
 
 def test_speech_lift_false_still_means_untouched():
     """Moving the level of a take is moving the take."""
-    chain = voiced_chain(1.0, lift=False, gain_db=14.2)
+    chain = voiced_chain(1.0, lift=False,
+                         tuning=Tuning(14.2, -45.0, -30.5))
     assert not any(f.startswith("volume=") for f in chain)
+
+
+# --------------------------------------------------------------------------
+# The three numbers that follow the material
+#
+# `ingest` already decodes every take to find its pauses, and on the way
+# it learns where that take's room sits and where its voice sits. These
+# turn those two numbers into the gain, the denoiser's floor and the
+# gate's line -- so a quiet flat and a noisy kitchen get different
+# thresholds without anybody typing one.
+# --------------------------------------------------------------------------
+
+def test_a_noisy_room_gates_harder_than_a_quiet_one():
+    """The whole point. Same voice level, different rooms."""
+    quiet = tuning_for(room_db=-53.0, voice_db=-22.0)
+    noisy = tuning_for(room_db=-38.0, voice_db=-22.0)
+    assert noisy.gate_db > quiet.gate_db
+    assert noisy.nf_db > quiet.nf_db
+
+
+def test_the_gate_sits_between_the_room_and_the_voice():
+    """Above the room so it closes on it, well under the voice so it
+    never closes on a softly spoken word."""
+    t = tuning_for(room_db=-53.0, voice_db=-22.0)
+    room_at_gate = t.gate_db - (-22.0 - -53.0) * GATE_FRACTION
+    assert room_at_gate < t.gate_db < room_at_gate + (-22.0 - -53.0)
+
+
+def test_the_gate_agrees_with_where_ingest_cut():
+    """ingest puts the line between room and voice at QUIET_FRACTION of
+    the way up. A gate that closed somewhere else than where the edit cut
+    would be the bug, so it uses the same fraction."""
+    from ffilm.ingest import QUIET_FRACTION
+    assert GATE_FRACTION == QUIET_FRACTION
+
+
+def test_a_take_with_nothing_to_tell_apart_keeps_the_settled_numbers():
+    """Constant traffic, or a take so hot the room and the voice are the
+    same size. Set its level, but do not derive a threshold from a
+    measurement that has just said it cannot see a difference."""
+    t = tuning_for(room_db=-30.0, voice_db=-30.0 + TRUST_RANGE_DB - 1)
+    assert t.nf_db == DEFAULT_TUNING.nf_db
+    assert t.gate_db == DEFAULT_TUNING.gate_db
+    assert t.gain_db != 0.0
+
+
+def test_no_measurement_means_the_numbers_this_file_always_used():
+    """A narration track kept outside media/, or a project whose
+    analysis/ has been deleted. Not an error -- an ordinary state."""
+    assert tuning_for(None, None) == DEFAULT_TUNING
+
+
+def test_the_default_gate_is_the_one_that_was_there_before():
+    """0.03 linear. Changing the fallback silently would change every
+    film that has no analysis."""
+    assert DEFAULT_TUNING.gate_threshold == approx(0.03, abs=0.0005)
+
+
+def test_the_thresholds_stay_inside_what_ffmpeg_accepts():
+    """afftdn refuses an nf outside -80..-20, and refusing is the good
+    case -- it fails the render rather than the sound."""
+    for room, voice in [(-90.0, -80.0), (-10.0, -2.0), (-70.0, -5.0)]:
+        t = tuning_for(room, voice)
+        assert -80.0 <= t.nf_db <= -20.0
+        assert 0.0 < t.gate_threshold < 1.0

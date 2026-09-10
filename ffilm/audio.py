@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import hashlib
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 from .spec import Film, Shot
@@ -116,13 +117,16 @@ SPEECH_NORM = "speechnorm=p=0.7:e=2:r=0.0003:l=1"
 # -45 rather than -50 because it removes about 4dB more and costs 0.1dB
 # of sibilance. `tn=1` stays: it tracks the floor as it goes, so a take
 # recorded in a different room still lands somewhere sensible.
-DENOISE = "afftdn=nf=-45:tn=1"
+DENOISE = "afftdn=nf={nf:.1f}:tn=1"
+DENOISE_DEFAULT_NF = -45.0
 
 # After the expansion: close the gaps completely. This has to come after,
 # not before -- a gate ahead of the normaliser is pointless, because
 # whatever leaks through gets expanded anyway, and a gate is the one
 # thing here that measured EXACTLY no change when placed first.
-NOISE_GATE = "agate=threshold=0.03:ratio=9:attack=10:release=250:knee=4"
+NOISE_GATE = ("agate=threshold={threshold:.5f}:ratio=9:"
+              "attack=10:release=250:knee=4")
+NOISE_GATE_DEFAULT_DB = -30.5      # 0.03 linear, which is what this was
 
 # The voice, before anything is mixed under it. Both of these ride along
 # with `speech_lift`, so `speech_lift: false` in film.yaml still means
@@ -411,6 +415,109 @@ LEVEL_MAX_CUT_DB = -20.0
 LEVEL_FLOOR_LUFS = -60.0
 
 
+@dataclass(frozen=True)
+class Tuning:
+    """The three numbers in this file that have to match the MATERIAL
+    rather than the taste: how far to turn this take up, where its noise
+    floor is, and where the line between its room and its voice goes.
+
+    Everything else here -- the move sizes, the fade lengths, the duck
+    depth -- is taste and stays constant on purpose. These three are not
+    taste. A number that means "just above the room" cannot be a constant
+    when one person records in a quiet flat and another beside a fan.
+    """
+
+    gain_db: float
+    nf_db: float
+    gate_db: float
+
+    @property
+    def gate_threshold(self) -> float:
+        """agate wants a linear amplitude, not decibels."""
+        return float(10.0 ** (self.gate_db / 20.0))
+
+
+DEFAULT_TUNING = Tuning(gain_db=0.0, nf_db=DENOISE_DEFAULT_NF,
+                        gate_db=NOISE_GATE_DEFAULT_DB)
+
+# What the chain leaves a voice at, measured at the gate's input, once
+# the flat gain has put the take at VOICE_TARGET_DBFS. Stable across
+# takes now -- that is the whole point of measuring first -- so the gate
+# can be placed relative to it. Measured across takes attenuated
+# 0/-12/-20/-28 dB: -18.6 every time.
+VOICE_AT_GATE_DBFS = -18.6
+
+# Where the gate's line goes between the room and the voice, as a
+# fraction of the way from one to the other. The SAME fraction, and the
+# same reasoning, as ingest.QUIET_FRACTION -- which answers the identical
+# question when it decides which parts of a take are pauses. The two
+# agreeing is not a coincidence to be tidied away later; a gate that
+# closed somewhere else than where the edit cut would be the bug.
+GATE_FRACTION = 0.35
+
+# Sat a little above the measured floor rather than on it. afftdn removes
+# more the higher this is, and measured on two real takes the cost in
+# sibilance between the floor and 5dB over it is 0.1dB. Free.
+NF_MARGIN_DB = 5.0
+
+# Guard rails. The gate has to stay somewhere a voice could plausibly be
+# above and a room plausibly below, whatever arithmetic arrives; afftdn's
+# own nf range is -80..-20 and it refuses anything outside.
+GATE_DB_LIMITS = (-55.0, -25.0)
+NF_DB_LIMITS = (-80.0, -20.0)
+
+# Under this much between the quietest and the loudest of a take there is
+# nothing to tell apart -- constant traffic, or a take so hot that the
+# room and the voice are the same size. Same threshold and same reasoning
+# as ingest.NEEDS_RANGE_DB: do not guess, use the settled defaults.
+TRUST_RANGE_DB = 12.0
+
+
+def tuning_for(room_db: float | None, voice_db: float | None) -> Tuning:
+    """This take's three numbers, from the two `ingest` already measured.
+
+    Pure, because this is where the film's sound is decided and a number
+    that can be silently wrong here is a number that has to be checkable
+    without listening to a render.
+
+    `room_db` and `voice_db` are the 10th and 90th percentiles of the
+    take's own 50ms RMS windows -- ingest works them out to find the
+    pauses and writes them into analysis/manifest.json. Reading them back
+    is why nothing here has to measure the same file a second time.
+    """
+    if room_db is None or voice_db is None:
+        return DEFAULT_TUNING
+    gain = level_gain_from(voice_db)
+    span = voice_db - room_db
+    if span < TRUST_RANGE_DB:
+        # Nothing to tell apart. The take still gets its level set --
+        # that part only needs to know how loud the voice is -- but the
+        # two thresholds fall back rather than being derived from a
+        # measurement that has just said it cannot see a difference.
+        return Tuning(gain, DEFAULT_TUNING.nf_db, DEFAULT_TUNING.gate_db)
+    nf = _clamp(room_db + gain + NF_MARGIN_DB, *NF_DB_LIMITS)
+    gate = _clamp(VOICE_AT_GATE_DBFS - span * (1.0 - GATE_FRACTION),
+                  *GATE_DB_LIMITS)
+    return Tuning(gain, nf, gate)
+
+
+def _clamp(v: float, lo: float, hi: float) -> float:
+    return max(lo, min(hi, v))
+
+
+def level_gain_from(voice_db: float) -> float:
+    """The flat gain that puts this take's voice at the target.
+
+    Measured on the same instrument as room_db and voice_db, on purpose:
+    a threshold and the level it is compared against have to come off the
+    same ruler. LEVEL_TARGET_LUFS doubles as the target here because on a
+    spoken take the two agree closely -- measured on a real one, ebur128
+    said -22.2 LUFS and the 90th-percentile RMS said -22.2 dBFS.
+    """
+    return _clamp(LEVEL_TARGET_LUFS - voice_db,
+                  LEVEL_MAX_CUT_DB, LEVEL_MAX_LIFT_DB)
+
+
 def take_gain_db(src: Path) -> float:
     """How much to turn this whole take up (or down) so that the voice in
     it sits at LEVEL_TARGET_LUFS.
@@ -462,10 +569,11 @@ def level_gain(measured_lufs: float | None) -> float:
 
 # Bumped whenever the voice chain below changes, so a take voiced by an
 # older version is made again rather than reused.
-VOICE_VERSION = 2
+VOICE_VERSION = 3
 
 
-def voiced_chain(speed: float, lift: bool, gain_db: float = 0.0) -> list[str]:
+def voiced_chain(speed: float, lift: bool,
+                 tuning: Tuning = DEFAULT_TUNING) -> list[str]:
     """The filters that shape a VOICE, applied ONCE to a whole take.
 
     This used to run per spoken piece, inside speech_chain, and that is
@@ -503,9 +611,10 @@ def voiced_chain(speed: float, lift: bool, gain_db: float = 0.0) -> list[str]:
     Which means the voiced take is on the SPED timeline, and a moment at
     `t` in the recording is at `t / speed` in it. See place_chain.
 
-    `gain_db` comes from take_gain_db and is the reason the three
-    absolute numbers after it (DENOISE's nf, NOISE_GATE's threshold,
-    KEY_LEVEL_DB) are allowed to be absolute at all.
+    `tuning` is this take's own three numbers -- see tuning_for. The
+    gain is the reason the two thresholds are allowed to be levels at
+    all, and the thresholds are derived from the same measurement as the
+    gain, so all three move together when the material does.
     """
     chain = ["aresample=44100"]
     if abs(speed - 1.0) > 1e-3:
@@ -525,11 +634,11 @@ def voiced_chain(speed: float, lift: bool, gain_db: float = 0.0) -> list[str]:
         # All of it rides with `speech_lift`, so `speech_lift: false`
         # still means "exactly as I recorded it".
         chain += voice_tone()
-        if abs(gain_db) > 0.05:
-            chain.append(f"volume={gain_db:.2f}dB")
-        chain.append(DENOISE)
+        if abs(tuning.gain_db) > 0.05:
+            chain.append(f"volume={tuning.gain_db:.2f}dB")
+        chain.append(DENOISE.format(nf=tuning.nf_db))
         chain.append(SPEECH_NORM)
-        chain.append(NOISE_GATE)
+        chain.append(NOISE_GATE.format(threshold=tuning.gate_threshold))
     return chain
 
 
@@ -585,6 +694,34 @@ def voiced_path(film, src: Path, speed: float, lift: bool) -> Path:
             f"{key}__{tag}__{lift_tag}__v{VOICE_VERSION}.wav")
 
 
+def tuning_for_take(film, src: Path) -> Tuning:
+    """This take's numbers, off the manifest if `ingest` has been here.
+
+    The manifest is the first place asked because ingest has already
+    decoded this file and worked out where its room and its voice sit --
+    measuring the same file again to learn the same thing is a whole
+    extra pass over the audio, every render, for an answer already
+    written down.
+
+    ebur128 is the fallback and answers only half the question: how loud
+    the take is, not how noisy. So a take ingest has not seen keeps its
+    level set and takes the settled thresholds, which is what this file
+    did before any of this existed.
+    """
+    from . import ingest as ingest_mod
+    try:
+        rel = src.resolve().relative_to(film.root.resolve()).as_posix()
+    except (ValueError, OSError):
+        rel = None
+    sound = ingest_mod.sound_of(film.root, rel) if rel else None
+    if sound is not None:
+        room, voice = sound.get("room_db"), sound.get("voice_db")
+        if room is not None and voice is not None:
+            return tuning_for(float(room), float(voice))
+    return Tuning(take_gain_db(src), DEFAULT_TUNING.nf_db,
+                  DEFAULT_TUNING.gate_db)
+
+
 def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
     """The whole take with the voice chain run over it once, as a file.
 
@@ -601,17 +738,17 @@ def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
     except OSError:
         pass
     from .render import ffmpeg_bin
-    # Measured before the chain is built, because the chain contains the
+    # Worked out before the chain is built, because the chain IS the
     # answer. Only when the voice is being shaped at all -- `speech_lift:
     # false` means the take is passed through as recorded, and moving its
     # level would be moving it.
-    gain = take_gain_db(src) if lift else 0.0
+    tuning = tuning_for_take(film, src) if lift else DEFAULT_TUNING
     try:
         dst.parent.mkdir(parents=True, exist_ok=True)
         r = subprocess.run(
             [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error",
              "-i", str(src), "-vn",
-             "-filter:a", ",".join(voiced_chain(speed, lift, gain)),
+             "-filter:a", ",".join(voiced_chain(speed, lift, tuning)),
              "-c:a", "pcm_s16le", str(dst)],
             capture_output=True, text=True, errors="replace", timeout=1800)
     except (OSError, subprocess.SubprocessError):
@@ -629,8 +766,8 @@ def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
     return dst
 
 
-def speech_chain(start: float, end: float | None, delay: int,
-                 speed: float, lift: bool, gain_db: float = 0.0) -> list[str]:
+def speech_chain(start: float, end: float | None, delay: int, speed: float,
+                 lift: bool, tuning: Tuning = DEFAULT_TUNING) -> list[str]:
     """The filters one spoken source passes through, in order.
 
     Pure on purpose: no ffmpeg, no files, no Film. Every number in the
@@ -671,11 +808,11 @@ def speech_chain(start: float, end: float | None, delay: int,
         # voiced_chain, which is the path this one stands in for; see
         # there for why the gain comes before the denoiser.
         chain += voice_tone()
-        if abs(gain_db) > 0.05:
-            chain.append(f"volume={gain_db:.2f}dB")
-        chain.append(DENOISE)
+        if abs(tuning.gain_db) > 0.05:
+            chain.append(f"volume={tuning.gain_db:.2f}dB")
+        chain.append(DENOISE.format(nf=tuning.nf_db))
         chain.append(SPEECH_NORM)
-        chain.append(NOISE_GATE)
+        chain.append(NOISE_GATE.format(threshold=tuning.gate_threshold))
 
     # A few milliseconds at each end. Cutting a pause out of a take
     # splices two waveforms together mid-air, and without this the join
@@ -786,7 +923,7 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
         print(f"  voice: {len(voiced)} take(s) shaped once, "
               f"{len(specs)} piece(s) cut from them")
 
-    fallback_gain: dict[str, float] = {}
+    fallback_tuning: dict[str, Tuning] = {}
 
     def emit(prefix: str) -> list[str]:
         """Add one input and one filter chain per speech source."""
@@ -808,13 +945,13 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
                 use = src
                 if film.speech_lift:
                     key_g = str(src)
-                    if key_g not in fallback_gain:
-                        fallback_gain[key_g] = take_gain_db(src)
-                    g = fallback_gain[key_g]
+                    if key_g not in fallback_tuning:
+                        fallback_tuning[key_g] = tuning_for_take(film, src)
+                    tn = fallback_tuning[key_g]
                 else:
-                    g = 0.0
+                    tn = DEFAULT_TUNING
                 chain = speech_chain(start, end, delay, speed,
-                                     film.speech_lift, g)
+                                     film.speech_lift, tn)
             lbl = f"{prefix}{i}"
             filters.append(f"[{idx}:a]" + ",".join(chain) + f"[{lbl}]")
             inputs.extend(["-i", str(use)])

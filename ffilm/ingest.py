@@ -105,6 +105,28 @@ def key_of(project: Path, src: str) -> str:
     return Path(src).stem
 
 
+def sound_of(project: Path, src: str) -> dict | None:
+    """What ingest measured about the sound on this file, or None.
+
+    None for anything ingest never looked at -- a narration track kept
+    outside media/, a manifest written before these numbers existed, a
+    project whose analysis/ has been deleted. Every caller has to have an
+    answer for that, because "no analysis yet" is an ordinary state of
+    this tool and not an error.
+    """
+    mf = project / "analysis" / "manifest.json"
+    try:
+        data = json.loads(mf.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    want = Path(src).as_posix()
+    for e in data.get("media", []):
+        if e.get("path") == want:
+            sound = e.get("sound")
+            return sound if isinstance(sound, dict) and sound.get("has") else None
+    return None
+
+
 # --------------------------------------------------------------------------
 # Where is the thing that matters?
 # --------------------------------------------------------------------------
@@ -555,6 +577,14 @@ def detect_sound(path: Path, duration: float, floor: str | None = None,
         return quiet_none                       # no audio stream at all
 
     levels = window_levels(pcm)
+    # Where the room is and where the voice is, on THIS take. Two numbers
+    # that quiet_stretches works out anyway and used to throw away after
+    # putting one line between them -- and they are the only honest basis
+    # for any threshold applied to this take later. audio.py reads them
+    # back off the manifest rather than measuring the same file again;
+    # see ffilm/audio.py, tuning_for.
+    room_db = float(np.percentile(levels, 10)) if levels.size else -60.0
+    voice_db = float(np.percentile(levels, 90)) if levels.size else -20.0
     if floor is None:
         found, db = quiet_stretches(levels, min_gap)
     else:
@@ -574,7 +604,8 @@ def detect_sound(path: Path, duration: float, floor: str | None = None,
     inner = [[round(s, 2), round(e, 2)] for s, e in quiet if first < s and e < last]
 
     return {"has": True, "ratio": round(ratio, 3), "in": round(first, 2),
-            "out": round(last, 2), "quiet": inner, "floor_db": round(db, 1)}
+            "out": round(last, 2), "quiet": inner, "floor_db": round(db, 1),
+            "room_db": round(room_db, 1), "voice_db": round(voice_db, 1)}
 
 
 def detect_cuts(path: Path, threshold: float = 0.28) -> list[float]:
@@ -737,6 +768,34 @@ def _previous(analysis: Path) -> dict[str, dict]:
     return {e["path"]: e for e in data.get("media", []) if e.get("path")}
 
 
+def _top_up_sound(entry: dict, path: Path) -> dict:
+    """Add a fact learned since this entry was written, without redoing
+    the entry.
+
+    Bumping ANALYSIS_VERSION is the blunt way to say "we know more than
+    we did then", and for a new fact about the SOUND it is far too blunt:
+    it would re-encode every proxy and re-cut every clip in every project
+    to learn two numbers that one pass over the audio already gives. So
+    the version stays where it is and the missing fact is filled in.
+
+    Only ever adds. An entry that already has the numbers is returned
+    untouched, and so is one with no sound to measure.
+    """
+    sound = entry.get("sound")
+    if not isinstance(sound, dict) or not sound.get("has"):
+        return entry
+    if sound.get("room_db") is not None:
+        return entry
+    fresh = detect_sound(path, float(entry.get("duration") or 0.0))
+    if not fresh.get("has"):
+        return entry
+    entry = dict(entry)
+    entry["sound"] = {**sound,
+                      "room_db": fresh.get("room_db"),
+                      "voice_db": fresh.get("voice_db")}
+    return entry
+
+
 def _still_usable(entry: dict, project: Path, path: Path) -> bool:
     """May last run's answer for this file stand?
 
@@ -818,6 +877,7 @@ def ingest(project: Path, video_thumbs: int = 6, quiet: bool = False) -> dict:
         if old is not None and _still_usable(old, project, source):
             entry = dict(old)
             entry["n"] = n
+            entry = _top_up_sound(entry, source)
             entries.append(entry)
             reused += 1
             if not quiet:
