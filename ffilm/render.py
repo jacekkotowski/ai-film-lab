@@ -61,7 +61,13 @@ class Quality:
 # nothing. Pass --supersample 2 if you disagree on a particular film.
 PEEK = Quality("peek", 360, 4, 1, 1, 32, "ultrafast", cv2.INTER_LINEAR)
 DRAFT = Quality("draft", 540, 12, 1, 1, 26, "veryfast", cv2.INTER_LINEAR)
-FINAL = Quality("final", None, None, 1, 4, 17, "medium", cv2.INTER_CUBIC)
+# preset was "medium". Measured on a real final: the frame generator
+# feeds x264 about 3 frames a second, and x264 -- 28 threads, all six
+# cores available to it -- sat at 112% of ONE core the whole way through,
+# blocked on the pipe. An encoder that spends its life waiting is an
+# encoder whose preset is free, so it may as well be spending that time
+# compressing. Same CRF, so the picture is the same; the file is smaller.
+FINAL = Quality("final", None, None, 1, 4, 17, "slow", cv2.INTER_CUBIC)
 
 QUALITIES = {"peek": PEEK, "draft": DRAFT, "final": FINAL}
 
@@ -378,7 +384,20 @@ def _glow(frame: np.ndarray, strength: float) -> np.ndarray:
     lut = np.clip(lift_curve * 255.0, 0, 255).astype(np.uint8)
     l2 = cv2.LUT(l, lut)
 
-    blur = cv2.GaussianBlur(l2, (0, 0), sigmaX=max(l.shape) / 90.0)
+    # Blurred at quarter scale and enlarged back, which is what
+    # blurred_fill does and for the same reason: a Gaussian at sigma 21
+    # over a 1080x1920 plane was 18 of the 93 seconds in a profiled
+    # render -- the single most expensive call in the whole toolkit --
+    # and at this softness a quarter-scale approximation is not
+    # distinguishable from it. Measured against the full-size blur on a
+    # real frame: 56.1 dB PSNR and a worst-case difference of 2 levels
+    # out of 255 -- on a plane that then feeds an unsharp mask at
+    # 0.06 weight, so what reaches the picture is smaller again.
+    sigma = max(l.shape) / 90.0
+    small = cv2.resize(l2, None, fx=0.25, fy=0.25, interpolation=cv2.INTER_AREA)
+    small = cv2.GaussianBlur(small, (0, 0), sigmaX=sigma * 0.25)
+    blur = cv2.resize(small, (l2.shape[1], l2.shape[0]),
+                      interpolation=cv2.INTER_LINEAR)
     l3 = cv2.addWeighted(l2, 1.0 + 0.25 * strength, blur, -0.25 * strength, 0)
 
     return cv2.cvtColor(cv2.merge([l3, a, b]), cv2.COLOR_LAB2BGR)
@@ -556,53 +575,113 @@ def caption_alpha(cap: Caption, t: float) -> float:
     return float(min(1.0, into / f, left / f))
 
 
+# One caption's pixels, drawn once. Small: a handful of cropped boxes,
+# and only ever the captions of the shot being rendered.
+_caption_art_cache: dict = {}
+CAPTION_ART_CACHE_MAX = 8
+
+
+def caption_art(cap, w: int, h: int, font_override: str | None):
+    """The pixels of one caption at full opacity, cropped to the box the
+    type actually occupies. None when it draws nothing.
+
+    draw_captions used to do all of this EVERY FRAME: measure the text to
+    choose a size, open a full-frame RGBA image, draw the shadow and the
+    face into it, convert 1080x1920x4 to numpy, and blend the entire
+    frame in float32. Profiled on a real final render it was 32 of 93
+    seconds -- a third of the time -- spent re-drawing type that had not
+    changed since the frame before.
+
+    The only thing that changes between frames is the ALPHA, from the
+    fade. So the type is drawn once and the fade is applied when it is
+    composited; and because the art is cropped to its own box, the
+    per-frame blend touches the sixth of the frame the words are on
+    instead of all of it.
+    """
+    key = (cap.text, cap.size, cap.pos, w, h, font_override)
+    hit = _caption_art_cache.get(key)
+    if hit is not None:
+        return hit
+
+    layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    size = max(12, int(h * 0.042 * cap.size))
+    margin = w * (1.0 - CAPTION_MAX_WIDTH) / 2
+    font, lines = fit_caption(d, cap.text, size, font_override,
+                              w * CAPTION_MAX_WIDTH)
+
+    lh = line_height(font)
+    step = int(lh * CAPTION_LINE_SPACING)
+    block_h = step * (len(lines) - 1) + lh
+
+    # y0 is the TOP of the whole block, so a caption that wrapped to
+    # three lines still ends where a one-line caption would.
+    left_aligned = cap.pos == "lower_third"
+    if cap.pos == "top":
+        y0 = h * 0.08
+    elif cap.pos == "center":
+        y0 = (h - block_h) / 2
+    elif left_aligned:
+        y0 = h * 0.72
+    else:                                       # bottom
+        y0 = h - h * 0.10 - block_h
+
+    for i, line in enumerate(lines):
+        lw = d.textlength(line, font=font)
+        x = margin if left_aligned else (w - lw) / 2
+        y = y0 + i * step
+        # A soft shadow so text survives a bright background.
+        d.text((x + 2, y + 2), line, font=font, fill=(0, 0, 0, 140))
+        d.text((x, y), line, font=font, fill=(255, 255, 255, 255))
+
+    rgba = np.array(layer)
+    rows = np.flatnonzero(rgba[..., 3].any(axis=1))
+    cols = np.flatnonzero(rgba[..., 3].any(axis=0))
+    if rows.size == 0 or cols.size == 0:
+        art = None
+    else:
+        y1, y2 = int(rows[0]), int(rows[-1]) + 1
+        x1, x2 = int(cols[0]), int(cols[-1]) + 1
+        sub = rgba[y1:y2, x1:x2]
+        art = (y1, y2, x1, x2,
+               sub[..., :3][..., ::-1].astype(np.float32),   # RGB -> BGR
+               sub[..., 3].astype(np.float32) / 255.0)
+
+    if len(_caption_art_cache) >= CAPTION_ART_CACHE_MAX:
+        _caption_art_cache.pop(next(iter(_caption_art_cache)))
+    _caption_art_cache[key] = art
+    return art
+
+
 def draw_captions(frame: np.ndarray, shot: Shot, t: float,
                   font_override: str | None) -> np.ndarray:
+    """Composite whatever is on screen right now, at its fade level.
+
+    Captions are composited one after another rather than being drawn
+    into a single layer first. For captions in different places -- which
+    is all of them, in practice -- the result is identical; where two
+    overlap, this is painter's order, which is the more defensible of the
+    two answers anyway.
+    """
     active = [(c, caption_alpha(c, t)) for c in shot.captions]
     active = [(c, a) for c, a in active if a > 0.001]
     if not active:
         return frame
 
     h, w = frame.shape[:2]
-    layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    d = ImageDraw.Draw(layer)
-
+    out = frame
     for cap, alpha in active:
-        size = max(12, int(h * 0.042 * cap.size))
-        margin = w * (1.0 - CAPTION_MAX_WIDTH) / 2
-        font, lines = fit_caption(d, cap.text, size, font_override,
-                                  w * CAPTION_MAX_WIDTH)
-
-        lh = line_height(font)
-        step = int(lh * CAPTION_LINE_SPACING)
-        block_h = step * (len(lines) - 1) + lh
-
-        # y0 is the TOP of the whole block, so a caption that wrapped to
-        # three lines still ends where a one-line caption would.
-        left_aligned = cap.pos == "lower_third"
-        if cap.pos == "top":
-            y0 = h * 0.08
-        elif cap.pos == "center":
-            y0 = (h - block_h) / 2
-        elif left_aligned:
-            y0 = h * 0.72
-        else:                                   # bottom
-            y0 = h - h * 0.10 - block_h
-
-        a = int(255 * alpha)
-        for i, line in enumerate(lines):
-            lw = d.textlength(line, font=font)
-            x = margin if left_aligned else (w - lw) / 2
-            y = y0 + i * step
-            # A soft shadow so text survives a bright background.
-            d.text((x + 2, y + 2), line, font=font, fill=(0, 0, 0, int(a * 0.55)))
-            d.text((x, y), line, font=font, fill=(255, 255, 255, a))
-
-    rgba = np.array(layer)
-    a = rgba[..., 3:4].astype(np.float32) / 255.0
-    rgb = rgba[..., :3][..., ::-1].astype(np.float32)     # RGB -> BGR
-    out = frame.astype(np.float32) * (1 - a) + rgb * a
-    return np.clip(out, 0, 255).astype(np.uint8)
+        art = caption_art(cap, w, h, font_override)
+        if art is None:
+            continue
+        y1, y2, x1, x2, rgb, mask = art
+        if out is frame:
+            out = frame.copy()
+        a = (mask * alpha)[..., None]
+        box = out[y1:y2, x1:x2].astype(np.float32)
+        out[y1:y2, x1:x2] = np.clip(box * (1.0 - a) + rgb * a,
+                                    0, 255).astype(np.uint8)
+    return out
 
 
 # --------------------------------------------------------------------------
