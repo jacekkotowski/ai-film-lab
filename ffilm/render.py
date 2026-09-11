@@ -780,6 +780,36 @@ def open_encoder(out: Path, w: int, h: int, fps: int, q: Quality):
 # --------------------------------------------------------------------------
 
 
+# Rendering the shots in parallel: built, measured, taken out again.
+#
+# It is the obvious next thing. Shots are independent -- the camera for
+# shot 9 does not depend on shot 8 -- so the film cuts into spans, one
+# process each, encoded separately and concatenated without re-encoding.
+# It was about sixty lines and it worked: the pieces joined, and with the
+# look's randomness seeded per shot instead of per film they were the
+# same frames a whole-film render makes.
+#
+# It is worth nothing. Measured on a real film, two passes each, same
+# machine, six cores:
+#
+#     one process        72.9s, 69.2s      ~305% of 600% CPU
+#     six processes      68.3s, 69.9s      ~561% of 600% CPU
+#
+# Eighty-four percent more processor burned to finish at the same time.
+# Capping each worker to one OpenCV thread (they oversubscribe otherwise,
+# since warpAffine and the blurs already thread themselves) changed
+# nothing; three workers came out slower than one.
+#
+# The cores are not the limit. `apply_look` walks a 6.2MB frame about
+# eight times -- glow, grey, saturate, tone, flicker, vignette, scratch,
+# grain -- so a render is memory bandwidth, and six processes cannot
+# make more of that than one. The way to make this faster is fewer
+# passes over the frame, not more processes walking it.
+#
+# Left here rather than in a commit message because the next person to
+# look at a 43%-in-apply_look profile will have the same idea.
+
+
 def render(film: Film, out: Path, quality: Quality, seed: int = 0,
            font: str | None = None, quiet: bool = False) -> Path:
     fps = quality.fps or film.fps
