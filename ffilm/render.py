@@ -61,13 +61,22 @@ class Quality:
 # nothing. Pass --supersample 2 if you disagree on a particular film.
 PEEK = Quality("peek", 360, 4, 1, 1, 32, "ultrafast", cv2.INTER_LINEAR)
 DRAFT = Quality("draft", 540, 12, 1, 1, 26, "veryfast", cv2.INTER_LINEAR)
-# preset was "medium". Measured on a real final: the frame generator
-# feeds x264 about 3 frames a second, and x264 -- 28 threads, all six
-# cores available to it -- sat at 112% of ONE core the whole way through,
-# blocked on the pipe. An encoder that spends its life waiting is an
-# encoder whose preset is free, so it may as well be spending that time
-# compressing. Same CRF, so the picture is the same; the file is smaller.
-FINAL = Quality("final", None, None, 1, 4, 17, "slow", cv2.INTER_CUBIC)
+# The preset is very nearly free, because x264 is not what takes the
+# time. The frame generator feeds it a few frames a second and x264 --
+# 28 threads, six cores available -- sits blocked on the pipe. So the
+# preset buys file size, not speed. Measured on the same slice, twice,
+# at this CRF:
+#
+#     veryfast   37.7s    29.47 MB
+#     fast       40.6s    31.21 MB
+#     medium     41.7s    29.77 MB
+#     slow       51.1s    29.10 MB
+#
+# fast and medium are the same speed inside the noise; slow is the only
+# one that costs real time, and buys 2% for 25%. On these numbers medium
+# is the best of the four -- same wall clock as fast, 4.8% smaller file.
+# `fast` is set because it was asked for, and it is one word to change.
+FINAL = Quality("final", None, None, 1, 4, 17, "fast", cv2.INTER_CUBIC)
 
 QUALITIES = {"peek": PEEK, "draft": DRAFT, "final": FINAL}
 
