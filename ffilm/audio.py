@@ -120,10 +120,34 @@ SPEECH_NORM = "speechnorm=p=0.7:e=2:r=0.0003:l=1"
 DENOISE = "afftdn=nf={nf:.1f}:tn=1"
 DENOISE_DEFAULT_NF = -45.0
 
-# After the expansion: close the gaps completely. This has to come after,
-# not before -- a gate ahead of the normaliser is pointless, because
-# whatever leaks through gets expanded anyway, and a gate is the one
-# thing here that measured EXACTLY no change when placed first.
+# Closing the gaps. There are TWO of these and the order matters both
+# times.
+#
+# The one after the expander catches what the expander lifted. The one
+# BEFORE it stops the expander seeing the room at all -- and that is new,
+# because for a long time the note here said a gate placed first "measured
+# EXACTLY no change". That was true and is no longer, and the reason is
+# worth keeping: a gate can only be placed where the level is known, and
+# until `take_gain_db` existed the level was whatever the microphone
+# happened to do. The threshold was a constant sitting in the middle of
+# the room's own scatter, so it closed on about half the pauses.
+#
+# Measured on a real take, room tone at three points in one recording,
+# voice identical at -18.6 dBFS in every row:
+#
+#                              22s      237s     247s    spread
+#     gate after only        -60.7    -53.4    -44.6     16.1
+#     gate before only       -70.7    -68.2    -59.0     11.7
+#     both                   -91.0    -90.3    -79.9     11.1
+#
+# 35dB at the worst point, for one more filter. Consonants measured
+# unchanged on three passages including a quiet one -- 4-10kHz relative
+# to the voice moved by 0.1dB at most.
+#
+# The film this came from had a background that swung 28dB from one
+# fifteen-second stretch to the next, loud enough in places to be heard
+# under the voice and quiet enough elsewhere to vanish. That is what a
+# single threshold against a drifting room sounds like.
 NOISE_GATE = ("agate=threshold={threshold:.5f}:ratio=9:"
               "attack=10:release=250:knee=4")
 NOISE_GATE_DEFAULT_DB = -30.5      # 0.03 linear, which is what this was
@@ -430,15 +454,22 @@ class Tuning:
     gain_db: float
     nf_db: float
     gate_db: float
+    pre_gate_db: float | None = None     # None = no gate before the expander
 
     @property
     def gate_threshold(self) -> float:
         """agate wants a linear amplitude, not decibels."""
         return float(10.0 ** (self.gate_db / 20.0))
 
+    @property
+    def pre_gate_threshold(self) -> float | None:
+        if self.pre_gate_db is None:
+            return None
+        return float(10.0 ** (self.pre_gate_db / 20.0))
+
 
 DEFAULT_TUNING = Tuning(gain_db=0.0, nf_db=DENOISE_DEFAULT_NF,
-                        gate_db=NOISE_GATE_DEFAULT_DB)
+                        gate_db=NOISE_GATE_DEFAULT_DB, pre_gate_db=None)
 
 # What the chain leaves a voice at, measured at the gate's input, once
 # the flat gain has put the take at VOICE_TARGET_DBFS. Stable across
@@ -498,7 +529,15 @@ def tuning_for(room_db: float | None, voice_db: float | None) -> Tuning:
     nf = _clamp(room_db + gain + NF_MARGIN_DB, *NF_DB_LIMITS)
     gate = _clamp(VOICE_AT_GATE_DBFS - span * (1.0 - GATE_FRACTION),
                   *GATE_DB_LIMITS)
-    return Tuning(gain, nf, gate)
+    # The same line, drawn on the scale the signal is actually on BEFORE
+    # the expander: the flat gain has just put the voice at
+    # LEVEL_TARGET_LUFS and left the room at room_db + gain. Nothing has
+    # moved them relative to each other yet, so this one can be worked out
+    # exactly rather than inferred.
+    room_at = room_db + gain
+    pre = _clamp(room_at + GATE_FRACTION * (LEVEL_TARGET_LUFS - room_at),
+                 *GATE_DB_LIMITS)
+    return Tuning(gain, nf, gate, pre)
 
 
 def _clamp(v: float, lo: float, hi: float) -> float:
@@ -569,7 +608,7 @@ def level_gain(measured_lufs: float | None) -> float:
 
 # Bumped whenever the voice chain below changes, so a take voiced by an
 # older version is made again rather than reused.
-VOICE_VERSION = 3
+VOICE_VERSION = 4
 
 
 def voiced_chain(speed: float, lift: bool,
@@ -637,6 +676,9 @@ def voiced_chain(speed: float, lift: bool,
         if abs(tuning.gain_db) > 0.05:
             chain.append(f"volume={tuning.gain_db:.2f}dB")
         chain.append(DENOISE.format(nf=tuning.nf_db))
+        if tuning.pre_gate_threshold is not None:
+            chain.append(NOISE_GATE.format(
+                threshold=tuning.pre_gate_threshold))
         chain.append(SPEECH_NORM)
         chain.append(NOISE_GATE.format(threshold=tuning.gate_threshold))
     return chain
@@ -811,6 +853,9 @@ def speech_chain(start: float, end: float | None, delay: int, speed: float,
         if abs(tuning.gain_db) > 0.05:
             chain.append(f"volume={tuning.gain_db:.2f}dB")
         chain.append(DENOISE.format(nf=tuning.nf_db))
+        if tuning.pre_gate_threshold is not None:
+            chain.append(NOISE_GATE.format(
+                threshold=tuning.pre_gate_threshold))
         chain.append(SPEECH_NORM)
         chain.append(NOISE_GATE.format(threshold=tuning.gate_threshold))
 

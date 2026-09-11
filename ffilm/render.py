@@ -73,10 +73,9 @@ DRAFT = Quality("draft", 540, 12, 1, 1, 26, "veryfast", cv2.INTER_LINEAR)
 #     slow       51.1s    29.10 MB
 #
 # fast and medium are the same speed inside the noise; slow is the only
-# one that costs real time, and buys 2% for 25%. On these numbers medium
-# is the best of the four -- same wall clock as fast, 4.8% smaller file.
-# `fast` is set because it was asked for, and it is one word to change.
-FINAL = Quality("final", None, None, 1, 4, 17, "fast", cv2.INTER_CUBIC)
+# one that costs real time, and buys 2% for 25%. So medium: the same wall
+# clock as fast and veryfast, and the smallest file of the three.
+FINAL = Quality("final", None, None, 1, 4, 17, "medium", cv2.INTER_CUBIC)
 
 QUALITIES = {"peek": PEEK, "draft": DRAFT, "final": FINAL}
 

@@ -665,3 +665,53 @@ def test_the_thresholds_stay_inside_what_ffmpeg_accepts():
         t = tuning_for(room, voice)
         assert -80.0 <= t.nf_db <= -20.0
         assert 0.0 < t.gate_threshold < 1.0
+
+
+# --------------------------------------------------------------------------
+# The gate before the expander
+#
+# For a long time the note in audio.py said a gate placed first measured
+# EXACTLY no change. It did -- while the threshold was a constant sitting
+# in the middle of the room's own scatter. Once the take is brought to a
+# known level first, the same filter is worth 35dB at the worst point of
+# a real recording.
+# --------------------------------------------------------------------------
+
+def test_there_is_a_gate_on_each_side_of_the_expander():
+    t = tuning_for(room_db=-53.1, voice_db=-22.2)
+    chain = voiced_chain(1.0, lift=True, tuning=t)
+    gates = [i for i, f in enumerate(chain) if f.startswith("agate")]
+    norm = at(chain, "speechnorm")
+    assert len(gates) == 2, chain
+    assert gates[0] < norm < gates[1]
+
+
+def test_the_gate_before_sits_under_the_one_after():
+    """They are the same line drawn on two different scales. Before the
+    expander the room has not been lifted yet, so the line is lower."""
+    t = tuning_for(room_db=-53.1, voice_db=-22.2)
+    assert t.pre_gate_db < t.gate_db
+
+
+def test_the_early_gate_is_placed_off_the_measured_room():
+    """Not a constant. A noisier room has to move it up, or it is the
+    bug it exists to fix."""
+    quiet = tuning_for(room_db=-56.0, voice_db=-22.0)
+    noisy = tuning_for(room_db=-38.0, voice_db=-22.0)
+    assert noisy.pre_gate_db > quiet.pre_gate_db + 5
+
+
+def test_no_measurement_means_no_gate_before():
+    """A take ingest has never seen. Without knowing where the room is
+    there is nowhere to put this gate, and a guess would be a gate across
+    somebody's voice."""
+    assert DEFAULT_TUNING.pre_gate_db is None
+    assert DEFAULT_TUNING.pre_gate_threshold is None
+    chain = voiced_chain(1.0, lift=True, tuning=DEFAULT_TUNING)
+    assert len([f for f in chain if f.startswith("agate")]) == 1
+
+
+def test_speech_lift_false_still_has_no_gates_at_all():
+    t = tuning_for(room_db=-53.1, voice_db=-22.2)
+    chain = voiced_chain(1.0, lift=False, tuning=t)
+    assert not any(f.startswith("agate") for f in chain)
