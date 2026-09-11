@@ -249,7 +249,7 @@ shots:
     captions:
       - text: "Just to walk beside you."
         at: 0.00
-        dur: 4.50
+        dur: 2.86
         pos: lower_third
       - text: "And if you fall,"
         at: 2.86
@@ -365,7 +365,7 @@ shots:
     captions:
       - text: "You do not have to know"
         at: 0.00
-        dur: 4.50
+        dur: 2.08
         pos: lower_third
       - text: "the whole road."
         at: 2.08

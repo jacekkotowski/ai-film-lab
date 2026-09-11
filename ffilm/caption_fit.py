@@ -17,6 +17,8 @@ contains 0:42. Everything else in the film is irrelevant to that line.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from .spec import Caption, Film
 from .voice import Line, VoiceSource
 
@@ -58,6 +60,47 @@ def _place(sid: str, s0: float, s1: float, ln: Line,
                   pos="lower_third")
 
 
+def stop_overlap(caps: list[Caption], sid: str,
+                 warnings: list[str]) -> list[Caption]:
+    """No two captions in the same place on screen at the same time.
+
+    `_place` sizes each line on its own and never looks at the next one,
+    so a line that ran long -- or, far more often, one that MAX_CAPTION_
+    SECONDS clipped to 4.5s -- sat there at full opacity while the next
+    one faded in underneath it. Rendered as two sentences printed over
+    each other, unreadable, and it survived every render because nothing
+    downstream is in a position to notice.
+
+    Measured on a real film: 81 frames of it, from two captions.
+
+    A caption is shortened to end exactly where the next one begins, so
+    what is left is a proper crossfade -- the outgoing one fading out
+    over its own `fade` while the incoming one fades in. Shortened, never
+    dropped: the words were said, and the shot is where they were said.
+
+    Only captions sharing a `pos` can collide; the whole point of `pos`
+    is that two lines in different places are two lines in different
+    places.
+    """
+    out: list[Caption] = []
+    for pos in {c.pos for c in caps}:
+        same = sorted([c for c in caps if c.pos == pos], key=lambda c: c.at)
+        for cap, nxt in zip(same, same[1:]):
+            if cap.at + cap.dur > nxt.at + 1e-6:
+                # Rounded DOWN, for the reason _place rounds down: the
+                # numbers written into film.yaml may never add up to more
+                # than the room they were given.
+                cut = int(max(0.0, nxt.at - cap.at) * 100) / 100.0
+                warnings.append(
+                    f'[{sid}] shortened to {cut:.2f}s, the next caption '
+                    f'starts: "{cap.text}"')
+                cap = replace(cap, dur=cut)
+            out.append(cap)
+        if same:
+            out.append(same[-1])
+    return sorted(out, key=lambda c: c.at)
+
+
 def fit_global(film: Film, lines: list[Line]) -> tuple[dict[str, list[Caption]], list[str]]:
     """A track that plays under the whole film -- match by position in
     the finished film's own timeline."""
@@ -81,7 +124,8 @@ def fit_global(film: Film, lines: list[Line]) -> tuple[dict[str, list[Caption]],
         cap = _place(best_id, *best_bounds, ln, warnings)
         if cap:
             out[best_id].append(cap)
-    return {k: v for k, v in out.items() if v}, warnings
+    out = {k: stop_overlap(v, k, warnings) for k, v in out.items() if v}
+    return out, warnings
 
 
 def fit_per_clip(film: Film, source: VoiceSource,
@@ -110,7 +154,8 @@ def fit_per_clip(film: Film, source: VoiceSource,
         cap = _place(best_id, *best_bounds, ln, warnings, best_speed)
         if cap:
             out[best_id].append(cap)
-    return {k: v for k, v in out.items() if v}, warnings
+    out = {k: stop_overlap(v, k, warnings) for k, v in out.items() if v}
+    return out, warnings
 
 
 def fit_lines_to_shots(film: Film, source: VoiceSource,

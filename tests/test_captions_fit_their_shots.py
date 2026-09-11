@@ -14,7 +14,10 @@ toolkit that had the bug -- it is trimmed to fit and the film renders.
 
 import pytest
 
-from ffilm.caption_fit import MAX_CAPTION_SECONDS, _place
+from pytest import approx
+
+from ffilm.caption_fit import (MAX_CAPTION_SECONDS, _place,
+                              stop_overlap)
 from ffilm.editor import dump
 from ffilm.spec import Caption, Film, Shot
 from ffilm.voice import Line
@@ -169,3 +172,57 @@ def test_the_bench_drops_a_caption_a_shot_no_longer_has_room_for(tmp_path):
 def test_the_bench_still_writes_an_ordinary_caption_untouched(tmp_path):
     out = bench_yaml(tmp_path, duration=10.0, at=1.0, dur=3.0)
     assert "at: 1.0" in out and "dur: 3.0" in out
+
+
+# --------------------------------------------------------------------------
+# Two captions in one place at one time
+#
+# _place sizes each line on its own, so a line clipped to
+# MAX_CAPTION_SECONDS could still be at full opacity when the next one
+# arrived. 81 frames of a real film printed two sentences over each other.
+# --------------------------------------------------------------------------
+
+def test_a_caption_stops_where_the_next_one_starts():
+    w = []
+    caps = [Caption("first", 0.0, 4.5, "lower_third"),
+            Caption("second", 2.86, 3.85, "lower_third")]
+    out = stop_overlap(caps, "s12", w)
+    assert out[0].dur == approx(2.86)
+    assert out[0].at + out[0].dur <= out[1].at + 1e-9
+    assert w and "shortened" in w[0]
+
+
+def test_nothing_is_dropped_only_shortened():
+    """The words were said. The shot is where they were said."""
+    caps = [Caption("first", 0.0, 9.0, "lower_third"),
+            Caption("second", 1.0, 9.0, "lower_third"),
+            Caption("third", 2.0, 3.0, "lower_third")]
+    out = stop_overlap(caps, "s1", [])
+    assert [c.text for c in out] == ["first", "second", "third"]
+
+
+def test_two_places_are_two_places():
+    """A line at the top and a line at the bottom are not in each
+    other's way, and shortening one would be wrong."""
+    caps = [Caption("top line", 0.0, 4.5, "top"),
+            Caption("bottom line", 1.0, 4.5, "bottom")]
+    w = []
+    out = stop_overlap(caps, "s1", w)
+    assert all(c.dur == approx(4.5) for c in out)
+    assert w == []
+
+
+def test_captions_that_do_not_collide_are_untouched():
+    caps = [Caption("first", 0.0, 2.0, "lower_third"),
+            Caption("second", 2.5, 2.0, "lower_third")]
+    out = stop_overlap(caps, "s1", [])
+    assert [(c.at, c.dur) for c in out] == [(0.0, 2.0), (2.5, 2.0)]
+
+
+def test_the_written_numbers_never_round_up():
+    """Same rule as _place: film.yaml may never claim more time than it
+    was given, or the film refuses to load."""
+    caps = [Caption("first", 0.0, 5.0, "lower_third"),
+            Caption("second", 1.239, 2.0, "lower_third")]
+    out = stop_overlap(caps, "s1", [])
+    assert out[0].dur <= 1.239
