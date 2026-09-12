@@ -20,6 +20,9 @@ it's installed.
 **[Read HOW_TO_USE.md](HOW_TO_USE.md)** for the full walkthrough. It
 assumes nothing, and it's the manual for everything below this point too.
 
+**[Read WHAT_IT_DOES.md](WHAT_IT_DOES.md)** if you'd rather know what the
+program does to your pictures and your sound before you install it.
+
 ---
 
 ## Set up once, then never again
