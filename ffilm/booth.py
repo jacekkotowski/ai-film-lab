@@ -99,6 +99,10 @@ SPEAKING_ABOVE_ROOM_DB = 12.0
 # ebur128's momentary loudness is already a 400 ms average, so this only
 # has to cover a real pause-for-breath.
 KEEP_MOVING_SECONDS = 0.8
+# ebur128 prints M:-120.7 until it has 400 ms of sound to measure. That
+# is "no reading yet", not a room: learned as the quietest the room had
+# been, it made the room itself count as talking for the rest of the take.
+NO_READING_LUFS = -100.0
 COUNT_FROM = 3
 
 BG = "#0b0b0c"
@@ -208,6 +212,8 @@ class VoiceFollow:
         self.last_voice: float | None = None
 
     def update(self, level: float, now: float) -> bool:
+        if level <= NO_READING_LUFS:
+            return True                      # the meter has not measured yet
         self.room = level if self.room is None else min(self.room, level)
         self.loudest = level if self.loudest is None else max(self.loudest, level)
         if self.loudest - self.room < SPEAKING_ABOVE_ROOM_DB:
@@ -275,7 +281,9 @@ class Take:
         self.out = out
         self.proc: subprocess.Popen | None = None
         self.frames: queue.Queue = queue.Queue(maxsize=2)
-        self.level = -70.0
+        # Below NO_READING_LUFS: nothing measured yet. It used to start at
+        # -70, which the prompter could learn as the room's quiet.
+        self.level = -120.7
         self.heard = False
         self.errors: list[str] = []
         self._stop = threading.Event()

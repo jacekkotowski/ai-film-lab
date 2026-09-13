@@ -52,6 +52,19 @@ def test_before_it_has_heard_the_room_it_scrolls_as_it_always_did():
     assert VoiceFollow().update(ROOM, 0.0) is True
 
 
+def test_the_meters_first_empty_readings_do_not_blind_it():
+    """The retake that never stopped. ebur128 reports M:-120.7 for its
+    first 0.3 s -- "nothing measured yet", measured on a real take whose
+    room sat at -59 and voice at -33 to -25. Learned as the room, that
+    made the room itself sound like talking, for the rest of the take.
+    Whether the window caught those readings was timing, so the first
+    take worked and the retake did not."""
+    f = VoiceFollow()
+    feed(f, [-120.7] * 3 + [ROOM] * 17)
+    feed(f, [VOICE] * 10, start=2.0)
+    assert feed(f, [ROOM] * 15, start=3.0) is False
+
+
 def test_a_quiet_microphone_is_still_followed():
     """A mic turned down 17 dB moves the voice and the room together."""
     f = VoiceFollow()
