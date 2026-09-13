@@ -74,6 +74,8 @@ GETTING THE MATERIAL          LOOKING AT THE MATERIAL
   record.py   camera + mic      ingest.py   contact sheet, manifest, proxies, pauses
   booth.py    the record window kinds.py    what counts as a photo / clip / track
                                 pix.py      read/write a still, whatever it is called
+FOUNDATIONS
+  ffmpeg.py   find ffmpeg/ffprobe   fonts.py  typefaces, wrapping   paths.py  where the toolkit is
 SOUND AND WORDS
   audio.py        speech + narration + music -> one track
   voice.py        speech -> timed lines (optional extra: voice)
@@ -83,23 +85,28 @@ SOUND AND WORDS
 
 THE WAY IN
   cli.py      the commands        guide.py    `uv run film`: what next?
+  checks.py   what is wrong, found before the render finds it
   editor.py   the browser bench   history.py  render commits film.yaml -> undo
   pack.py     a zip for another computer
 ```
 
-## Known structural debt (true on 2026-09-13)
+## The layers
 
-The layers and every current violation are in
-`tests/test_imports_only_point_down.py`. A new upward import fails that
-test; so does fixing one without deleting its entry. The main items:
+`tests/test_imports_only_point_down.py` sorts every module into a layer
+and fails if an import points up. There are no exceptions:
 
-- `ffmpeg_bin()`/`ffprobe_bin()` live in `render.py`, but `audio`, `ingest`,
-  `voice` and `record` import them. Analysis therefore depends on the
-  renderer. **Do not add more importers.** The fix is a `tools/ffmpeg.py`.
-- `record.py` imports `cli.toolkit_root`, and `cli` imports `record`: a cycle,
-  hidden by a function-local import.
-- `cli.py` (about 1,300 lines) holds real logic (`unused_media`,
-  `framing_notes`, `preflight_report`, `ship`), not just argument parsing.
-  New logic goes in a module, not in `cli.py`.
+```
+9  cli                                  the command line
+8  guide, editor                        the ways in
+7  scaffold, booth, checks              workflows
+6  render, caption_fit                  pixels; captions fitted to shots
+5  audio, voice, cover                  sound and words
+4  record, ingest                       getting and reading the material
+3  moves      2  spec      1  library
+0  kinds, pix, paths, ffmpeg, fonts, history, pack
+```
 
-Fixing any of these is a change I have to ask for.
+When a new module needs something from a module at the same or a higher
+layer, move the shared piece *down*. That is how `ffmpeg.py`, `fonts.py`,
+`paths.py` and `checks.py` came to exist. New logic never goes in `cli.py`:
+the checks live in `checks.py`, and cli only prints them.

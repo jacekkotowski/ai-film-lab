@@ -6,7 +6,7 @@ description: Make a change to the ffilm/ package itself — a bug fix, a new com
 # Change the machine: a rule, a test, a fix, a commit
 
 Rules for this role: `ffilm/CLAUDE.md`. Read its "standing requests" and
-"known structural debt" before planning anything.
+"the layers" before planning anything.
 
 ## Steps
 
@@ -31,7 +31,8 @@ Rules for this role: `ffilm/CLAUDE.md`. Read its "standing requests" and
 
 5. **Make the smallest change that passes it.**
    - Put new logic in a module, never in `cli.py`.
-   - Don't add importers of `render.ffmpeg_bin`, and no new dependencies.
+   - Imports only point down (the layer test says where a new module goes).
+     No new dependencies.
    - A comment explains *why*, in the same plain voice as the docstrings
      around it: what broke, and what it looked like to the user.
 
