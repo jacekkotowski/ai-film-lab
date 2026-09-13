@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from ffilm import cli, cover
+from ffilm import checks, cli, cover
 
 
 def picture(path: Path, w: int, h: int) -> Path:
@@ -72,21 +72,21 @@ def test_making_a_project_stocks_the_shelf(tmp_path, shelf):
 
 def test_a_vertical_project_with_no_film_yaml_is_still_vertical(tmp_path):
     root = cli.make_project(tmp_path / "short", vertical=True)
-    assert cli._film_shape(root) == (1080, 1920)
+    assert checks.film_shape(root) == (1080, 1920)
 
 
 def test_the_resolution_in_film_yaml_wins(tmp_path):
     root = cli.make_project(tmp_path / "short", vertical=True)
     (root / "film.yaml").write_text("resolution: [1920, 1080]\n",
                                     encoding="utf-8")
-    assert cli._film_shape(root) == (1920, 1080)
+    assert checks.film_shape(root) == (1920, 1080)
 
 
 def test_a_nonsense_resolution_falls_back_rather_than_crashing(tmp_path):
     root = cli.make_project(tmp_path / "odd")
     (root / "film.yaml").write_text("resolution: yes please\n",
                                     encoding="utf-8")
-    assert cli._film_shape(root) == cover.WIDE
+    assert checks.film_shape(root) == cover.WIDE
 
 
 # --------------------------------------------------------------------------

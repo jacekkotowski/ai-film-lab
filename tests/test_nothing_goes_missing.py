@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 from ffilm import pix
-from ffilm.cli import framing_notes, unused_media
+from ffilm.checks import framing_notes, unused_media
 from ffilm.ingest import analysis_keys, in_capture_order
 from ffilm.spec import Film, Shot
 

@@ -36,7 +36,7 @@ LAYERS = {
     # 6  pixels, and captions fitted to shots
     "render": 6, "caption_fit": 6,
     # 7  workflows built on all of that
-    "scaffold": 7, "booth": 7,
+    "scaffold": 7, "booth": 7, "checks": 7,
     # 8  the ways in
     "guide": 8, "editor": 8,
     # 9  the command line, which dispatches to everything

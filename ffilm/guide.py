@@ -410,12 +410,8 @@ def next_steps(project: Path) -> list[Step]:
 
 
 def _voice_installed() -> bool:
-    """Is the optional speech model package there?"""
-    from importlib.util import find_spec
-    try:
-        return find_spec("faster_whisper") is not None
-    except (ImportError, ValueError):
-        return False
+    from .checks import voice_installed
+    return voice_installed()
 
 
 def film_is_wide(yml: Path) -> bool:
