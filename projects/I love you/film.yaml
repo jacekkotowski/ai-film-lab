@@ -36,6 +36,7 @@ shots:
         at: 0.0
         dur: 1.5
         pos: lower_third
+        words: [0.00, 0.52, 0.75, 0.90, 1.20]
 
   - id: s03
     src: media/rec_20260910-173831.mp4
@@ -53,10 +54,12 @@ shots:
         at: 0.1
         dur: 0.9
         pos: lower_third
+        words: [0.00, 0.30, 0.57]
       - text: "Because I want to see you live."
         at: 1.0
         dur: 2.4
         pos: lower_third
+        words: [0.00, 0.55, 0.90, 1.13, 1.33, 1.62, 1.88]
 
   - id: s04
     src: media/rec_20260910-173831.mp4
@@ -74,6 +77,7 @@ shots:
         at: 0.3
         dur: 4.5
         pos: lower_third
+        words: [0.00, 0.32, 0.78, 1.33, 1.77, 3.34, 3.75]
 
   - id: s05
     src: media/rec_20260910-173831.mp4
@@ -91,10 +95,12 @@ shots:
         at: 0.1
         dur: 3.2
         pos: lower_third
+        words: [0.00, 0.52, 0.92, 1.20, 2.28, 2.75]
       - text: "when you finally become fully yourself."
         at: 3.3
         dur: 4.5
         pos: lower_third
+        words: [0.00, 0.78, 2.12, 2.73, 3.70, 4.38]
 
   - id: s06
     src: media/rec_20260910-173831.mp4
@@ -112,10 +118,12 @@ shots:
         at: 0.1
         dur: 2.7
         pos: lower_third
+        words: [0.00, 0.40, 0.67, 1.07, 1.53, 1.92]
       - text: "Truly free."
         at: 3.7
         dur: 1.2
         pos: lower_third
+        words: [0.00, 0.72]
 
   - id: s07
     src: media/rec_20260910-173831.mp4
@@ -133,6 +141,7 @@ shots:
         at: 0.0
         dur: 1.9
         pos: lower_third
+        words: [0.00, 0.58, 1.42]
 
   - id: s08
     src: media/rec_20260910-173831.mp4
@@ -150,10 +159,12 @@ shots:
         at: 0.0
         dur: 1.8
         pos: lower_third
+        words: [0.00, 0.58, 1.37]
       - text: "Free to give life."
         at: 2.6
         dur: 2.7
         pos: lower_third
+        words: [0.00, 1.17, 1.75, 2.08]
 
   - id: s09
     src: media/rec_20260910-173831.mp4
@@ -171,6 +182,7 @@ shots:
         at: 0.0
         dur: 2.8
         pos: lower_third
+        words: [0.00, 0.58, 1.77, 2.15]
 
   - id: s10
     src: media/rec_20260910-173831.mp4
@@ -188,6 +200,7 @@ shots:
         at: 0.0
         dur: 2.9
         pos: lower_third
+        words: [0.00, 1.78, 2.77]
 
   - id: s11
     src: media/rec_20260910-173831.mp4
@@ -205,6 +218,7 @@ shots:
         at: 1.8
         dur: 3.3
         pos: lower_third
+        words: [0.00, 0.80, 1.45, 2.33, 2.60, 2.95]
 
   - id: s12
     src: media/rec_20260910-173831.mp4
@@ -222,6 +236,7 @@ shots:
         at: 0.0
         dur: 3.2
         pos: lower_third
+        words: [0.00, 0.98, 1.45, 1.85, 2.10, 2.43, 2.77]
 
   - id: s13
     src: media/rec_20260910-173831.mp4
@@ -239,18 +254,22 @@ shots:
         at: 0.0
         dur: 2.9
         pos: lower_third
+        words: [0.00]
       - text: "And if you fall,"
         at: 2.9
         dur: 3.9
         pos: lower_third
+        words: [0.00, 1.73, 2.68, 3.05]
       - text: "I want to be there to catch you."
         at: 6.7
         dur: 4.5
         pos: lower_third
+        words: [0.00, 1.58, 1.92, 2.25, 2.47, 2.85, 3.32, 4.03]
       - text: "Then help you stand again."
         at: 12.3
         dur: 3.1
         pos: lower_third
+        words: [0.00, 0.55, 1.62, 1.95, 2.60]
 
   - id: s14
     src: media/rec_20260910-173831.mp4
@@ -268,10 +287,12 @@ shots:
         at: 0.0
         dur: 4.5
         pos: lower_third
+        words: [0.00, 3.59, 4.01]
       - text: "that is worth protecting."
         at: 5.2
         dur: 2.0
         pos: lower_third
+        words: [0.00, 0.58, 0.78, 1.08]
 
   - id: s15
     src: media/rec_20260910-173831.mp4
@@ -289,6 +310,7 @@ shots:
         at: 0.0
         dur: 3.0
         pos: lower_third
+        words: [0.00, 0.58, 1.12, 1.62, 2.32, 2.58]
 
   - id: s16
     src: media/rec_20260910-173831.mp4
@@ -306,6 +328,7 @@ shots:
         at: 0.0
         dur: 3.0
         pos: lower_third
+        words: [0.00, 0.82, 1.80, 2.12, 2.45]
 
   - id: s17
     src: media/rec_20260910-173831.mp4
@@ -323,10 +346,12 @@ shots:
         at: 0.0
         dur: 2.8
         pos: lower_third
+        words: [0.00, 0.58, 1.50, 2.08]
       - text: "remember what God keeps saying:"
         at: 3.6
         dur: 3.7
         pos: lower_third
+        words: [0.00, 0.58, 1.57, 2.12, 3.07]
 
   - id: s18
     src: media/rec_20260910-173831.mp4
@@ -344,6 +369,7 @@ shots:
         at: 0.0
         dur: 1.8
         pos: lower_third
+        words: [0.00, 1.73]
 
   - id: s19
     src: media/rec_20260910-173831.mp4
@@ -361,18 +387,22 @@ shots:
         at: 0.0
         dur: 2.1
         pos: lower_third
+        words: [0.00]
       - text: "the whole road."
         at: 2.1
         dur: 1.7
         pos: lower_third
+        words: [0.00, 0.67, 1.12]
       - text: "You only have to take"
         at: 4.8
         dur: 1.8
         pos: lower_third
+        words: [0.00, 0.45, 0.88, 1.20, 1.38]
       - text: "the next step."
         at: 6.6
         dur: 1.7
         pos: lower_third
+        words: [0.00, 0.83, 1.17]
 
   - id: s20
     src: media/rec_20260910-173831.mp4
@@ -390,10 +420,12 @@ shots:
         at: 0.0
         dur: 4.5
         pos: lower_third
+        words: [0.00, 2.30, 3.20, 3.72, 4.13, 4.47]
       - text: "I want to see you succeed."
         at: 5.3
         dur: 3.5
         pos: lower_third
+        words: [0.00, 0.90, 1.50, 1.87, 2.20, 3.02]
 
   - id: s21
     src: media/rec_20260910-173831.mp4
@@ -411,6 +443,7 @@ shots:
         at: 0.0
         dur: 1.7
         pos: lower_third
+        words: [0.00]
 
   - id: s22
     src: media/rec_20260910-173831.mp4
@@ -428,10 +461,12 @@ shots:
         at: 0.0
         dur: 1.1
         pos: lower_third
+        words: [0.00, 0.73]
       - text: "Because I love you."
         at: 1.9
         dur: 3.3
         pos: lower_third
+        words: [0.00, 0.55, 2.35, 2.90]
 
   - id: s23
     src: media/rec_20260910-173831.mp4
@@ -449,6 +484,7 @@ shots:
         at: 0.0
         dur: 4.2
         pos: lower_third
+        words: [0.00, 1.03, 1.77, 2.20, 2.42, 2.87, 3.28, 3.83, 4.08]
 
   - id: s24
     src: media/rec_20260910-173831.mp4
@@ -466,18 +502,22 @@ shots:
         at: 0.0
         dur: 2.0
         pos: lower_third
+        words: [0.00, 0.55, 0.87, 1.38]
       - text: "to become more alive,"
         at: 2.8
         dur: 2.2
         pos: lower_third
+        words: [0.00, 0.55, 1.23, 1.63]
       - text: "more free,"
         at: 6.0
         dur: 1.1
         pos: lower_third
+        words: [0.00, 0.55]
       - text: "more capable of giving goodness to the world."
         at: 8.2
         dur: 4.0
         pos: lower_third
+        words: [0.00, 0.55, 1.22, 1.80, 2.22, 2.78, 3.27, 3.50]
 
   - id: s25
     src: media/rec_20260910-173831.mp4
@@ -495,6 +535,7 @@ shots:
         at: 0.0
         dur: 4.4
         pos: lower_third
+        words: [0.00, 4.00, 4.28]
 
   - id: s26
     src: media/rec_20260910-173831.mp4
@@ -512,10 +553,12 @@ shots:
         at: 0.2
         dur: 3.6
         pos: lower_third
+        words: [0.00, 0.38, 0.68, 0.93, 1.37, 2.47, 2.70, 2.83, 3.07, 3.33]
       - text: "And if I am allowed"
         at: 3.8
         dur: 1.8
         pos: lower_third
+        words: [0.00]
 
   - id: s27
     src: media/rec_20260910-173831.mp4
@@ -533,6 +576,7 @@ shots:
         at: 1.3
         dur: 3.2
         pos: lower_third
+        words: [0.00, 0.57, 0.87, 1.23, 1.72, 2.10, 2.43, 2.63, 2.77]
 
   - id: s28
     src: media/rec_20260910-173831.mp4
@@ -550,6 +594,7 @@ shots:
         at: 0.0
         dur: 1.2
         pos: lower_third
+        words: [0.00]
 
   - id: s29
     src: media/rec_20260910-173831.mp4
@@ -567,6 +612,7 @@ shots:
         at: 0.0
         dur: 2.2
         pos: lower_third
+        words: [0.00]
 
   - id: s30
     src: media/rec_20260910-173831.mp4
@@ -584,3 +630,4 @@ shots:
         at: 0.3
         dur: 1.5
         pos: lower_third
+        words: [0.00, 0.77]
