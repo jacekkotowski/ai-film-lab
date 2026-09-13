@@ -19,7 +19,6 @@ Three quality tiers, same code path. That matters: what you judge in
 from __future__ import annotations
 
 import math
-import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -27,9 +26,11 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 from . import pix
+from .ffmpeg import ffmpeg_bin, ffprobe_bin
+from .fonts import line_height, load_font, wrap_to_width
 from .moves import window_at, window_past_end
 from .spec import Caption, Film, Look, Shot, Window, frames_for
 
@@ -498,24 +499,6 @@ def apply_look(frame: np.ndarray, look: Look, rng: np.random.Generator) -> np.nd
 # Captions
 # --------------------------------------------------------------------------
 
-FONT_CANDIDATES = [
-    "C:/Windows/Fonts/segoeui.ttf",
-    "C:/Windows/Fonts/arial.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    "/System/Library/Fonts/Helvetica.ttc",
-]
-
-
-def load_font(size: int, override: str | None = None) -> ImageFont.FreeTypeFont:
-    paths = ([override] if override else []) + FONT_CANDIDATES
-    for p in paths:
-        try:
-            return ImageFont.truetype(p, size)
-        except Exception:
-            continue
-    return ImageFont.load_default(size)
-
-
 # Text wider than this fraction of the frame wraps to the next line.
 # Whisper hands us up to twelve words at a time; at 4.2% of frame height
 # that is roughly twice the width of a 1080-wide vertical frame, and
@@ -523,26 +506,6 @@ def load_font(size: int, override: str | None = None) -> ImageFont.FreeTypeFont:
 CAPTION_MAX_WIDTH = 0.84
 CAPTION_MAX_LINES = 3        # past this we shrink the type instead of stacking
 CAPTION_LINE_SPACING = 1.22
-
-
-def wrap_to_width(d: ImageDraw.ImageDraw, text: str, font, max_px: float
-                  ) -> list[str]:
-    """Greedy word wrap. Any newline you typed yourself is kept."""
-    lines: list[str] = []
-    for para in text.splitlines():
-        words = para.split()
-        if not words:
-            continue
-        cur = words[0]
-        for word in words[1:]:
-            trial = f"{cur} {word}"
-            if d.textlength(trial, font=font) <= max_px:
-                cur = trial
-            else:
-                lines.append(cur)
-                cur = word
-        lines.append(cur)
-    return lines or [text]
 
 
 def fit_caption(d: ImageDraw.ImageDraw, text: str, size: int,
@@ -563,14 +526,6 @@ def fit_caption(d: ImageDraw.ImageDraw, text: str, size: int,
             break
     font = load_font(max(12, size), font_override)
     return font, wrap_to_width(d, text, font, max_px)
-
-
-def line_height(font) -> int:
-    try:
-        asc, desc = font.getmetrics()
-        return asc + desc
-    except Exception:
-        return int(getattr(font, "size", 24) * 1.2)
 
 
 def caption_alpha(cap: Caption, t: float) -> float:
@@ -721,41 +676,6 @@ def say(text: str) -> bool:
         return True
     except (OSError, ValueError):
         return False
-
-
-def ffmpeg_bin() -> str:
-    exe = shutil.which("ffmpeg")
-    if not exe:
-        raise SystemExit(
-            "ffmpeg not found on PATH.\n"
-            "Install it with:  winget install --id Gyan.FFmpeg -e\n"
-            "then close and reopen your terminal."
-        )
-    return exe
-
-
-def ffprobe_bin() -> str:
-    """ffprobe, the other half of ffmpeg. It reads durations and sizes.
-
-    Ask PATH for it by name first. The tempting one-liner --
-    ffmpeg_bin().replace("ffmpeg", "ffprobe") -- is wrong, and wrong in a
-    way that only shows up on the install our own docs recommend: winget
-    unpacks into ...\\ffmpeg-9.0.1-full_build\\bin\\ffmpeg.exe, and a blind
-    replace renames the FOLDER too. Only ever swap the filename.
-    """
-    exe = shutil.which("ffprobe")
-    if exe:
-        return exe
-    p = Path(ffmpeg_bin())
-    beside = p.with_name(p.name.replace("ffmpeg", "ffprobe"))
-    if beside.exists():
-        return str(beside)
-    raise SystemExit(
-        "ffprobe not found on PATH. It ships alongside ffmpeg, so this "
-        "usually means a half-finished install:\n"
-        "  winget install --id Gyan.FFmpeg -e\n"
-        "then close and reopen your terminal."
-    )
 
 
 def open_encoder(out: Path, w: int, h: int, fps: int, q: Quality):

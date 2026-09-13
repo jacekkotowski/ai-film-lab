@@ -41,12 +41,8 @@ import threading
 import time
 from pathlib import Path
 
-# The preview is padded to exactly this, whatever shape the camera is,
-# so the reader knows how many bytes make one frame without having to
-# ask. 12fps is plenty to see whether your head is in the middle.
-PREVIEW_W = 384
-PREVIEW_H = 216
-PREVIEW_FPS = 12
+# The preview size lives in record.py, which makes the preview.
+from .record import PREVIEW_FPS, PREVIEW_H, PREVIEW_W
 
 # ebur128's momentary loudness, in LUFS. Silence in a quiet room sits
 # near -70; a person talking at a laptop lands around -30 to -18. These

@@ -60,7 +60,7 @@ class Line:
 def has_audio_track(path: Path) -> bool:
     """Some clips are silent (a screen recording, a muted export). Check
     before trying to extract, so the error is clear instead of cryptic."""
-    from .render import ffmpeg_bin, ffprobe_bin
+    from .ffmpeg import ffmpeg_bin, ffprobe_bin
     exe = ffprobe_bin()
     r = subprocess.run(
         [exe, "-v", "error", "-select_streams", "a", "-show_entries",
@@ -72,7 +72,7 @@ def has_audio_track(path: Path) -> bool:
 def extract_audio(video: Path, out: Path) -> Path:
     """Pull the audio track out of a video file, once, to a plain wav.
     Re-used on later runs unless the source video is newer."""
-    from .render import ffmpeg_bin, ffprobe_bin
+    from .ffmpeg import ffmpeg_bin, ffprobe_bin
     if out.exists() and out.stat().st_mtime > video.stat().st_mtime:
         return out
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -58,7 +58,8 @@ def root() -> Path:
     override = os.environ.get("FFILM_LIBRARY")
     if override is not None:
         return Path(override)
-    return Path(__file__).resolve().parent.parent / "library"
+    from .paths import toolkit_root
+    return toolkit_root() / "library"
 
 
 def enabled() -> bool:

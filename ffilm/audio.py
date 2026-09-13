@@ -241,7 +241,7 @@ def graph_file_flag() -> str | None:
     if _graph_flag:
         return _graph_flag[0]
 
-    from .render import ffmpeg_bin
+    from .ffmpeg import ffmpeg_bin
     import tempfile
 
     answer = None
@@ -309,7 +309,7 @@ def _glob_escape(s: str) -> str:
 
 
 def _dur(path: Path) -> float:
-    from .render import ffmpeg_bin, ffprobe_bin
+    from .ffmpeg import ffmpeg_bin, ffprobe_bin
     exe = ffprobe_bin()
     r = subprocess.run(
         [exe, "-v", "error", "-show_entries", "format=duration",
@@ -335,7 +335,7 @@ def _has_audio(path: Path) -> bool:
     key = str(path)
     if key in _audio_seen:
         return _audio_seen[key]
-    from .render import ffprobe_bin
+    from .ffmpeg import ffprobe_bin
     r = subprocess.run(
         [ffprobe_bin(), "-v", "error", "-select_streams", "a",
          "-show_entries", "stream=index", "-of", "csv=p=0", str(path)],
@@ -572,7 +572,7 @@ def take_gain_db(src: Path) -> float:
     is once, cached. 0.0 when the measurement fails or finds nothing that
     sounds like a voice -- and then the chain is exactly what it was.
     """
-    from .render import ffmpeg_bin
+    from .ffmpeg import ffmpeg_bin
     try:
         r = subprocess.run(
             [ffmpeg_bin(), "-hide_banner", "-nostats", "-i", str(src),
@@ -779,7 +779,7 @@ def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
             return dst
     except OSError:
         pass
-    from .render import ffmpeg_bin
+    from .ffmpeg import ffmpeg_bin
     # Worked out before the chain is built, because the chain IS the
     # answer. Only when the voice is being shaped at all -- `speech_lift:
     # false` means the take is passed through as recorded, and moving its
@@ -889,7 +889,7 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
     at the exact second instead is what put the lips out of step: see
     spec.frames_for.
     """
-    from .render import ffmpeg_bin, ffprobe_bin
+    from .ffmpeg import ffmpeg_bin, ffprobe_bin
     from .spec import frames_for
 
     fps = fps or film.fps

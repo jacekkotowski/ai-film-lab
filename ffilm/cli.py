@@ -38,14 +38,10 @@ from . import guide
 from . import history
 from . import scaffold
 from .moves import choose_moves
+from .paths import toolkit_root
 from .render import QUALITIES, render
 from .spec import Film
 from .spec import title_of as spec_title_of
-
-def toolkit_root() -> Path:
-    """Where ffilm itself lives, no matter which folder the terminal is in."""
-    return Path(__file__).resolve().parent.parent
-
 
 def find_project(arg: str | None) -> Path:
     """Find the project folder without requiring `cd` into AI-Film first.
@@ -229,7 +225,7 @@ def ship(project: Path, film, out: Path, open_page: bool = True) -> None:
     """
     has_audio = True
     try:
-        from .render import ffprobe_bin
+        from .ffmpeg import ffprobe_bin
         r = subprocess.run(
             [ffprobe_bin(), "-v", "error", "-select_streams", "a",
              "-show_entries", "stream=index", "-of", "csv=p=0", str(out)],
@@ -858,7 +854,7 @@ def cmd_record(args) -> None:
     """Camera + microphone -> files in media/, and nothing else."""
     from . import booth
     from . import record as rec
-    from .render import ffmpeg_bin
+    from .ffmpeg import ffmpeg_bin
     rec.require_windows()
 
     project = _record_project(args.project)

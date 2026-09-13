@@ -387,7 +387,7 @@ def layout_title(draw, text: str, w: int, h: int, font_override: str | None):
     title comes out big and a sentence comes out readable, without
     anybody choosing a number.
     """
-    from .render import line_height, load_font, wrap_to_width
+    from .fonts import line_height, load_font, wrap_to_width
 
     max_px = w * TITLE_MAX_WIDTH
     max_block = h * TITLE_MAX_BLOCK
@@ -445,7 +445,7 @@ def compose(image: Path | None, title: str, w: int, h: int,
     d = ImageDraw.Draw(layer)
     face, lines = layout_title(d, title, w, h, font)
 
-    from .render import line_height
+    from .fonts import line_height
     lh = line_height(face)
     step = int(lh * TITLE_LINE_SPACING)
     block_h = step * (len(lines) - 1) + lh

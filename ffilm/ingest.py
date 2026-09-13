@@ -25,7 +25,7 @@ import numpy as np
 
 from . import kinds
 from . import pix
-from .render import ffmpeg_bin, ffprobe_bin
+from .ffmpeg import ffmpeg_bin, ffprobe_bin
 from .spec import Shot
 
 STILL_EXT = kinds.STILL

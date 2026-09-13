@@ -42,6 +42,13 @@ from pathlib import Path
 # talking to a lens, are slower than they think.
 REC_SPEED = 1.2
 
+# The live preview (booth.py shows it) is padded to exactly this,
+# whatever shape the camera is, so the reader knows how many bytes make one frame without having to
+# ask. 12fps is plenty to see whether your head is in the middle.
+PREVIEW_W = 384
+PREVIEW_H = 216
+PREVIEW_FPS = 12
+
 # What a recorded file is called. `scaffold` recognises this prefix and
 # is the reason a take arrives in film.yaml already sped up.
 REC_PREFIX = "rec_"
@@ -165,7 +172,7 @@ def _ffmpeg_text(args: list[str]) -> str:
     open the device, and a mangled name opens nothing. The failure is
     silent on an English machine and total on any other.
     """
-    from .render import ffmpeg_bin
+    from .ffmpeg import ffmpeg_bin
     r = subprocess.run([ffmpeg_bin()] + args, capture_output=True)
     raw = (r.stderr or b"") + (r.stdout or b"")
     return raw.decode("utf-8", errors="replace")
@@ -361,7 +368,6 @@ def record_command(out: Path, video: str | None, audio: str | None,
     aud = audio_stream(video)
 
     if window and video:
-        from .booth import PREVIEW_FPS, PREVIEW_H, PREVIEW_W
         # ONE decode, split once into two branches.
         #
         # The obvious way -- naming `-map 0:v` in both the file output
@@ -421,7 +427,7 @@ def record_command(out: Path, video: str | None, audio: str | None,
 
 
 def config_path() -> Path:
-    from .cli import toolkit_root
+    from .paths import toolkit_root
     return toolkit_root() / ".devices.json"
 
 
@@ -568,7 +574,7 @@ def is_frozen(path: Path) -> bool:
 
     ffmpeg's own freezedetect, so there is nothing here to get wrong.
     """
-    from .render import ffmpeg_bin
+    from .ffmpeg import ffmpeg_bin
     r = subprocess.run(
         [ffmpeg_bin(), "-hide_banner", "-i", str(path), "-map", "0:v",
          "-vf", f"freezedetect=n=-60dB:d={FREEZE_SECONDS:g}",
@@ -597,7 +603,7 @@ def verify_take(path: Path, mode: tuple[int, int, float] | None,
     time to find that out is now, while the light is the same and you
     can simply say it again -- not tomorrow, in the edit.
     """
-    from .render import ffprobe_bin
+    from .ffmpeg import ffprobe_bin
     r = subprocess.run(
         [ffprobe_bin(), "-v", "error", "-of", "json",
          "-show_entries", "format=duration:stream=codec_type,nb_frames",

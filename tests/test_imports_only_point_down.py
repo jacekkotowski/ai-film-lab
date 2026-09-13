@@ -21,41 +21,31 @@ PKG = Path(__file__).resolve().parent.parent / "ffilm"
 
 LAYERS = {
     # 0  foundations: no ffilm imports at all
-    "__init__": 0, "kinds": 0, "pix": 0, "history": 0, "pack": 0,
+    "__init__": 0, "kinds": 0, "pix": 0, "paths": 0, "ffmpeg": 0,
+    "fonts": 0, "history": 0, "pack": 0,
     # 1  the shared shelf
     "library": 1,
     # 2  what a film IS
     "spec": 2,
     # 3  the movement vocabulary
     "moves": 3,
-    # 4  stages: turn material into analysis, sound, words, pixels
-    "render": 4, "ingest": 4, "audio": 4, "voice": 4,
-    "caption_fit": 4, "cover": 4,
-    # 5  workflows built on the stages
-    "scaffold": 5, "record": 5, "booth": 5,
-    # 6  the ways in
-    "guide": 6, "editor": 6,
-    # 7  the command line, which dispatches to everything
-    "cli": 7,
+    # 4  getting and reading the material
+    "record": 4, "ingest": 4,
+    # 5  sound and words, built from the analysis
+    "audio": 5, "voice": 5, "cover": 5,
+    # 6  pixels, and captions fitted to shots
+    "render": 6, "caption_fit": 6,
+    # 7  workflows built on all of that
+    "scaffold": 7, "booth": 7,
+    # 8  the ways in
+    "guide": 8, "editor": 8,
+    # 9  the command line, which dispatches to everything
+    "cli": 9,
 }
 
-KNOWN_EXCEPTIONS = {
-    # ffmpeg_bin/ffprobe_bin live in render.py. Fix: ffilm/tools/ffmpeg.py
-    ("audio", "render"): "ffmpeg_bin",
-    ("voice", "render"): "ffmpeg_bin",
-    ("ingest", "render"): "ffmpeg_bin",
-    # fonts and text wrapping live in render.py. Fix: a fonts module
-    ("cover", "render"): "load_font, wrap_to_width, line_height",
-    # stages reaching into each other
-    ("audio", "ingest"): "pause detection",
-    ("voice", "ingest"): "analysis paths",
-    ("caption_fit", "voice"): "Line, VoiceSource types",
-    ("render", "audio"): "build_soundtrack -- muxing belongs above both",
-    # workflow to workflow, and a cycle back to the top
-    ("scaffold", "record"): "REC_SPEED, is_recording",
-    ("record", "booth"): "PREVIEW_* sizes -- and booth runs record",
-    ("record", "cli"): "toolkit_root -- a cycle: cli imports record",
-}
+# Every upward import that is still true, with the reason. Empty since
+# 2026-09-13 -- keep it that way: move the shared piece down instead.
+KNOWN_EXCEPTIONS: dict[tuple[str, str], str] = {}
 
 
 def ffilm_imports(path: Path) -> set[str]:
