@@ -89,7 +89,9 @@ THE WAY IN
 
 ## Known structural debt (true on 2026-09-13)
 
-Written down so nobody has to rediscover it, and so nobody makes it worse:
+The layers and every current violation are in
+`tests/test_imports_only_point_down.py`. A new upward import fails that
+test; so does fixing one without deleting its entry. The main items:
 
 - `ffmpeg_bin()`/`ffprobe_bin()` live in `render.py`, but `audio`, `ingest`,
   `voice` and `record` import them. Analysis therefore depends on the
@@ -99,7 +101,5 @@ Written down so nobody has to rediscover it, and so nobody makes it worse:
 - `cli.py` (about 1,300 lines) holds real logic (`unused_media`,
   `framing_notes`, `preflight_report`, `ship`), not just argument parsing.
   New logic goes in a module, not in `cli.py`.
-- `pack.py` `TOOLKIT` does not list `.claude/`, `docs/` or
-  `projects/CLAUDE.md`, so a packed copy arrives without them.
 
 Fixing any of these is a change I have to ask for.

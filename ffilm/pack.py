@@ -41,6 +41,11 @@ TOOLKIT = [
     "pyproject.toml", "uv.lock", "CLAUDE.md", "README.md",
     "HOW_TO_USE.md", "FILM.bat", ".gitignore", ".gitattributes",
     "_fetch.py",
+    # How Claude works on this toolkit: the rulebooks, the skills, the
+    # hooks. Without them a copy's Claude edits the machine instead of
+    # the film. settings.local.json is NOT listed -- it is one person's.
+    "docs", "projects/CLAUDE.md",
+    ".claude/settings.json", ".claude/skills", ".claude/hooks",
 ]
 
 # Of a project, the parts that cannot be made again.
