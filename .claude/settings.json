@@ -55,5 +55,33 @@
       "Glob(//c/Users/jacek/code/ai-film-lab/**)",
       "Grep(//c/Users/jacek/code/ai-film-lab/**)"
     ]
+  },
+
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --quiet --no-project python \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_media.py\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run --quiet --no-project python \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_film.py\"",
+            "timeout": 120,
+            "statusMessage": "film check"
+          }
+        ]
+      }
+    ]
   }
 }

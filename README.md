@@ -51,6 +51,9 @@ learn them by using it.
 *"shot 2 is too long and the camera move is too aggressive."* The
 working agreement in [CLAUDE.md](CLAUDE.md) is what keeps it editing
 the film instead of rewriting the machine.
+[docs/HOW_CLAUDE_IS_SET_UP.md](docs/HOW_CLAUDE_IS_SET_UP.md) explains
+the whole set-up — rulebooks, skills, hooks, decision records — as an
+example you can copy.
 
 ## What it is
 

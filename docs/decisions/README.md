@@ -1,0 +1,41 @@
+# Decisions
+
+Each file here answers one question that cost real time to settle, so it
+never has to be settled again. They are short and they carry the numbers.
+
+**Read the list before proposing a change.** If your idea is here as a
+dead end, you need *new* measurements to reopen it, not a new argument.
+
+| #    | Question                                              | Answer, in a line                                  |
+|------|-------------------------------------------------------|----------------------------------------------------|
+| 0001 | Why is `uv.lock` in git?                              | A version range silently removed face detection    |
+| 0002 | Where does render time go, and what doesn't help?     | `apply_look`; four ideas measured worthless        |
+| 0003 | Why is there room noise late in a take, and what fixed it? | A gate on the wrong scale; a second gate before the expander |
+| 0004 | Why does a recording come out frozen, quiet or hissy? | The device and the room, not the code              |
+| 0005 | Why "measure before claiming"?                        | Four confident wrong answers from reading code     |
+
+## Writing a new one
+
+Copy this, number it next, and keep it under a page:
+
+```markdown
+# NNNN — The question, as a question?
+
+**Status:** settled YYYY-MM-DD  ·  **Commits:** abc1234
+
+## The question
+What was asked, and by whom, in one paragraph.
+
+## What was measured
+The table of numbers. Say how each was measured.
+
+## The decision
+What was chosen, and what that rules out.
+
+## Reopen it only if
+The specific new evidence that would change the answer.
+```
+
+*Why this format:* in industry these are called ADRs (Architecture
+Decision Records). What makes them useful is the last section. It turns
+"we tried that" into a condition someone can actually check.
