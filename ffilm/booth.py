@@ -89,6 +89,16 @@ TYPICAL_WORDS = "the quick brown fox jumps over the lazy dog"
 MIN_PROMPTER_PX = 240
 
 TICK_MS = 40
+
+# The prompter follows your voice: it moves while you talk and holds
+# still when you stop. "Talking" is this far above the quietest the room
+# has been -- measured against the room, not against a fixed number, so
+# it works at any microphone gain.
+SPEAKING_ABOVE_ROOM_DB = 12.0
+# The gap between two words, or a breath, must not stop the words.
+# ebur128's momentary loudness is already a 400 ms average, so this only
+# has to cover a real pause-for-breath.
+KEEP_MOVING_SECONDS = 0.8
 COUNT_FROM = 3
 
 BG = "#0b0b0c"
@@ -177,6 +187,35 @@ def save_script(path: Path, text: str) -> None:
         path.write_text(text + "\n", encoding="utf-8")
     except OSError:
         pass
+
+
+class VoiceFollow:
+    """Should the prompter be moving right now?
+
+    Fed the loudness the recorder already prints for the mic meter, about
+    ten times a second. No speech model and nothing new running beside the
+    recording -- this is arithmetic on a number that was already there.
+
+    Until it has heard both the room and something clearly louder, it
+    answers yes: the prompter scrolls exactly as it did before this
+    existed, rather than refusing to start for someone who began talking
+    the instant the camera woke.
+    """
+
+    def __init__(self) -> None:
+        self.room: float | None = None       # quietest level heard
+        self.loudest: float | None = None
+        self.last_voice: float | None = None
+
+    def update(self, level: float, now: float) -> bool:
+        self.room = level if self.room is None else min(self.room, level)
+        self.loudest = level if self.loudest is None else max(self.loudest, level)
+        if self.loudest - self.room < SPEAKING_ABOVE_ROOM_DB:
+            return True                      # cannot tell voice from room yet
+        if level >= self.room + SPEAKING_ABOVE_ROOM_DB:
+            self.last_voice = now
+        return (self.last_voice is not None
+                and now - self.last_voice <= KEEP_MOVING_SECONDS)
 
 
 def scroll_speed(text: str, wpm: int, text_px: float) -> float:
@@ -633,7 +672,11 @@ def session(script: str, script_path: Path, wpm: int, title: str,
             # that was not recording yet. The clock already waited for
             # this; the words did not, which is the half that matters,
             # because the clock is not what you are looking at.
-            if item["id"] is not None and S["rolling"]:
+            # Heard every tick, from the camera's first second, so the room
+            # is known by the time the words start.
+            follow = S.setdefault("follow", VoiceFollow())
+            talking = follow.update(take.level, time.time())
+            if item["id"] is not None and S["rolling"] and talking:
                 S["y"] -= scroll_speed(S["script"], S["wpm"], text_height()) * \
                     (TICK_MS / 1000.0)
                 canvas.coords(item["id"], sw // 2, S["y"])
@@ -645,6 +688,7 @@ def session(script: str, script_path: Path, wpm: int, title: str,
 
     def end_take():
         take, S["take"] = S["take"], None
+        S.pop("follow", None)                # the next take learns its own room
         if take is None:
             return
         take.stop()

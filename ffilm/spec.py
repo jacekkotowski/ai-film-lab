@@ -96,6 +96,10 @@ class Caption:
     pos: str = "bottom"        # bottom | top | center | lower_third
     size: float = 1.0          # multiplier on the default size
     fade: float = 0.4          # seconds of fade at each end
+    # When each word starts, in seconds from the caption's own start.
+    # Written by `film caption`; the renderer lights the word being said.
+    # Delete the line and the caption is plain white again.
+    words: list[float] = field(default_factory=list)
 
     @staticmethod
     def parse(d: Any) -> "Caption":
@@ -108,6 +112,7 @@ class Caption:
             pos=str(d.get("pos", "bottom")),
             size=float(d.get("size", 1.0)),
             fade=float(d.get("fade", 0.4)),
+            words=[float(x) for x in d.get("words") or []],
         )
 
 

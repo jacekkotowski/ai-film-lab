@@ -689,7 +689,14 @@ def _caption_lines(caps, indent: str) -> list[str]:
         L.append(f"{indent}    at: {float(c.at):.2f}")
         L.append(f"{indent}    dur: {float(c.dur):.2f}")
         L.append(f"{indent}    pos: {c.pos}")
+        if c.words:
+            L.append(f"{indent}    words: {_seconds_list(c.words)}")
     return L
+
+
+def _seconds_list(times) -> str:
+    """[0.00, 0.41, 0.83] -- one short line, readable and hand-editable."""
+    return "[" + ", ".join(f"{float(t):.2f}" for t in times) + "]"
 
 
 def add_captions(text: str, by_shot: dict[str, list]) -> str:

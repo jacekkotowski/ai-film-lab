@@ -56,8 +56,13 @@ def _place(sid: str, s0: float, s1: float, ln: Line,
         warnings.append(f'[{sid}] cut short, the shot ends first: "{ln.text}"')
     # Rounded DOWN, so the written numbers can never add up to more than
     # the shot they sit on.
-    return Caption(text=ln.text, at=at, dur=int(dur * 100) / 100.0,
-                  pos="lower_third")
+    dur = int(dur * 100) / 100.0
+    # On the caption's own clock, at the shot's speed -- the same
+    # conversion `at` just had, for the same reason.
+    words = [round((w - ln.start) / speed, 2) for w in ln.words
+             if (w - ln.start) / speed < dur]
+    return Caption(text=ln.text, at=at, dur=dur, pos="lower_third",
+                   words=words)
 
 
 def stop_overlap(caps: list[Caption], sid: str,

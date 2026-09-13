@@ -19,6 +19,7 @@ Three quality tiers, same code path. That matters: what you judge in
 from __future__ import annotations
 
 import math
+from bisect import bisect_right
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -541,10 +542,37 @@ def caption_alpha(cap: Caption, t: float) -> float:
 # One caption's pixels, drawn once. Small: a handful of cropped boxes,
 # and only ever the captions of the shot being rendered.
 _caption_art_cache: dict = {}
-CAPTION_ART_CACHE_MAX = 8
+# A caption is drawn once per lit word now, and two can be on screen in
+# a crossfade, so room for a whole line's worth of words and its neighbour.
+CAPTION_ART_CACHE_MAX = 16
+
+# The colour of the word being said. Warm, so it reads as emphasis on
+# white type rather than as a second, different caption.
+CAPTION_LIT = (255, 210, 60, 255)
 
 
-def caption_art(cap, w: int, h: int, font_override: str | None):
+def lit_word(cap, t: float) -> int | None:
+    """Which word of the caption to light, `t` seconds into the caption.
+
+    None before the first word starts, and for a caption with no word
+    times at all. When the text was edited after `film caption` wrote it
+    -- a word cut, a phrase tightened -- the count no longer matches what
+    was heard, so the light moves through the caption in proportion
+    instead: halfway through the speech is halfway along the words.
+    """
+    if not cap.words or t < cap.words[0]:
+        return None
+    heard = bisect_right(cap.words, t) - 1
+    shown = len(cap.text.split())
+    if shown == 0:
+        return None
+    if shown == len(cap.words):
+        return heard
+    return min(shown - 1, heard * shown // len(cap.words))
+
+
+def caption_art(cap, w: int, h: int, font_override: str | None,
+                lit: int | None = None):
     """The pixels of one caption at full opacity, cropped to the box the
     type actually occupies. None when it draws nothing.
 
@@ -561,7 +589,7 @@ def caption_art(cap, w: int, h: int, font_override: str | None):
     per-frame blend touches the sixth of the frame the words are on
     instead of all of it.
     """
-    key = (cap.text, cap.size, cap.pos, w, h, font_override)
+    key = (cap.text, cap.size, cap.pos, w, h, font_override, lit)
     hit = _caption_art_cache.get(key)
     if hit is not None:
         return hit
@@ -589,6 +617,7 @@ def caption_art(cap, w: int, h: int, font_override: str | None):
     else:                                       # bottom
         y0 = h - h * 0.10 - block_h
 
+    first = 0                                   # index of this line's first word
     for i, line in enumerate(lines):
         lw = d.textlength(line, font=font)
         x = margin if left_aligned else (w - lw) / 2
@@ -596,6 +625,13 @@ def caption_art(cap, w: int, h: int, font_override: str | None):
         # A soft shadow so text survives a bright background.
         d.text((x + 2, y + 2), line, font=font, fill=(0, 0, 0, 140))
         d.text((x, y), line, font=font, fill=(255, 255, 255, 255))
+        words = line.split()
+        if lit is not None and first <= lit < first + len(words):
+            k = lit - first
+            before = " ".join(words[:k]) + (" " if k else "")
+            d.text((x + d.textlength(before, font=font), y), words[k],
+                   font=font, fill=CAPTION_LIT)
+        first += len(words)
 
     rgba = np.array(layer)
     rows = np.flatnonzero(rgba[..., 3].any(axis=1))
@@ -634,7 +670,7 @@ def draw_captions(frame: np.ndarray, shot: Shot, t: float,
     h, w = frame.shape[:2]
     out = frame
     for cap, alpha in active:
-        art = caption_art(cap, w, h, font_override)
+        art = caption_art(cap, w, h, font_override, lit_word(cap, t - cap.at))
         if art is None:
             continue
         y1, y2, x1, x2, rgb, mask = art

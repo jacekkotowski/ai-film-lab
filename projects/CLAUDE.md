@@ -59,6 +59,11 @@ The meaning of every `film.yaml` field is in the docstring at the top of
   picture already shows, cut it.
 - **Faces hold longer** than shots without them.
 - **Total caption time stays under ~20% of the runtime.**
+- **`words:` on a caption lights the word being said.** `film caption`
+  writes it: the start of each word, in seconds from the caption's `at`.
+  Never invent or hand-shift it. If you edit a caption's text, leave
+  `words:` alone (the highlight follows proportionally). Delete the line
+  only when the user wants that caption plain.
 
 ## Video shots
 

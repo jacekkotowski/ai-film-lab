@@ -26,7 +26,7 @@ import logging
 import os
 import re
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import kinds
@@ -40,6 +40,7 @@ class Line:
     text: str
     start: float
     end: float
+    words: list[float] = field(default_factory=list)   # when each word starts
 
     def __post_init__(self):
         # The speech model hands back numpy scalars, not Python floats.
@@ -51,6 +52,7 @@ class Line:
         self.text = str(self.text)
         self.start = float(self.start)
         self.end = float(self.end)
+        self.words = [float(w) for w in self.words]
 
     @property
     def dur(self) -> float:
@@ -686,9 +688,37 @@ def transcribe(audio: Path, model_size: str = "small",
     if following_a_script and every_word:
         lines.extend(lines_for(every_word, script))
     lines.sort(key=lambda ln: ln.start)
+    attach_word_starts(lines, every_word)
 
     print(f"  {len(lines)} lines, language detected: {info.language}")
     return lines
+
+
+def attach_word_starts(lines: list[Line], words: list) -> None:
+    """Give each line the start time of every word said inside it.
+
+    The model has always reported when each word starts, and the lines
+    were built from those words -- then the times were thrown away, and
+    a caption could only appear and disappear whole. Kept, they let the
+    renderer light the word being said.
+
+    A word belongs to the last line that has started by then, and only
+    if that line has not already ended: words said between two captions
+    belong to neither.
+    """
+    lines = sorted(lines, key=lambda ln: ln.start)
+    for ln in lines:
+        ln.words = []
+    for w in words:
+        start = float(w.start)
+        owner = None
+        for ln in lines:
+            if ln.start - 1e-3 <= start:
+                owner = ln
+            else:
+                break
+        if owner is not None and start <= owner.end + 0.05:
+            owner.words.append(start)
 
 
 def save_transcript(project: Path,

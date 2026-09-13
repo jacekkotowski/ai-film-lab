@@ -36,7 +36,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from .moves import EASINGS, MOVES
-from .scaffold import quoted
+from .scaffold import _seconds_list, quoted
 from .spec import Film
 
 PAGE = r"""<!DOCTYPE html>
@@ -470,7 +470,8 @@ def state(project: Path) -> dict:
             "fill": s.fill,
             "frm": None if s.frm is None else vars(s.frm),
             "to": None if s.to is None else vars(s.to),
-            "captions": [{"text": c.text, "at": c.at, "dur": c.dur, "pos": c.pos}
+            "captions": [{"text": c.text, "at": c.at, "dur": c.dur, "pos": c.pos,
+                          "words": c.words}
                          for c in s.captions],
         })
     return {"fps": film.fps, "width": film.width, "height": film.height,
@@ -572,6 +573,8 @@ def dump(project: Path, data: dict) -> str:
                 L.append(f"        at: {at:.1f}")
                 L.append(f"        dur: {cap_dur:.1f}")
                 L.append(f"        pos: {c.get('pos', 'bottom')}")
+                if c.get("words"):
+                    L.append(f"        words: {_seconds_list(c['words'])}")
     L.append("")
     return "\n".join(L)
 
