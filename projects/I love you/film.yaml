@@ -1,586 +1,586 @@
-# Written by `film init`. Everything here is a starting point.
-# Change the numbers. That is what this file is for.
-#
-# Filename hints `init` understood, if you used any:
-#   00_ 01_ ...     explicit order
-#   open_ close_    which shot opens / closes the film
-#   open_close_     the SAME image opens AND closes it
-#   quote_          held longer, filename becomes a centered title
-#
-#   uv run film peek    seconds    -- is the ORDER right?
-#   uv run film draft   <1 min     -- does the MOTION feel right?
-#   uv run film final   minutes    -- ship it
+# Edited in `film edit`. Comments are not preserved by the editor —
+# use `note:` fields, which are data and survive.
 
 fps: 24
-resolution: [1080, 1920]   # vertical, for YouTube Shorts
-# audio: media/voiceover.mp3   # optional separate narration
-# title: the words on the thumbnail. Left out, the film is
-#        called what its folder is called.
-# music: found on its own -- this project's music/ folder if it
-#        has one, otherwise your library/music/ folder.
-music_volume: 0.6      # the level when nobody is talking
-music_fade: 2.0        # seconds of fade in and out
-music_duck: 0.5        # how far the music drops while you talk
-                       # 0 = never drops. 1 = gets right out of the way
+resolution: [1080, 1920]
 
+music_volume: 0.6
+music_fade: 2.0
+music_duck: 0.5
 look:
-  preset: old_film      # clean | warm | old_film | projector
-  glow: 0.25            # lifts shadows -- better lighting
-
-# Uncomment if a wide clip is losing too much to a tall frame.
-# `blur` keeps the picture whole on a blurred copy of itself
-# instead of cropping it. fill_aspect is the shape of the sharp
-# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
-# fill: blur
-# fill_aspect: 1.0
+  preset: old_film
+  glow: 0.25
 
 shots:
 
-  - id: s00
+  - id: s01
     src: analysis/title.jpg
     duration: 4.0
     move: static
-    note: "the opening card -- the same picture and the same words
-      as the thumbnail, so clicking the miniature lands you on the
-      frame you clicked. Made from your library; delete this whole
-      block if you would rather open on yourself talking."
+    ease: sine_in_out
+    focus: [0.500, 0.500]
+    note: "the opening card -- the same picture and the same words as the thumbnail, so clicking the miniature lands you on the frame you clicked. Made from your library; delete this whole block if you would rather open on yourself talking."
 
-  - id: s01
+  - id: s02
     src: media/rec_20260910-173831.mp4
     in: "00:03.85"
     out: "00:05.95"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    speed: 1.2
     move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
     note: "part 1 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
       - text: "### Why I love you"
-        at: 0.00
-        dur: 1.46
-        pos: lower_third
-
-  - id: s02
-    src: media/rec_20260910-173831.mp4
-    in: "00:07.40"
-    out: "00:12.00"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 2 of 29 -- one take with the long pauses cut out. Every word is kept"
-    captions:
-      - text: "Why do I love you?"
-        at: 0.12
-        dur: 0.88
-        pos: lower_third
-      - text: "Because I want to see you live."
-        at: 1.01
-        dur: 2.43
+        at: 0.0
+        dur: 1.5
         pos: lower_third
 
   - id: s03
     src: media/rec_20260910-173831.mp4
-    in: "00:14.15"
-    out: "00:21.65"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "00:07.40"
+    out: "00:12.00"
+    speed: 1.2
+    move: drift_right
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 3 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 2 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "I want to witness the awakening you are searching for."
-        at: 0.27
-        dur: 4.50
+      - text: "Why do I love you?"
+        at: 0.1
+        dur: 0.9
+        pos: lower_third
+      - text: "Because I want to see you live."
+        at: 1.0
+        dur: 2.4
         pos: lower_third
 
   - id: s04
     src: media/rec_20260910-173831.mp4
-    in: "00:25.15"
-    out: "00:35.40"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_left
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "00:14.15"
+    out: "00:21.65"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 4 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 3 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "I want to see what happens"
-        at: 0.07
-        dur: 3.21
-        pos: lower_third
-      - text: "when you finally become fully yourself."
-        at: 3.28
-        dur: 4.50
+      - text: "I want to witness the awakening you are searching for."
+        at: 0.3
+        dur: 4.5
         pos: lower_third
 
   - id: s05
     src: media/rec_20260910-173831.mp4
-    in: "00:38.00"
-    out: "00:44.35"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "00:25.15"
+    out: "00:35.40"
+    speed: 1.2
+    move: drift_left
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 5 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 4 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "I want you to be free."
-        at: 0.12
-        dur: 2.71
+      - text: "I want to see what happens"
+        at: 0.1
+        dur: 3.2
         pos: lower_third
-      - text: "Truly free."
-        at: 3.67
-        dur: 1.16
+      - text: "when you finally become fully yourself."
+        at: 3.3
+        dur: 4.5
         pos: lower_third
 
   - id: s06
     src: media/rec_20260910-173831.mp4
-    in: "00:45.55"
-    out: "00:48.40"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "00:38.00"
+    out: "00:44.35"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 6 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 5 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "Free to create."
-        at: 0.01
-        dur: 1.94
+      - text: "I want you to be free."
+        at: 0.1
+        dur: 2.7
+        pos: lower_third
+      - text: "Truly free."
+        at: 3.7
+        dur: 1.2
         pos: lower_third
 
   - id: s07
     src: media/rec_20260910-173831.mp4
-    in: "00:49.40"
-    out: "00:56.25"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "00:45.55"
+    out: "00:48.41"
+    speed: 1.2
+    move: drift_right
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 7 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 6 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "Free to grow."
-        at: 0.00
-        dur: 1.78
-        pos: lower_third
-      - text: "Free to give life."
-        at: 2.60
-        dur: 2.66
+      - text: "Free to create."
+        at: 0.0
+        dur: 1.9
         pos: lower_third
 
   - id: s08
     src: media/rec_20260910-173831.mp4
-    in: "00:57.30"
-    out: "01:01.10"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_left
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "00:49.40"
+    out: "00:56.25"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 8 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 7 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "Free to do good."
-        at: 0.00
-        dur: 2.80
+      - text: "Free to grow."
+        at: 0.0
+        dur: 1.8
+        pos: lower_third
+      - text: "Free to give life."
+        at: 2.6
+        dur: 2.7
         pos: lower_third
 
   - id: s09
     src: media/rec_20260910-173831.mp4
-    in: "01:02.05"
-    out: "01:05.55"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "00:57.30"
+    out: "01:01.10"
+    speed: 1.2
+    move: drift_left
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 9 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 8 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "And if you are afraid,"
-        at: 0.00
-        dur: 2.91
+      - text: "Free to do good."
+        at: 0.0
+        dur: 2.8
         pos: lower_third
 
   - id: s10
     src: media/rec_20260910-173831.mp4
-    in: "01:07.20"
-    out: "01:13.55"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "01:02.05"
+    out: "01:05.55"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 10 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 9 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "I want to walk with you."
-        at: 1.77
-        dur: 3.26
+      - text: "And if you are afraid,"
+        at: 0.0
+        dur: 2.9
         pos: lower_third
 
   - id: s11
     src: media/rec_20260910-173831.mp4
-    in: "01:15.25"
-    out: "01:19.40"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "01:07.20"
+    out: "01:13.55"
+    speed: 1.2
+    move: drift_right
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 11 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 10 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "Not to choose your path for you."
-        at: 0.03
-        dur: 3.16
+      - text: "I want to walk with you."
+        at: 1.8
+        dur: 3.3
         pos: lower_third
 
   - id: s12
     src: media/rec_20260910-173831.mp4
-    in: "01:28.85"
-    out: "01:47.90"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_left
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "01:15.25"
+    out: "01:19.40"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 12 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 11 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "Just to walk beside you."
-        at: 0.00
-        dur: 2.86
-        pos: lower_third
-      - text: "And if you fall,"
-        at: 2.86
-        dur: 3.85
-        pos: lower_third
-      - text: "I want to be there to catch you."
-        at: 6.71
-        dur: 4.50
-        pos: lower_third
-      - text: "Then help you stand again."
-        at: 12.34
-        dur: 3.08
+      - text: "Not to choose your path for you."
+        at: 0.0
+        dur: 3.2
         pos: lower_third
 
   - id: s13
     src: media/rec_20260910-173831.mp4
-    in: "01:51.10"
-    out: "02:00.40"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "01:28.85"
+    out: "01:47.91"
+    speed: 1.2
+    move: drift_left
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 13 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 12 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "Because I believe there is something in you"
-        at: 0.00
-        dur: 4.50
+      - text: "Just to walk beside you."
+        at: 0.0
+        dur: 2.9
         pos: lower_third
-      - text: "that is worth protecting."
-        at: 5.16
-        dur: 2.03
+      - text: "And if you fall,"
+        at: 2.9
+        dur: 3.9
+        pos: lower_third
+      - text: "I want to be there to catch you."
+        at: 6.7
+        dur: 4.5
+        pos: lower_third
+      - text: "Then help you stand again."
+        at: 12.3
+        dur: 3.1
         pos: lower_third
 
   - id: s14
     src: media/rec_20260910-173831.mp4
-    in: "02:01.85"
-    out: "02:05.70"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "01:51.10"
+    out: "02:00.40"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 14 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 13 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "Something that wants to wake up."
-        at: 0.03
-        dur: 3.03
+      - text: "Because I believe there is something in you"
+        at: 0.0
+        dur: 4.5
+        pos: lower_third
+      - text: "that is worth protecting."
+        at: 5.2
+        dur: 2.0
         pos: lower_third
 
   - id: s15
     src: media/rec_20260910-173831.mp4
-    in: "02:13.45"
-    out: "02:17.15"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "02:01.85"
+    out: "02:05.70"
+    speed: 1.2
+    move: drift_right
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 15 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 14 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "Something that wants to live."
-        at: 0.00
-        dur: 2.96
+      - text: "Something that wants to wake up."
+        at: 0.0
+        dur: 3.0
         pos: lower_third
 
   - id: s16
     src: media/rec_20260910-173831.mp4
-    in: "02:18.35"
-    out: "02:27.75"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_left
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "02:13.45"
+    out: "02:17.15"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 16 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 15 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "So when fear comes,"
-        at: 0.00
-        dur: 2.75
-        pos: lower_third
-      - text: "remember what God keeps saying:"
-        at: 3.63
-        dur: 3.69
+      - text: "Something that wants to live."
+        at: 0.0
+        dur: 3.0
         pos: lower_third
 
   - id: s17
     src: media/rec_20260910-173831.mp4
-    in: "02:28.75"
-    out: "02:30.90"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "02:18.35"
+    out: "02:27.75"
+    speed: 1.2
+    move: drift_left
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 17 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 16 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "**Do not be afraid.**"
-        at: 0.00
-        dur: 1.79
+      - text: "So when fear comes,"
+        at: 0.0
+        dur: 2.8
+        pos: lower_third
+      - text: "remember what God keeps saying:"
+        at: 3.6
+        dur: 3.7
         pos: lower_third
 
   - id: s18
     src: media/rec_20260910-173831.mp4
-    in: "02:39.60"
-    out: "02:49.90"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "02:28.75"
+    out: "02:30.90"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 18 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 17 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "You do not have to know"
-        at: 0.00
-        dur: 2.08
-        pos: lower_third
-      - text: "the whole road."
-        at: 2.08
-        dur: 1.74
-        pos: lower_third
-      - text: "You only have to take"
-        at: 4.79
-        dur: 1.83
-        pos: lower_third
-      - text: "the next step."
-        at: 6.63
-        dur: 1.74
+      - text: "**Do not be afraid.**"
+        at: 0.0
+        dur: 1.8
         pos: lower_third
 
   - id: s19
     src: media/rec_20260910-173831.mp4
-    in: "02:51.20"
-    out: "03:02.45"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "02:39.60"
+    out: "02:49.90"
+    speed: 1.2
+    move: drift_right
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 19 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 18 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "And I want to see you take it."
-        at: 0.00
-        dur: 4.50
+      - text: "You do not have to know"
+        at: 0.0
+        dur: 2.1
         pos: lower_third
-      - text: "I want to see you succeed."
-        at: 5.28
-        dur: 3.46
+      - text: "the whole road."
+        at: 2.1
+        dur: 1.7
+        pos: lower_third
+      - text: "You only have to take"
+        at: 4.8
+        dur: 1.8
+        pos: lower_third
+      - text: "the next step."
+        at: 6.6
+        dur: 1.7
         pos: lower_third
 
   - id: s20
     src: media/rec_20260910-173831.mp4
-    in: "03:08.30"
-    out: "03:10.35"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_left
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "02:51.20"
+    out: "03:02.46"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 20 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 19 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "Not for me."
-        at: 0.00
-        dur: 1.70
+      - text: "And I want to see you take it."
+        at: 0.0
+        dur: 4.5
+        pos: lower_third
+      - text: "I want to see you succeed."
+        at: 5.3
+        dur: 3.5
         pos: lower_third
 
   - id: s21
     src: media/rec_20260910-173831.mp4
-    in: "03:11.45"
-    out: "03:18.20"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "03:08.30"
+    out: "03:10.35"
+    speed: 1.2
+    move: drift_left
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 21 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 20 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "For you."
-        at: 0.00
-        dur: 1.11
-        pos: lower_third
-      - text: "Because I love you."
-        at: 1.95
-        dur: 3.33
+      - text: "Not for me."
+        at: 0.0
+        dur: 1.7
         pos: lower_third
 
   - id: s22
     src: media/rec_20260910-173831.mp4
-    in: "03:19.65"
-    out: "03:24.70"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "03:11.45"
+    out: "03:18.19"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 22 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 21 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "And perhaps this is what love means to me:"
-        at: 0.00
-        dur: 4.20
+      - text: "For you."
+        at: 0.0
+        dur: 1.1
+        pos: lower_third
+      - text: "Because I love you."
+        at: 1.9
+        dur: 3.3
         pos: lower_third
 
   - id: s23
     src: media/rec_20260910-173831.mp4
-    in: "03:25.85"
-    out: "03:40.75"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "03:19.65"
+    out: "03:24.70"
+    speed: 1.2
+    move: drift_right
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 23 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 22 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "to want another person"
-        at: 0.00
-        dur: 1.98
-        pos: lower_third
-      - text: "to become more alive,"
-        at: 2.80
-        dur: 2.18
-        pos: lower_third
-      - text: "more free,"
-        at: 5.97
-        dur: 1.14
-        pos: lower_third
-      - text: "more capable of giving goodness to the world."
-        at: 8.18
-        dur: 3.98
+      - text: "And perhaps this is what love means to me:"
+        at: 0.0
+        dur: 4.2
         pos: lower_third
 
   - id: s24
     src: media/rec_20260910-173831.mp4
-    in: "03:43.75"
-    out: "03:49.00"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_left
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "03:25.85"
+    out: "03:40.75"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 24 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 23 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "I do not want to possess your freedom."
-        at: 0.00
-        dur: 4.37
+      - text: "to want another person"
+        at: 0.0
+        dur: 2.0
+        pos: lower_third
+      - text: "to become more alive,"
+        at: 2.8
+        dur: 2.2
+        pos: lower_third
+      - text: "more free,"
+        at: 6.0
+        dur: 1.1
+        pos: lower_third
+      - text: "more capable of giving goodness to the world."
+        at: 8.2
+        dur: 4.0
         pos: lower_third
 
   - id: s25
     src: media/rec_20260910-173831.mp4
-    in: "03:50.10"
-    out: "03:56.85"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "03:43.75"
+    out: "03:49.01"
+    speed: 1.2
+    move: drift_left
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 25 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 24 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "I want to see what you will do with it."
-        at: 0.16
-        dur: 3.64
-        pos: lower_third
-      - text: "And if I am allowed"
-        at: 3.81
-        dur: 1.81
+      - text: "I do not want to possess your freedom."
+        at: 0.0
+        dur: 4.4
         pos: lower_third
 
   - id: s26
     src: media/rec_20260910-173831.mp4
-    in: "03:58.50"
-    out: "04:04.40"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "03:50.10"
+    out: "03:56.84"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 26 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 25 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "to walk beside you for some of the road,"
-        at: 1.34
-        dur: 3.16
+      - text: "I want to see what you will do with it."
+        at: 0.2
+        dur: 3.6
+        pos: lower_third
+      - text: "And if I am allowed"
+        at: 3.8
+        dur: 1.8
         pos: lower_third
 
   - id: s27
     src: media/rec_20260910-173831.mp4
-    in: "04:05.85"
-    out: "04:07.25"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "03:58.50"
+    out: "04:04.40"
+    speed: 1.2
+    move: drift_right
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 27 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 26 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "I will."
-        at: 0.00
-        dur: 1.16
+      - text: "to walk beside you for some of the road,"
+        at: 1.3
+        dur: 3.2
         pos: lower_third
 
   - id: s28
     src: media/rec_20260910-173831.mp4
-    in: "04:09.20"
-    out: "04:11.90"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_left
-    amount: 0.6            # how much of the move to use. 0 = none
+    in: "04:05.85"
+    out: "04:07.25"
+    speed: 1.2
+    move: static
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 28 of 29 -- one take with the long pauses cut out. Every word is kept"
+    dissolve: 0.3
+    note: "part 27 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "With no claim on you."
-        at: 0.00
-        dur: 2.25
+      - text: "I will."
+        at: 0.0
+        dur: 1.2
         pos: lower_third
 
   - id: s29
     src: media/rec_20260910-173831.mp4
+    in: "04:09.20"
+    out: "04:11.90"
+    speed: 1.2
+    move: drift_left
+    ease: sine_in_out
+    amount: 0.60
+    focus: [0.547, 0.442]
+    dissolve: 0.3
+    note: "part 28 of 29 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "With no claim on you."
+        at: 0.0
+        dur: 2.2
+        pos: lower_third
+
+  - id: s30
+    src: media/rec_20260910-173831.mp4
     in: "04:12.95"
     out: "04:15.75"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    speed: 1.2
     move: static
-    amount: 0.6            # how much of the move to use. 0 = none
+    ease: sine_in_out
+    amount: 0.60
     focus: [0.547, 0.442]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    dissolve: 0.3
     note: "part 29 of 29 -- one take with the long pauses cut out. Every word is kept"
     captions:
       - text: "Only love."
-        at: 0.32
-        dur: 1.53
+        at: 0.3
+        dur: 1.5
         pos: lower_third
-
-# 29 shots, about 151 seconds.
-# Speech captions are left out on purpose -- run
-# `uv run film caption` once you're happy with the shots,
-# or watch it once and add what actually needs saying.
