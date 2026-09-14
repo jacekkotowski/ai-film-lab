@@ -37,3 +37,9 @@ cover/
 # music/ and cover/ already match at any depth. The READ ME is written
 # by `film library` on whichever machine needs it.
 library/READ ME.txt
+
+# Downloaded once after installing, never committed: model files are
+# binary, other people's, and listed with URL and checksum in
+# models/README.md so the next machine can fetch the same bytes.
+models/*
+!models/README.md
