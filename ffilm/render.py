@@ -29,7 +29,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw
 
-from . import pix
+from . import pix, segment
 from .ffmpeg import ffmpeg_bin, ffprobe_bin
 from .fonts import line_height, load_font, wrap_to_width
 from .moves import window_at, window_past_end
@@ -265,7 +265,10 @@ class VideoSource:
     """Sequential reader with a cursor. Seeking backwards is rare, so we
     optimise for the common case: walking forward through the clip."""
 
-    def __init__(self, path: Path, shot: Shot, ow: int, oh: int, max_scale: float):
+    segmenter = None                 # no bokeh unless __init__ says so
+
+    def __init__(self, path: Path, shot: Shot, ow: int, oh: int, max_scale: float,
+                 bokeh: float = 0.0):
         self.cap = cv2.VideoCapture(str(path))
         if not self.cap.isOpened():
             raise SystemExit(f"Could not open video: {path}")
@@ -274,6 +277,11 @@ class VideoSource:
         self.ow, self.oh, self.max_scale = ow, oh, max_scale
         self.cursor = -1
         self.last: np.ndarray | None = None
+        # Once per decoded frame, in order, so the mask can be steadied
+        # against the frame before it. A held frame is not segmented twice.
+        self.bokeh = bokeh
+        self.segmenter = segment.Segmenter() if bokeh > 0 else None
+        self.smoother = segment.MaskSmoother()
         start = int(round(shot.tin * self.src_fps))
         if start > 0:
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, start)
@@ -301,7 +309,11 @@ class VideoSource:
             if self.last is None:
                 raise SystemExit(f"Ran out of video in {self.shot.src}")
             return self.last
-        self.last = prepare_source(img, self.ow, self.oh, self.max_scale)
+        img = prepare_source(img, self.ow, self.oh, self.max_scale)
+        if self.segmenter is not None:
+            mask = self.smoother.smooth(self.segmenter.mask(img))
+            img = segment.bokeh(img, mask, self.bokeh)
+        self.last = img
         return self.last
 
     def close(self) -> None:
@@ -311,7 +323,7 @@ class VideoSource:
 def open_source(film: Film, shot: Shot, ow: int, oh: int, max_scale: float):
     path = film.resolve(shot.src)
     if shot.kind == "video":
-        return VideoSource(path, shot, ow, oh, max_scale)
+        return VideoSource(path, shot, ow, oh, max_scale, film.bokeh_for(shot))
     return StillSource(path, ow, oh, max_scale)
 
 

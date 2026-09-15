@@ -13,6 +13,7 @@ dead end, you need *new* measurements to reopen it, not a new argument.
 | 0003 | Why is there room noise late in a take, and what fixed it? | A gate on the wrong scale; a second gate before the expander |
 | 0004 | Why does a recording come out frozen, quiet or hissy? | The device and the room, not the code              |
 | 0005 | Why "measure before claiming"?                        | Four confident wrong answers from reading code     |
+| 0006 | Which model finds the person for bokeh?               | MediaPipe landscape; +45 % on final; unseen in tall close-ups |
 
 ## Writing a new one
 

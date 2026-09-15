@@ -37,7 +37,7 @@ from . import editor
 from . import guide
 from . import history
 from . import scaffold
-from .checks import (film_shape, framing_notes, library_lines,
+from .checks import (bokeh_notes, film_shape, framing_notes, library_lines,
                      preflight_report, unused_media)
 from .moves import choose_moves
 from .paths import toolkit_root
@@ -549,6 +549,8 @@ def cmd_check(args) -> None:
 
     for note in framing_notes(film):
         print(f"  {note}" if note.startswith("[") else note)
+    for note in bokeh_notes(film):
+        print(f"  {note}")
 
     guide.print_next(project)
 

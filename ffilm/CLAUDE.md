@@ -73,6 +73,7 @@ THE SPINE
 GETTING THE MATERIAL          LOOKING AT THE MATERIAL
   record.py   camera + mic      ingest.py   contact sheet, manifest, proxies, pauses
   booth.py    the record window kinds.py    what counts as a photo / clip / track
+                                segment.py  where the person is, for bokeh
                                 pix.py      read/write a still, whatever it is called
 FOUNDATIONS
   ffmpeg.py   find ffmpeg/ffprobe   fonts.py  typefaces, wrapping   paths.py  where the toolkit is
@@ -101,7 +102,7 @@ and fails if an import points up. There are no exceptions:
 7  scaffold, booth, checks              workflows
 6  render, caption_fit                  pixels; captions fitted to shots
 5  audio, voice, cover                  sound and words
-4  record, ingest                       getting and reading the material
+4  record, ingest, segment              getting and reading the material
 3  moves      2  spec      1  library
 0  kinds, pix, paths, ffmpeg, fonts, history, pack
 ```

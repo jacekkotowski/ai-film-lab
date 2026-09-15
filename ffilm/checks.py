@@ -103,6 +103,16 @@ def framing_notes(film) -> list[str]:
     return out
 
 
+def bokeh_notes(film) -> list[str]:
+    """A film that asks for bokeh without the model file, said at check
+    time rather than half way into a render. See segment.missing_model."""
+    from . import segment
+    if not any(film.bokeh_for(s) > 0 for s in film.shots):
+        return []
+    msg = segment.missing_model()
+    return msg.splitlines() if msg else []
+
+
 def film_shape(project: Path) -> tuple[int, int]:
     """The film's own resolution, read cheaply. Not Film.load, which
     validates every source file -- a cover should still build for a film

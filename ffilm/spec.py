@@ -11,6 +11,7 @@ A film.yaml looks like this:
     resolution: [1920, 1080]
     audio: media/music.mp3
     fill: crop                 # crop | blur -- see Film.fill below
+    bokeh: 0                   # the room behind a speaker blurred -- Film.bokeh
     look:
       grain: 0.3
       vignette: 0.25
@@ -210,6 +211,9 @@ class Shot:
     # is the ordinary case.
     fill: str | None = None          # None = whatever the film says
 
+    # Overrides the film's `bokeh` for this one shot. 0 turns it off.
+    bokeh: float | None = None       # None = whatever the film says
+
     captions: list[Caption] = field(default_factory=list)
     note: str = ""                   # for humans and for me. Never rendered.
     id: str = ""
@@ -251,6 +255,7 @@ class Shot:
             ease=str(d.get("ease", "sine_in_out")),
             dissolve=max(0.0, float(d.get("dissolve", 0.0))),
             fill=str(d["fill"]).lower() if "fill" in d else None,
+            bokeh=max(0.0, float(d["bokeh"])) if "bokeh" in d else None,
             captions=[Caption.parse(c) for c in d.get("captions", [])],
             note=str(d.get("note", "")),
             id=str(d.get("id", f"s{index + 1:02d}")),
@@ -409,6 +414,14 @@ class Film:
     fill: str = "crop"                # crop | blur
     fill_aspect: float = 1.0          # width / height of the sharp part
 
+    # The room behind a speaker softly blurred, the speaker sharp. Not
+    # `fill: blur`, which blurs a copy of the whole picture around it.
+    # 0 is off, 1 is the softness it was judged at, 2 twice as soft.
+    # Recorded clips only, and it needs a model file -- see segment.py.
+    # Note: in a vertical film a close-up keeps so little of the room
+    # that this barely shows; it is for wide films and wider takes.
+    bokeh: float = 0.0
+
     look: Look = field(default_factory=Look)
     shots: list[Shot] = field(default_factory=list)
     root: Path = field(default_factory=Path)
@@ -418,6 +431,13 @@ class Film:
     @property
     def duration(self) -> float:
         return sum(s.duration for s in self.shots)
+
+    def bokeh_for(self, shot: Shot) -> float:
+        """How much bokeh this shot gets: its own setting, else the film's.
+        Photographs get none -- it was asked for on recorded takes."""
+        if shot.kind != "video":
+            return 0.0
+        return self.bokeh if shot.bokeh is None else shot.bokeh
 
     def resolve(self, src: str) -> Path:
         """Paths in film.yaml are relative to the film.yaml itself."""
@@ -475,6 +495,7 @@ class Film:
             loudness=float(d.get("loudness", -14.0)),
             fill=str(d.get("fill", "crop")).lower(),
             fill_aspect=float(d.get("fill_aspect", 1.0)),
+            bokeh=max(0.0, float(d.get("bokeh", 0.0))),
             look=Look.parse(d.get("look")),
             shots=[Shot.parse(s, i) for i, s in enumerate(d.get("shots", []))],
             root=path.parent,

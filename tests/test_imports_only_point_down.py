@@ -30,7 +30,7 @@ LAYERS = {
     # 3  the movement vocabulary
     "moves": 3,
     # 4  getting and reading the material
-    "record": 4, "ingest": 4,
+    "record": 4, "ingest": 4, "segment": 4,
     # 5  sound and words, built from the analysis
     "audio": 5, "voice": 5, "cover": 5,
     # 6  pixels, and captions fitted to shots
