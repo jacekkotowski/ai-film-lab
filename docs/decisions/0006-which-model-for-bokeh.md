@@ -30,8 +30,12 @@ one run each:
 
 ## The decision
 - MediaPipe landscape. A wrong object left sharp is worse than a steadier edge.
-- `bokeh:` is a number: 0 means off, which is the default. The film sets it, and a
-  shot may override it. It applies to video only. The mask is smoothed across decoded frames.
+- `bokeh:` is a number: 0 means off. The film's setting reaches **only your
+  recordings** (`rec_*`), because a clip with nobody in it would blur all over.
+  A shot's own `bokeh:` works on any clip. The mask is smoothed across decoded frames.
+- On by default **in new films only** (5e44e4f): `film init` writes `bokeh: 1`
+  into film.yaml, commented out if the model is missing. The code's default
+  stays 0, so films already made do not change.
 - The model lives in `models/`, which git ignores except `models/README.md`
   (URL, SHA-256). A film that asks for bokeh without the model is told
   so by `film check` and by the render. Nothing is skipped silently (see 0001).
