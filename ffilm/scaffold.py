@@ -12,7 +12,7 @@ import json
 import re
 from pathlib import Path
 
-from . import kinds
+from . import kinds, segment
 from .moves import choose_moves
 from .record import REC_SPEED, is_recording
 from .spec import Caption, Shot, pretty_name
@@ -366,6 +366,8 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     L.append("# fill: blur")
     L.append("# fill_aspect: 1.0")
     L.append("")
+    L.extend(bokeh_lines(segment.missing_model() is None))
+    L.append("")
     L.append("shots:")
     L.extend(title_card_block(project, vertical))
 
@@ -390,6 +392,26 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
         L.append("# or watch it once and add what actually needs saying.")
     L.append("")
     return "\n".join(L)
+
+
+def bokeh_lines(model_present: bool) -> list[str]:
+    """Bokeh is on in every new film, and says so in film.yaml.
+
+    Written into the file rather than made the code's default, so it can
+    be seen and set to 0, and so films made before it keep looking the
+    way they were watched. Without the model it is written commented out:
+    a fresh machine's first render must not stop over a look.
+    """
+    L = ["# The room behind you softly blurred, you sharp -- on your own",
+         "# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%",
+         "# render time. Barely shows in a vertical close-up: the crop is",
+         "# nearly all face. Another clip can ask for it with its own `bokeh:`."]
+    if model_present:
+        L.append("bokeh: 1")
+    else:
+        L.append(f"# bokeh: 1   <- needs models/{segment.MODEL_FILE}, "
+                 f"see models/README.md")
+    return L
 
 
 def title_card_block(project: Path, vertical: bool) -> list[str]:

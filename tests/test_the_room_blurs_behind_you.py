@@ -74,12 +74,22 @@ def test_a_film_has_no_bokeh_unless_it_asks():
 
 def test_a_shot_can_turn_it_on_or_off_for_itself():
     film = Film(bokeh=1.0)
-    plain = Shot.parse({"src": "a.mp4", "out": 2}, 0)
-    off = Shot.parse({"src": "a.mp4", "out": 2, "bokeh": 0}, 1)
-    stronger = Shot.parse({"src": "a.mp4", "out": 2, "bokeh": 1.5}, 2)
+    plain = Shot.parse({"src": "media/rec_1.mp4", "out": 2}, 0)
+    off = Shot.parse({"src": "media/rec_1.mp4", "out": 2, "bokeh": 0}, 1)
+    stronger = Shot.parse({"src": "media/rec_1.mp4", "out": 2, "bokeh": 1.5}, 2)
     assert film.bokeh_for(plain) == 1.0
     assert film.bokeh_for(off) == 0.0
     assert film.bokeh_for(stronger) == 1.5
+
+
+def test_the_films_bokeh_reaches_only_your_recordings():
+    """A phone clip of the sea has nobody to keep sharp: the film's
+    setting would blur the whole picture. It asks for its own, or none."""
+    film = Film(bokeh=1.0)
+    sea = Shot.parse({"src": "media/sea.mp4", "out": 2}, 0)
+    asked = Shot.parse({"src": "media/sea.mp4", "out": 2, "bokeh": 1}, 1)
+    assert film.bokeh_for(sea) == 0.0
+    assert film.bokeh_for(asked) == 1.0
 
 
 def test_photographs_are_left_alone():
@@ -102,3 +112,19 @@ def test_a_missing_model_is_said_not_skipped(tmp_path):
 def test_the_url_in_the_code_is_the_one_in_the_readme():
     readme = (toolkit_root() / "models" / "README.md").read_text(encoding="utf-8")
     assert segment.MODEL_URL in re.findall(r"https://\S+", readme)
+
+
+def test_a_new_film_asks_for_bokeh_when_the_model_is_there():
+    """Asked on 2026-09-15: on by default, written INTO film.yaml where it
+    can be seen and set to 0 -- not hidden in the code, and not switched on
+    for films already made."""
+    from ffilm import scaffold
+    assert "bokeh: 1" in "\n".join(scaffold.bokeh_lines(model_present=True))
+
+
+def test_without_the_model_a_new_film_says_so_instead_of_failing():
+    """A fresh machine must still render its first film."""
+    from ffilm import scaffold
+    lines = scaffold.bokeh_lines(model_present=False)
+    assert not any(l.startswith("bokeh:") for l in lines)
+    assert any("# bokeh: 1" in l for l in lines)

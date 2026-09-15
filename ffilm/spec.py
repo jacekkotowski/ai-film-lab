@@ -433,11 +433,17 @@ class Film:
         return sum(s.duration for s in self.shots)
 
     def bokeh_for(self, shot: Shot) -> float:
-        """How much bokeh this shot gets: its own setting, else the film's.
-        Photographs get none -- it was asked for on recorded takes."""
+        """How much bokeh this shot gets.
+
+        A shot's own `bokeh:` wins, on any clip. The film's setting reaches
+        only your recordings (rec_*.mp4): a clip with nobody in it has no
+        person to keep sharp, so its whole picture would blur. Photographs
+        get none -- there is no next frame to steady the edge with."""
         if shot.kind != "video":
             return 0.0
-        return self.bokeh if shot.bokeh is None else shot.bokeh
+        if shot.bokeh is not None:
+            return shot.bokeh
+        return self.bokeh if kinds.is_recording(Path(shot.src).stem) else 0.0
 
     def resolve(self, src: str) -> Path:
         """Paths in film.yaml are relative to the film.yaml itself."""

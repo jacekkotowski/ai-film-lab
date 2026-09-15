@@ -69,6 +69,17 @@ def is_aside(path: str | Path, media: str | Path) -> bool:
 # first frame used.
 POSTER = STILL | {".gif"}
 
+# What a file made by `film record` is called. Here and not in record.py
+# because spec.py needs it too, and spec sits below record: bokeh is on
+# for YOUR takes by default, not for every clip -- a clip with nobody in
+# it would have its whole picture blurred.
+REC_PREFIX = "rec_"
+
+
+def is_recording(stem: str) -> bool:
+    """Was this file made by `film record`?"""
+    return stem.lower().startswith(REC_PREFIX)
+
 
 def is_video(path: str | Path) -> bool:
     return Path(path).suffix.lower() in VIDEO

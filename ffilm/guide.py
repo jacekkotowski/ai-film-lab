@@ -493,20 +493,11 @@ def _run(args: list[str]) -> int:
     return r.returncode
 
 
-# What to offer when somebody has not said. A Short is the thing this is
-# for, and sixty seconds is the length people actually watch to the end
-# of. Nothing is forced: ENTER takes it, and typing 0 turns it off.
-SUGGESTED_SECONDS = 60
-
-
 def _ask_length(args: list[str]) -> list[str]:
     """Offer a length before building, once, where the decision is.
 
     `--target` has existed and worked from the start, and the guide never
-    mentioned it -- so the ordinary result of dropping twenty-five
-    photographs in a folder was a two-minute film, which is not a Short
-    and which nobody reaches the end of. Shortening it afterwards means
-    knowing that a flag exists.
+    mentioned it -- so shortening a film meant knowing that a flag exists.
 
     Never shortens speech, whatever is typed here -- see
     scaffold.fit_to_target. This only ever touches the pictures.
@@ -515,16 +506,25 @@ def _ask_length(args: list[str]) -> list[str]:
         return args
     print(f"\n  How long should it be? Pictures are shortened to fit; "
           f"nothing you\n  said is ever cut.")
-    a = _ask(f"\n  ENTER for about {SUGGESTED_SECONDS} seconds, "
-             f"a number of seconds, or 0 for no limit:  ")
+    a = _ask("\n  ENTER to keep the whole film, or a number of seconds:  ")
     if a.lower().startswith("q"):
         return args
-    if a.strip() == "":
-        return args + ["--target", str(SUGGESTED_SECONDS)]
+    return _length_args(args, a)
+
+
+def _length_args(args: list[str], answer: str) -> list[str]:
+    """What an answer to the length question adds to the command.
+
+    ENTER used to mean "about 60 seconds", so a take recorded in full came
+    out with its pictures squeezed to a minute unless you knew to type 0.
+    Asked on 2026-09-15: nothing is shortened unless a number is typed --
+    and a typo counts as nothing, because it must not shorten the film
+    either.
+    """
     try:
-        want = float(a.replace(",", "."))
+        want = float(answer.strip().replace(",", "."))
     except ValueError:
-        return args + ["--target", str(SUGGESTED_SECONDS)]
+        return args
     return args if want <= 0 else args + ["--target", f"{want:g}"]
 
 

@@ -36,6 +36,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from .kinds import REC_PREFIX, is_recording  # noqa: F401 -- used by scaffold, tests
+
 # Recorded takes get this in film.yaml. Not applied to the file on disk:
 # the original stays the speed you spoke at, and `speed: 1.2` is a number
 # in the edit that you can argue with. Most people, recording themselves
@@ -50,8 +52,8 @@ PREVIEW_H = 216
 PREVIEW_FPS = 12
 
 # What a recorded file is called. `scaffold` recognises this prefix and
-# is the reason a take arrives in film.yaml already sped up.
-REC_PREFIX = "rec_"
+# is the reason a take arrives in film.yaml already sped up. REC_PREFIX
+# and is_recording live in kinds.py, because spec.py needs them too.
 
 # Ceiling on the negotiated capture mode. 1080p of a talking head is
 # already more than a Short will ever show, and every extra pixel is
@@ -68,11 +70,6 @@ FILM_FPS = 24
 # the frames are simply gone -- "real-time buffer too full" and a stutter
 # you only find later. Memory is cheaper than a retake.
 RTBUFSIZE = "512M"
-
-
-def is_recording(stem: str) -> bool:
-    """Was this file made by `film record`?"""
-    return stem.lower().startswith(REC_PREFIX)
 
 
 def take_name(when: datetime | None = None) -> str:
