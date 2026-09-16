@@ -17,6 +17,7 @@ contains 0:42. Everything else in the film is irrelevant to that line.
 
 from __future__ import annotations
 
+import re
 from dataclasses import replace
 
 from .spec import Caption, Film
@@ -169,3 +170,32 @@ def fit_lines_to_shots(film: Film, source: VoiceSource,
     if source.shot_srcs:
         return fit_per_clip(film, source, lines)
     return fit_global(film, lines)
+
+
+def _words(text: str) -> str:
+    return " ".join(re.findall(r"\w+", text.casefold(), flags=re.UNICODE))
+
+
+def re_reads(film: Film) -> list[tuple[str, float]]:
+    """Shots whose every caption is said again on a later shot.
+
+    A sentence read, paused over, and read again is two shots, and now two
+    captions. One of the readings is usually the keeper and the other is an
+    outtake that stayed in the film -- 47.5s of a 216s film, the day this
+    was written. Which one to keep is an editing decision, so this only
+    names them, with how long each is on screen.
+
+    Compared as running words, not caption by caption: the second reading
+    is often broken at a different comma.
+    """
+    said = [(s, " ".join(_words(c.text) for c in s.captions))
+            for s in film.shots]
+    out = []
+    for i, (s, text) in enumerate(said):
+        if not text:
+            continue
+        rest = " " + " ".join(t for _, t in said[i + 1:] if t) + " "
+        if all(f" {_words(c.text)} " in rest for c in s.captions
+               if _words(c.text)):
+            out.append((s.id, s.duration))
+    return out

@@ -383,3 +383,81 @@ def test_a_sentence_that_ends_in_a_quote_mark_still_ends():
 def test_closing_brackets_and_curly_quotes_count_too():
     assert len(script_units("He said it (loudly.) Then he left.")) == 2
     assert len(script_units("She wrote \u201cno.\u201d He agreed.")) == 2
+
+
+# --------------------------------------------------------------------------
+# A sentence read twice, with a pause between
+# --------------------------------------------------------------------------
+
+def later(words, by):
+    for w in words:
+        w.start += by
+        w.end += by
+    return words
+
+
+def test_a_sentence_read_twice_is_captioned_twice():
+    """You read a sentence, paused, and read it again. The edit cuts at
+    the pause and keeps BOTH readings as shots -- so both need their
+    words on screen. Keeping only the last reading left 8 talking shots,
+    47.5s of a 216s film, with no caption at all ("I am not your fear",
+    2026-09-16)."""
+    unit = "I am not the fear you are holding onto."
+    first = say("i am not the fear you are holding onto")
+    second = later(say("i am not the fear you are holding onto"), 12.0)
+    out = align_to_script(first + second, [unit])
+    assert texts(out) == [unit, unit]
+    assert out[0].start == first[0].start
+    assert out[1].start == second[0].start
+
+
+def test_a_second_reading_of_several_sentences_gets_all_of_them():
+    units = ["You are strong.", "You are essential to this world."]
+    first = say("you are strong you are essential to this world")
+    second = later(say("you are strong you are essential to this world"), 15.0)
+    out = align_to_script(first + second, units)
+    assert texts(out) == units + units
+
+
+def test_two_stumbled_words_before_a_pause_are_still_not_captioned():
+    """A false start is not a reading. Two words of it, even with a
+    breath after, must not put the whole sentence on screen."""
+    unit = "Do not be afraid of them."
+    stumble = say("do not")
+    good = later(say("do not be afraid of them"), 3.0)
+    out = align_to_script(stumble + good, [unit])
+    assert len(out) == 1
+    assert out[0].start == good[0].start
+
+
+def test_something_you_improvised_between_readings_is_not_captioned():
+    unit = "I love you."
+    words = (say("i love you")
+             + later(say("wait let me start that over now"), 3.0)
+             + later(say("i love you"), 8.0))
+    out = align_to_script(words, [unit])
+    assert all(t == unit for t in texts(out))
+
+
+def test_a_reading_is_captioned_even_when_the_next_one_starts_with_a_stumble():
+    """On the real take, every missed reading ran straight into the first
+    word of the next attempt: "...disrespected you. I'm" -- then "I am not
+    the fear..." again. The pause that matters is the one around the
+    CAPTION, not around the leftover speech."""
+    units = ["Creating a wall.", "I am not the fear you are holding onto.",
+             "Though I am learning."]
+    words, t = [], 0.0
+
+    def add(text, gap):
+        nonlocal t
+        ws = later(say(text), t + gap)
+        words.extend(ws)
+        t = ws[-1].end
+
+    add("creating a wall", 0.0)
+    add("i am not the fear you are holding onto", 1.8)
+    add("i'm", 1.5)                              # the stumble
+    add("i am not the fear you are holding onto", 0.3)
+    add("though i am learning", 1.0)
+    out = align_to_script(words, units)
+    assert texts(out) == [units[0], units[1], units[1], units[2]]

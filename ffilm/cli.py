@@ -388,6 +388,18 @@ def cmd_caption(args) -> None:
         print("  (that shot may be too short for what is said over it --"
               " consider lengthening it)")
 
+    # Said once, and said again on a later shot: usually an outtake that
+    # stayed in. Named here; which reading to keep is yours to decide.
+    with_new = replace(film, shots=[
+        replace(s, captions=list(s.captions) + all_placed.get(s.id, []))
+        for s in film.shots])
+    again = caption_fit.re_reads(with_new)
+    if again:
+        listed = "  ".join(f"{sid} ({secs:.1f}s)" for sid, secs in again)
+        print(f"\n  re-reads, said again on a later shot: {listed}")
+        print(f"  {sum(secs for _, secs in again):.0f}s of the film. Delete "
+              f"the earlier shot if the later reading is the keeper.")
+
     if not args.apply:
         print("\nThis was a preview. Run again with --apply to write these "
               "into film.yaml (existing captions on affected shots are kept, "

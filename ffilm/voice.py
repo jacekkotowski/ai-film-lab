@@ -285,6 +285,21 @@ def _chunk_words(words: list, max_words: int = 16) -> list[Line]:
 # one was a false start -- you fluffed the line and read it again.
 FALSE_START_GAP = 3
 
+# A whole SECOND reading is a different thing from a false start, and it
+# was being treated as one. You read a sentence, stop, and read it again:
+# the edit cuts at that pause (ingest cuts pauses of about a second) and
+# keeps both readings as shots. Keeping only the last reading's caption
+# left the first one on screen with nothing under it -- 8 talking shots,
+# 47.5s of a 216s film, on "I am not your fear" (2026-09-16).
+#
+# So speech that no caption covers, standing apart from its neighbours by
+# at least this pause, is matched against the script again on its own.
+SECOND_READING_GAP = 1.0
+# ...and a written sentence counts as read there only if most of it was.
+# Under this it is a stumble, and a stumble does not get the whole
+# sentence printed over it.
+SECOND_READING_SHARE = 0.6
+
 
 def _key(text: str) -> list[str]:
     """Words reduced to something two spellings of them can share.
@@ -495,9 +510,68 @@ def align_to_script(words: list, units: list[str]) -> list[Line]:
     Line per sentence that was actually spoken, timed from the transcript
     and worded from the script.
 
-    A sentence read twice keeps the LAST reading, which is what a person
-    means by reading it twice.
+    A sentence stumbled and said again straight away keeps the LAST
+    reading, which is what a person means by that. A sentence read again
+    after a real pause gets a caption on each reading -- see
+    SECOND_READING_GAP for why the two are different.
     """
+    out = _align_once(words, units)
+    out += _second_readings(words, units, out)
+    # Times must not run backwards, whatever the matcher decided.
+    out.sort(key=lambda ln: ln.start)
+    return out
+
+
+def _second_readings(words: list, units: list[str],
+                     lines: list[Line]) -> list[Line]:
+    """Captions for speech the first alignment left uncovered, where the
+    caption found there stands apart as a reading of its own.
+
+    The pause is checked around each CAPTION, not around the uncovered
+    stretch. On the real take every missed reading ran straight into the
+    first word of the next attempt -- "...disrespected you. I'm" -- so the
+    stretch never stood apart, and the reading inside it did.
+
+    A third reading is found too: the matcher on a stretch keeps its last
+    reading, and every earlier one is left uncovered for the next level.
+    """
+    def covered_by(found: list[Line]):
+        return [any(ln.start - 1e-6 <= float(w.start) <= ln.end + 1e-6
+                    for ln in found) for w in words]
+
+    flags = covered_by(lines)
+    extra: list[Line] = []
+    i = 0
+    while i < len(words):
+        if flags[i]:
+            i += 1
+            continue
+        j = i
+        while j + 1 < len(words) and not flags[j + 1]:
+            j += 1
+        if j - i + 1 >= MIN_WORDS:
+            stretch = words[i:j + 1]
+            found = _align_once(stretch, units, SECOND_READING_SHARE)
+            found += _second_readings(stretch, units, found) if found else []
+            before = next((float(words[k].end) for k in range(i - 1, -1, -1)
+                           if flags[k]), None)
+            after = next((float(words[k].start)
+                          for k in range(j + 1, len(words)) if flags[k]), None)
+            # One caption at a time: a stretch can hold a clean reading of
+            # one sentence and, at its very end, a sentence said again
+            # straight away -- which is a stumble, and stays uncaptioned.
+            extra += [ln for ln in found
+                      if (before is None or ln.start - before >= SECOND_READING_GAP)
+                      and (after is None or after - ln.end >= SECOND_READING_GAP)]
+        i = j + 1
+    return extra
+
+
+def _align_once(words: list, units: list[str],
+                min_share: float = 0.0) -> list[Line]:
+    """One pass of the matcher: each written sentence, at most once.
+    `min_share` is how much of a sentence has to have been said for it to
+    count -- nothing on the first pass, most of it on a second reading."""
     spoken, spoken_at = [], []
     for i, w in enumerate(words):
         for tok in _key(getattr(w, "word", "")):
@@ -535,6 +609,8 @@ def align_to_script(words: list, units: list[str]) -> list[Line]:
             if run[0][1] - pair[1] > FALSE_START_GAP:
                 break
             run.insert(0, pair)
+        if min_share and len(run) < min_share * len(_key(unit)):
+            continue                      # a stumble, not a reading
         when = {pos: words[spoken_at[j]] for pos, j in run}
 
         def at(pos, _when=when):
@@ -557,9 +633,6 @@ def align_to_script(words: list, units: list[str]) -> list[Line]:
             if not here:
                 continue                  # this clause was never said
             out.append(Line(text, float(here[0].start), float(here[-1].end)))
-
-    # Times must not run backwards, whatever the matcher decided.
-    out.sort(key=lambda ln: ln.start)
     return out
 
 

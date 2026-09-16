@@ -226,3 +226,40 @@ def test_the_written_numbers_never_round_up():
             Caption("second", 1.239, 2.0, "lower_third")]
     out = stop_overlap(caps, "s1", [])
     assert out[0].dur <= 1.239
+
+
+# --------------------------------------------------------------------------
+# Re-reads: said once, said again later, both kept as shots
+# --------------------------------------------------------------------------
+
+from ffilm.caption_fit import re_reads
+
+
+def test_a_re_read_is_named_with_its_shot_and_its_seconds():
+    """Captioning every reading makes the re-reads visible. Which one to
+    keep is the editor's call, so the machine names them and stops."""
+    film = film_of(shot(10.5, ("I am not the fear.", 0, 2), sid="s07"),
+                   shot(6.0, ("Something else.", 0, 2), sid="s08"),
+                   shot(19.9, ("I am not the fear.", 1, 2),
+                        ("Nor am I the people.", 3, 2), sid="s09"))
+    assert re_reads(film) == [("s07", 10.5)]
+
+
+def test_the_last_reading_is_never_called_a_re_read():
+    film = film_of(shot(4, ("I love you.", 0, 2), sid="s01"),
+                   shot(4, ("I love you.", 0, 2), sid="s02"))
+    assert re_reads(film) == [("s01", 4)]
+
+
+def test_a_shot_with_new_words_in_it_is_not_a_re_read():
+    film = film_of(shot(8, ("I love you.", 0, 2), ("And more.", 3, 2), sid="s01"),
+                   shot(4, ("I love you.", 0, 2), sid="s02"))
+    assert re_reads(film) == []
+
+
+def test_a_re_read_split_differently_is_still_a_re_read():
+    """The second reading may be broken at a different comma."""
+    film = film_of(shot(5, ("You are strong, brave, and good-hearted.", 0, 3), sid="s01"),
+                   shot(5, ("You are strong,", 0, 1),
+                        ("brave, and good-hearted.", 1, 2), sid="s02"))
+    assert re_reads(film) == [("s01", 5)]
