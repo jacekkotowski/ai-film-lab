@@ -176,3 +176,24 @@ def test_a_film_with_keys_after_the_shots_block():
     d = load(out)
     assert d["music_volume"] == 0.6
     assert d["shots"][0]["captions"][0]["text"] == "hi"
+
+
+def test_the_footer_stops_saying_captions_are_missing_once_they_are_in():
+    """`film init` signs off with "Speech captions are left out on
+    purpose -- run film caption". After `film go` had put 48 captions in,
+    the file still said so."""
+    footer = ("# 3 shots, about 16 seconds.\n"
+              "# Speech captions are left out on purpose -- run\n"
+              "# `uv run film caption` once you're happy with the shots,\n"
+              "# or watch it once and add what actually needs saying.\n")
+    text = SCAFFOLDED.replace("# 3 shots, about 16 seconds.\n", footer)
+    out = add_captions(text, {"s01": [cap("Hello there.")]})
+    assert "left out on purpose" not in out
+    assert "# 3 shots, about 16 seconds." in out
+    assert load(out)["shots"][1]["captions"][0]["text"] == "Hello there."
+
+
+def test_the_footer_stays_when_nothing_was_captioned():
+    footer = "# Speech captions are left out on purpose -- run\n"
+    text = SCAFFOLDED + footer
+    assert "left out on purpose" in add_captions(text, {"s09": [cap("x")]})

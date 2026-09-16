@@ -526,6 +526,3 @@ shots:
     note: "part 23 of 23 -- one take with the long pauses cut out. Every word is kept"
 
 # 18 talking shots after the re-reads were cut (2026-09-16).
-# Speech captions are left out on purpose -- run
-# `uv run film caption` once you're happy with the shots,
-# or watch it once and add what actually needs saying.

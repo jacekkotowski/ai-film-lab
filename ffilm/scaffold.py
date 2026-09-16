@@ -387,9 +387,7 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
         L.append("# order above; if it's wrong, either reorder the shots: blocks")
         L.append("# below, or rename files 00_, 01_, 02_... and run init again.")
     if not any(m.get("role") == "quote" for m in meta):
-        L.append("# Speech captions are left out on purpose -- run")
-        L.append("# `uv run film caption` once you're happy with the shots,")
-        L.append("# or watch it once and add what actually needs saying.")
+        L.extend(NO_CAPTIONS_YET)
     L.append("")
     return "\n".join(L)
 
@@ -721,6 +719,16 @@ def _seconds_list(times) -> str:
     return "[" + ", ".join(f"{float(t):.2f}" for t in times) + "]"
 
 
+# The footer `build` writes when a film has no captions. `add_captions`
+# takes it out again, because after `film go` had put 48 captions in, the
+# file still said they were left out.
+NO_CAPTIONS_YET = (
+    "# Speech captions are left out on purpose -- run",
+    "# `uv run film caption` once you're happy with the shots,",
+    "# or watch it once and add what actually needs saying.",
+)
+
+
 def add_captions(text: str, by_shot: dict[str, list]) -> str:
     """Write captions into film.yaml AS TEXT, leaving everything else
     exactly as it was found.
@@ -791,10 +799,13 @@ def add_captions(text: str, by_shot: dict[str, list]) -> str:
             body = body[1:]               # the key is already there
         inserts[end] = body
 
+    captioned = bool(inserts)
     out: list[str] = []
     for i, line in enumerate(lines):
         if i in inserts:
             out.extend(inserts.pop(i))
+        if captioned and line in NO_CAPTIONS_YET:
+            continue
         out.append(line)
     for rest in inserts.values():         # captions on the very last shot
         out.extend(rest)
