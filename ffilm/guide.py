@@ -601,6 +601,16 @@ def _make_project() -> Path | None:
     return None
 
 
+def other_choices(n_steps: int) -> str:
+    """How the alternatives are offered at the prompt. One alternative is
+    "2", not "2-2"."""
+    if n_steps <= 1:
+        return ""
+    if n_steps == 2:
+        return ", 2 for another"
+    return f", 2-{n_steps} for another"
+
+
 def walk(project: Path | None = None) -> None:
     """Ask, act, ask again. The whole app for someone in a hurry."""
     interactive = sys.stdin.isatty()
@@ -678,8 +688,7 @@ def walk(project: Path | None = None) -> None:
             first = "ENTER when the files are in"
         else:
             first = "ENTER to run it"
-        choices = first + (
-            f", 2-{len(steps)} for another" if len(steps) > 1 else "")
+        choices = first + other_choices(len(steps))
         choices += ", N for a new film"
         if others:
             choices += ", F to switch"

@@ -308,3 +308,11 @@ def test_a_long_film_still_uploads_it_just_is_not_a_short():
 def test_a_film_with_no_sound_is_worth_mentioning():
     from ffilm import cover
     assert cover.shorts_problems(1080, 1920, 30.0, has_audio=False) != []
+
+
+def test_one_alternative_is_offered_as_one_number_not_a_range():
+    """The walk-through said "2-2 for another" whenever there was exactly
+    one alternative -- a range with nothing in it."""
+    assert guide.other_choices(1) == ""
+    assert guide.other_choices(2) == ", 2 for another"
+    assert guide.other_choices(4) == ", 2-4 for another"
