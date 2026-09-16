@@ -27,6 +27,25 @@ Rules that apply to every item here:
 
 ---
 
+## Status, end of 2026-09-16
+
+| item | state | commit |
+|---|---|---|
+| 3. read-twice captions + re-read report | done; film edited, 215.9 s -> 178.7 s | 3e87760, ebb6368 |
+| 4 + 6c. music repeats and level | done; decision 0007 | 16fa8c8 |
+| 6a + 6b. one voice chain, chain-keyed cache | done | a69ff9e |
+| 2. voice character | done: G, not G+ (Jacek's rule) | 1f72314 |
+| 5a date hyphens, 5b "2-2", 5c/5e help, 5d footer | done | several |
+| 8a new cover picture rebuilds, 8b wrong-shape note | done | e34bf39 and after |
+| 7.3 two-second card on new vertical films | done (inferred) | 3ef569b, de6c8ca |
+| 7.5 caption share in check | done | 4ac6f0f |
+| 9. sharpen before the warp | done, 0.35 | 5223cfa |
+| **1. arnndn go/no-go** | **waiting: needs Jacek's OK to download an RNNoise model file** | — |
+| 7.4 caption line on Shorts | not started: needs one unlisted upload to look at | — |
+
+Draft of "I am not your fear" with everything in: -14.2 LUFS, pauses in
+the voice-only track -79.2 dBFS, no music under -50 dBFS mid-film.
+
 ## Order of work
 
 | # | Item | Why first | Size |
