@@ -760,9 +760,41 @@ def test_the_voice_character_comes_after_both_gates():
     the pauses. Moved in front of them, the gates would be judging a
     different signal than the one the numbers were taken on."""
     from ffilm.audio import VOICE_CHARACTER
-    chain = lift_filters(TUNED)
+    chain = lift_filters(TUNED, speech_model=False)
     last_gate = max(i for i, f in enumerate(chain) if f.startswith("agate"))
     assert chain[last_gate + 1:] == VOICE_CHARACTER
+    assert lift_filters(TUNED)[-len(VOICE_CHARACTER):] == VOICE_CHARACTER
+
+
+def test_the_speech_denoiser_comes_after_speechnorm_or_ffmpeg_hangs():
+    """Measured 2026-09-16, ffmpeg 9.0.1: arnndn anywhere BEFORE speechnorm
+    wrote 96% of the file and then hung at the end of the stream, every
+    time -- three runs, three fixed frame sizes, 48k throughout, all hung.
+    After it: 1.2s. A render that stops with no message is the worst
+    thing this tool could do, so this order is a rule."""
+    from ffilm.audio import SPEECH_DENOISE
+    chain = lift_filters(TUNED)
+    rnn = next(i for i, f in enumerate(chain) if f.startswith("arnndn"))
+    norm = next(i for i, f in enumerate(chain) if f.startswith("speechnorm"))
+    last_gate = max(i for i, f in enumerate(chain) if f.startswith("agate"))
+    assert rnn > norm
+    assert rnn > last_gate                  # where it was measured
+    assert chain[rnn - 1:rnn + 2] == SPEECH_DENOISE
+
+
+def test_the_speech_denoiser_runs_at_48k_and_comes_back():
+    """RNNoise is a 48 kHz model; everything around it is 44.1."""
+    from ffilm.audio import SPEECH_DENOISE
+    assert SPEECH_DENOISE[0] == "aresample=48000"
+    assert SPEECH_DENOISE[-1] == "aresample=44100"
+
+
+def test_without_the_model_the_voice_is_still_shaped():
+    """No network on a new computer: the film is still made, only the
+    room under the words stays."""
+    chain = voiced_chain(1.0, True, TUNED, speech_model=False)
+    assert not any(f.startswith("arnndn") for f in chain)
+    assert any(f.startswith("speechnorm") for f in chain)
 
 
 def test_speech_lift_off_still_means_exactly_as_recorded():

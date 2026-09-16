@@ -40,7 +40,7 @@ Rules that apply to every item here:
 | 7.3 two-second card on new vertical films | done (inferred) | 3ef569b, de6c8ca |
 | 7.5 caption share in check | done | 4ac6f0f |
 | 9. sharpen before the warp | done, 0.35 | 5223cfa |
-| **1. arnndn go/no-go** | **waiting: needs Jacek's OK to download an RNNoise model file** | — |
+| 1. arnndn go/no-go | done: go, sh.rnnn after both gates; models fetched automatically; decision 0008 | see git log |
 | 7.4 caption line on Shorts | not started: needs one unlisted upload to look at | — |
 
 Draft of "I am not your fear" with everything in: -14.2 LUFS, pauses in

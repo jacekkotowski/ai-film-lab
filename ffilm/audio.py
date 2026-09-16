@@ -30,6 +30,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from . import models
 from .spec import Film, Shot
 
 CLICK_FADE = 0.02      # seconds of fade at each end of a speech segment
@@ -631,10 +632,32 @@ def level_gain(measured_lufs: float | None) -> float:
 
 # Bumped whenever the voice chain below changes, so a take voiced by an
 # older version is made again rather than reused.
-VOICE_VERSION = 5
+VOICE_VERSION = 6
 
 
-def lift_filters(tuning: Tuning = DEFAULT_TUNING) -> list[str]:
+# RNNoise: the room under and between the words, which the gates cannot
+# reach because the voice is there at the same time. Measured 2026-09-16
+# on "I am not your fear", two 34s stretches, against the rule set before
+# the result was known -- the room down by 8 dB or more, the consonant
+# bands moved by 1 dB or less (docs/decisions/0008):
+#
+#                          room under words   3-6 kHz   6-10 kHz
+#     20-54s               -48.6 -> -62.4     -0.1      +0.1
+#     150-184s             -45.0 -> -61.0     +0.5      +0.6
+#
+# AFTER speechnorm, always. Anywhere before it, ffmpeg 9.0.1 wrote 96% of
+# the take and hung at the end of the stream, every time.
+#
+# 48 kHz is the model's own rate. It is a data file, fetched into models/
+# by models.ensure, and ffmpeg is run from that folder so the filter never
+# has to spell out a Windows path with a drive letter's colon in it.
+SPEECH_DENOISE = ["aresample=48000",
+                  f"arnndn=m={models.SPEECH_DENOISE.file}",
+                  "aresample=44100"]
+
+
+def lift_filters(tuning: Tuning = DEFAULT_TUNING,
+                 speech_model: bool = True) -> list[str]:
     """What `speech_lift` does to a voice, in order: floor and warmth,
     bring the take to a known level, clean, even out what is left, close
     the gaps.
@@ -652,12 +675,15 @@ def lift_filters(tuning: Tuning = DEFAULT_TUNING) -> list[str]:
         chain.append(NOISE_GATE.format(threshold=tuning.pre_gate_threshold))
     chain.append(SPEECH_NORM)
     chain.append(NOISE_GATE.format(threshold=tuning.gate_threshold))
+    if speech_model:
+        chain += SPEECH_DENOISE
     chain += VOICE_CHARACTER
     return chain
 
 
 def voiced_chain(speed: float, lift: bool,
-                 tuning: Tuning = DEFAULT_TUNING) -> list[str]:
+                 tuning: Tuning = DEFAULT_TUNING,
+                 speech_model: bool = True) -> list[str]:
     """The filters that shape a VOICE, applied ONCE to a whole take.
 
     This used to run per spoken piece, inside speech_chain, and that is
@@ -717,7 +743,7 @@ def voiced_chain(speed: float, lift: bool,
         #
         # All of it rides with `speech_lift`, so `speech_lift: false`
         # still means "exactly as I recorded it".
-        chain += lift_filters(tuning)
+        chain += lift_filters(tuning, speech_model)
     return chain
 
 
@@ -829,7 +855,10 @@ def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
     # false` means the take is passed through as recorded, and moving its
     # level would be moving it.
     tuning = tuning_for_take(film, src) if lift else DEFAULT_TUNING
-    chain = voiced_chain(speed, lift, tuning)
+    # Fetched the first time it is needed. Without it the take is still
+    # voiced, and the cached file's name says which chain made it.
+    speech_model = lift and models.ensure(models.SPEECH_DENOISE) is not None
+    chain = voiced_chain(speed, lift, tuning, speech_model)
     dst = voiced_path(film, src, speed, lift, chain)
     try:
         if dst.exists() and dst.stat().st_mtime > src.stat().st_mtime:
@@ -840,11 +869,13 @@ def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
     try:
         dst.parent.mkdir(parents=True, exist_ok=True)
         r = subprocess.run(
-            [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error",
-             "-i", str(src), "-vn",
+            [ffmpeg_bin(), "-nostdin", "-y", "-hide_banner",
+             "-loglevel", "error",
+             "-i", str(src.resolve()), "-vn",
              "-filter:a", ",".join(chain),
-             "-c:a", "pcm_s16le", str(dst)],
-            capture_output=True, text=True, errors="replace", timeout=1800)
+             "-c:a", "pcm_s16le", str(dst.resolve())],
+            capture_output=True, text=True, errors="replace", timeout=1800,
+            cwd=str(models.models_dir()) if speech_model else None)
     except (OSError, subprocess.SubprocessError):
         return None
     if r.returncode != 0 or not dst.exists() or dst.stat().st_size < 1024:
@@ -861,7 +892,8 @@ def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
 
 
 def speech_chain(start: float, end: float | None, delay: int, speed: float,
-                 lift: bool, tuning: Tuning = DEFAULT_TUNING) -> list[str]:
+                 lift: bool, tuning: Tuning = DEFAULT_TUNING,
+                 speech_model: bool = True) -> list[str]:
     """The filters one spoken source passes through, in order.
 
     Pure on purpose: no ffmpeg, no files, no Film. Every number in the
@@ -901,7 +933,7 @@ def speech_chain(start: float, end: float | None, delay: int, speed: float,
         # they all assume it is. Same order and the same constants as
         # voiced_chain, which is the path this one stands in for; see
         # there for why the gain comes before the denoiser.
-        chain += lift_filters(tuning)
+        chain += lift_filters(tuning, speech_model)
 
     # A few milliseconds at each end. Cutting a pause out of a take
     # splices two waveforms together mid-air, and without this the join
@@ -1114,6 +1146,13 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
     from .ffmpeg import ffmpeg_bin, ffprobe_bin
     from .spec import frames_for
 
+    # Absolute, because ffmpeg may be run from models/ (see SPEECH_DENOISE)
+    # and a relative --out would then land somewhere else.
+    silent_video, out = Path(silent_video).resolve(), Path(out).resolve()
+    # The fallback path below does not fetch: voiced_take has already
+    # tried once, and a second minute of network timeout buys nothing.
+    speech_model = film.speech_lift and models.is_present(models.SPEECH_DENOISE)
+
     fps = fps or film.fps
     # The film's real length is whole frames, not the sum of the numbers
     # in film.yaml -- and the music is cut to it.
@@ -1218,7 +1257,7 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
                 else:
                     tn = DEFAULT_TUNING
                 chain = speech_chain(start, end, delay, speed,
-                                     film.speech_lift, tn)
+                                     film.speech_lift, tn, speech_model)
             lbl = f"{prefix}{i}"
             filters.append(f"[{idx}:a]" + ",".join(chain) + f"[{lbl}]")
             inputs.extend(["-i", str(use)])
@@ -1404,7 +1443,9 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
 
     try:
         r = subprocess.run(args, capture_output=True, text=True,
-                           errors="replace")
+                           errors="replace",
+                           cwd=str(models.models_dir()) if speech_model
+                           else None)
     finally:
         if written is not None:
             written.unlink(missing_ok=True)

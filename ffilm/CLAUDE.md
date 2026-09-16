@@ -57,6 +57,10 @@ a pure function and test that.
   which silently removed face detection. See
   `docs/decisions/0001-lock-the-dependencies.md`.
 - **Windows first.** Paths contain spaces and Polish letters. Quote them.
+- **A model file is never committed and never fetched by hand.** Add it to
+  `models.CATALOGUE` and to `models/README.md`; a test keeps the two equal.
+- **`arnndn` goes after `speechnorm`.** Before it, ffmpeg hangs at the end
+  of the stream. See `docs/decisions/0008`.
 
 ## The map
 
@@ -83,6 +87,7 @@ SOUND AND WORDS
   caption_fit.py  which line belongs on which shot
   cover.py        the thumbnail. Not part of the film
   library.py      the shared shelf: music + two cover backdrops
+  models.py       the model files: fetched once into models/, checked by SHA-256
 
 THE WAY IN
   cli.py      the commands        guide.py    `uv run film`: what next?
@@ -103,7 +108,7 @@ and fails if an import points up. There are no exceptions:
 6  render, caption_fit                  pixels; captions fitted to shots
 5  audio, voice, cover                  sound and words
 4  record, ingest, segment              getting and reading the material
-3  moves      2  spec      1  library
+3  moves      2  spec      1  library, models
 0  kinds, pix, paths, ffmpeg, fonts, history, pack
 ```
 

@@ -15,6 +15,7 @@ dead end, you need *new* measurements to reopen it, not a new argument.
 | 0005 | Why "measure before claiming"?                        | Four confident wrong answers from reading code     |
 | 0006 | Which model finds the person for bokeh?               | MediaPipe landscape; +45 % on final; unseen in tall close-ups |
 | 0007 | Why is every music track at -20 LUFS, and how does it repeat? | Measured once; trimmed 18 dB under its loudness; 5 s crossfade |
+| 0008 | Which speech denoiser, where, and how is it installed? | RNNoise sh after both gates (before speechnorm hangs); fetched and checked into models/ |
 
 ## Writing a new one
 
