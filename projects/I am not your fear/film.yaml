@@ -1,0 +1,564 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# audio: media/voiceover.mp3   # optional separate narration
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 4.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20260916-113221.mp4
+    in: "00:02.45"
+    out: "00:20.85"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    note: "part 1 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "When someone breaks our trust,"
+        at: 0.00
+        dur: 2.61
+        pos: lower_third
+        words: [0.00, 0.55, 1.38, 1.78, 2.03]
+      - text: "disrespects us, publicly humbles us,"
+        at: 3.87
+        dur: 2.48
+        pos: lower_third
+        words: [0.00, 1.02, 1.45, 2.23]
+      - text: "or fails us when we are in distress,"
+        at: 7.17
+        dur: 2.71
+        pos: lower_third
+        words: [0.00, 0.55, 1.00, 1.28, 1.52, 1.72, 1.97, 2.28]
+      - text: "building walls isn't just natural,"
+        at: 10.66
+        dur: 1.83
+        pos: lower_third
+        words: [0.00, 0.35, 0.77, 1.18, 1.35]
+      - text: "it feels like survival."
+        at: 13.46
+        dur: 1.33
+        pos: lower_third
+        words: [0.00, 0.30, 0.58, 0.83]
+
+  - id: s02
+    src: media/rec_20260916-113221.mp4
+    in: "00:22.20"
+    out: "00:32.80"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 2 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "We tell ourselves: Never again."
+        at: 0.00
+        dur: 2.65
+        pos: lower_third
+        words: [0.00, 0.57, 0.77, 1.88, 2.20]
+      - text: "I won't let anyone get close enough to hurt me like that."
+        at: 3.53
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.30, 0.85, 1.13, 1.57, 1.87, 2.23, 2.65, 3.55, 4.20, 4.38]
+
+  - id: s03
+    src: media/rec_20260916-113221.mp4
+    in: "00:34.45"
+    out: "00:43.55"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 3 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Eckhart Tolle speaks about how past pain forces"
+        at: 0.13
+        dur: 4.45
+        pos: lower_third
+        words: [0.00, 0.53, 1.12, 1.85, 2.37, 2.85, 3.48, 3.90]
+      - text: "the mind to generalize."
+        at: 4.58
+        dur: 2.66
+        pos: lower_third
+        words: [0.00, 0.53, 0.87, 1.30]
+
+  - id: s04
+    src: media/rec_20260916-113221.mp4
+    in: "00:44.75"
+    out: "00:53.20"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 4 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "After being hurt or ridiculed,"
+        at: 0.00
+        dur: 3.15
+        pos: lower_third
+        words: [0.00, 0.97, 1.23, 1.68, 2.35]
+      - text: "we put people into categories to protect ourselves."
+        at: 3.15
+        dur: 3.36
+        pos: lower_third
+        words: [0.00, 0.23, 0.53, 0.87, 1.12, 1.75, 2.30, 2.82]
+
+  - id: s05
+    src: media/rec_20260916-113221.mp4
+    in: "00:54.60"
+    out: "01:08.65"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 5 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "It is so easy to look at me,"
+        at: 0.00
+        dur: 2.74
+        pos: lower_third
+        words: [0.00, 0.97, 1.15, 1.47, 1.87, 2.67, 2.85, 3.02]
+      - text: "as a man,"
+        at: 2.74
+        dur: 0.91
+        pos: lower_third
+        words: [0.00, 0.48, 0.58]
+      - text: "or as someone who reminds you of past pain,"
+        at: 3.66
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.90, 1.35, 1.73, 2.52, 3.08, 3.42, 3.82, 4.22]
+      - text: "and see a threat."
+        at: 8.33
+        dur: 2.93
+        pos: lower_third
+        words: [0.00, 1.27, 2.08, 2.60]
+
+  - id: s06
+    src: media/rec_20260916-113221.mp4
+    in: "01:09.75"
+    out: "01:25.25"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 6 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "The mind projects old memories onto the person standing right"
+        at: 0.00
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.52, 1.02, 2.07, 2.62, 3.23, 3.88, 4.22]
+      - text: "in front of you,"
+        at: 6.13
+        dur: 1.46
+        pos: lower_third
+        words: [0.00, 0.58, 0.87, 1.13]
+      - text: "creating a wall where there could be connection."
+        at: 8.03
+        dur: 4.28
+        pos: lower_third
+        words: [0.00, 0.50, 0.78, 1.30, 2.43, 2.78, 3.02, 3.43]
+
+  - id: s07
+    src: media/rec_20260916-113221.mp4
+    in: "01:26.40"
+    out: "01:39.05"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 7 of 23 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s08
+    src: media/rec_20260916-113221.mp4
+    in: "01:40.15"
+    out: "02:04.05"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 8 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I am not the fear you're holding onto,"
+        at: 1.32
+        dur: 1.30
+        pos: lower_third
+        words: [0.00, 0.55, 0.90]
+      - text: "nor am I the people who hurt, abused,"
+        at: 3.02
+        dur: 2.46
+        pos: lower_third
+        words: [0.00, 0.38, 0.80, 0.98, 1.15, 1.43, 1.67, 2.10]
+      - text: "or disrespected you."
+        at: 5.77
+        dur: 1.41
+        pos: lower_third
+        words: [0.00, 0.25, 1.07]
+      - text: "Though I am not without my human errors,"
+        at: 7.97
+        dur: 3.75
+        pos: lower_third
+        words: [0.00, 0.68, 1.70, 1.83, 2.03, 2.32, 2.65, 3.15]
+      - text: "including my past lack of empathy,"
+        at: 11.93
+        dur: 2.96
+        pos: lower_third
+        words: [0.00, 0.62, 1.18, 1.62, 2.15, 2.48]
+      - text: "for which I am deeply sorry."
+        at: 15.20
+        dur: 2.44
+        pos: lower_third
+        words: [0.00, 0.35, 0.67, 1.17, 1.37, 1.90]
+      - text: "I am learning."
+        at: 18.43
+        dur: 1.03
+        pos: lower_third
+        words: [0.00, 0.50, 0.65]
+
+  - id: s09
+    src: media/rec_20260916-113221.mp4
+    in: "02:05.70"
+    out: "02:14.05"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 9 of 23 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s10
+    src: media/rec_20260916-113221.mp4
+    in: "02:15.30"
+    out: "02:23.45"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 10 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "You don't have to hide the butterfly over your heart,"
+        at: 0.00
+        dur: 3.75
+        pos: lower_third
+        words: [0.00, 0.47, 0.88, 1.10, 1.37, 1.95, 2.32, 2.80, 3.23, 3.43]
+      - text: "and you never have to defend it from me."
+        at: 3.75
+        dur: 2.74
+        pos: lower_third
+        words: [0.00, 0.55, 0.88, 1.33, 1.62, 1.80, 2.12, 2.28, 2.48]
+
+  - id: s11
+    src: media/rec_20260916-113221.mp4
+    in: "02:24.55"
+    out: "02:52.60"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 11 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I am not here to expect,"
+        at: 0.00
+        dur: 3.02
+        pos: lower_third
+        words: [0.00, 0.70, 0.83, 1.08, 1.58, 2.25]
+      - text: "to rush, to prove anything,"
+        at: 3.02
+        dur: 1.71
+        pos: lower_third
+        words: [0.00, 0.28, 0.90, 0.98, 1.35]
+      - text: "or to invade your space."
+        at: 4.92
+        dur: 1.83
+        pos: lower_third
+        words: [0.00, 0.52, 0.85, 1.18, 1.45]
+      - text: "I address what you announced bravely in public,"
+        at: 7.66
+        dur: 3.43
+        pos: lower_third
+        words: [0.00, 0.70, 1.13, 1.47, 1.72, 2.22, 2.80, 3.03]
+      - text: "to witness how magnificent a person you are,"
+        at: 11.09
+        dur: 4.13
+        pos: lower_third
+        words: [0.00, 1.03, 1.67, 2.07, 2.85, 3.13, 3.52, 3.82]
+      - text: "and I address what your eyes told me."
+        at: 15.22
+        dur: 4.05
+        pos: lower_third
+        words: [0.00, 1.00, 2.20, 2.53, 3.00, 3.18, 3.42, 3.77]
+      - text: "This is my public response."
+        at: 20.86
+        dur: 2.01
+        pos: lower_third
+        words: [0.00, 0.47, 0.62, 0.87, 1.50]
+
+  - id: s12
+    src: media/rec_20260916-113221.mp4
+    in: "02:54.65"
+    out: "03:06.75"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 12 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I love you, I respect your pace,"
+        at: 0.16
+        dur: 3.33
+        pos: lower_third
+        words: [0.00, 0.42, 0.87, 1.77, 2.17, 2.68, 2.95]
+      - text: "and I am right here in this present moment,"
+        at: 3.49
+        dur: 3.91
+        pos: lower_third
+        words: [0.00, 0.98, 1.80, 1.97, 2.20, 2.58, 2.87, 3.08, 3.47]
+      - text: "offering safety."
+        at: 7.41
+        dur: 2.21
+        pos: lower_third
+        words: [0.00, 0.78]
+
+  - id: s13
+    src: media/rec_20260916-113221.mp4
+    in: "03:07.90"
+    out: "03:23.30"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 13 of 23 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s14
+    src: media/rec_20260916-113221.mp4
+    in: "03:24.30"
+    out: "03:30.50"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 14 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "You don't have to protect yourself from me."
+        at: 0.00
+        dur: 2.22
+        pos: lower_third
+        words: [0.00, 0.67, 0.92, 1.08, 1.23, 1.57, 1.90, 2.23]
+      - text: "And I will be there for you."
+        at: 2.22
+        dur: 2.69
+        pos: lower_third
+        words: [0.00, 0.95, 1.52, 1.72, 1.90, 2.13, 2.37]
+
+  - id: s15
+    src: media/rec_20260916-113221.mp4
+    in: "03:31.50"
+    out: "03:34.20"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 15 of 23 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s16
+    src: media/rec_20260916-113221.mp4
+    in: "03:35.20"
+    out: "03:38.65"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 16 of 23 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s17
+    src: media/rec_20260916-113221.mp4
+    in: "03:39.55"
+    out: "03:42.60"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 17 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "You are a magnificent person."
+        at: 0.00
+        dur: 2.18
+        pos: lower_third
+        words: [0.00, 0.55, 0.93, 1.25, 1.60]
+
+  - id: s18
+    src: media/rec_20260916-113221.mp4
+    in: "03:43.55"
+    out: "03:51.55"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 18 of 23 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s19
+    src: media/rec_20260916-113221.mp4
+    in: "03:52.50"
+    out: "04:00.20"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 19 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Your beauty makes this world beautiful and worth living,"
+        at: 1.57
+        dur: 1.71
+        pos: lower_third
+        words: [0.00, 0.20, 0.72, 1.10, 1.38]
+      - text: "and you are indeed enough."
+        at: 3.28
+        dur: 2.88
+        pos: lower_third
+        words: [0.00, 0.82, 1.10, 1.43, 2.00]
+
+  - id: s20
+    src: media/rec_20260916-113221.mp4
+    in: "04:01.30"
+    out: "04:30.75"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 20 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Do not be afraid of me, of them,"
+        at: 0.00
+        dur: 2.38
+        pos: lower_third
+        words: [0.00, 0.73, 0.90, 1.07, 1.47, 1.70, 2.27, 2.50]
+      - text: "or of anyone."
+        at: 2.38
+        dur: 1.53
+        pos: lower_third
+        words: [0.00, 0.68, 1.08]
+      - text: "You are strong, brave, and good-hearted."
+        at: 16.95
+        dur: 1.48
+        pos: lower_third
+        words: [0.00, 0.82, 1.07]
+      - text: "You are essential to this world."
+        at: 19.43
+        dur: 2.51
+        pos: lower_third
+        words: [0.00, 0.57, 1.13, 1.73, 1.98, 2.18]
+      - text: "Essential to me."
+        at: 22.57
+        dur: 1.53
+        pos: lower_third
+        words: [0.00, 0.87, 1.28]
+
+  - id: s21
+    src: media/rec_20260916-113221.mp4
+    in: "04:31.90"
+    out: "04:37.45"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 21 of 23 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s22
+    src: media/rec_20260916-113221.mp4
+    in: "04:38.75"
+    out: "04:41.35"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 22 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "I love you."
+        at: 0.00
+        dur: 1.95
+        pos: lower_third
+        words: [0.00, 0.60, 1.58]
+
+  - id: s23
+    src: media/rec_20260916-113221.mp4
+    in: "04:47.20"
+    out: "04:48.05"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.522, 0.413]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 23 of 23 -- one take with the long pauses cut out. Every word is kept"
+
+# 23 shots, about 212 seconds.
+# Speech captions are left out on purpose -- run
+# `uv run film caption` once you're happy with the shots,
+# or watch it once and add what actually needs saying.
