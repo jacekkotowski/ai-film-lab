@@ -242,6 +242,43 @@ def prepare_source(img: np.ndarray, ow: int, oh: int, max_scale: float) -> np.nd
     return cv2.resize(img, new, interpolation=cv2.INTER_AREA)
 
 
+# A face in a vertical film is soft from the crop, not from the camera: a
+# 9:16 slice of a 1920x1080 take keeps 607 pixels of width and enlarges
+# them 1.78x. Measured on "I am not your fear" at 1:00, Laplacian variance
+# of the face at output size -- plain 7.1, sharpened before the warp 9.9,
+# smoothed before the warp 3.5. So sharpen, lightly, on the SOURCE frame:
+# before the warp, and long before the look (grade, vignette, grain,
+# scratches), which is not touched. Skin smoothing was refused on the same
+# numbers -- the grain would paint texture back onto mush.
+SHARPEN = 0.35
+SHARPEN_SIGMA = 1.2          # source pixels
+
+
+def sharpen(img: np.ndarray, amount: float,
+            mask: np.ndarray | None = None) -> np.ndarray:
+    """Unsharp mask. Only where the person is, when there is a mask: with
+    bokeh on, the room is blurred on purpose."""
+    if amount <= 0:
+        return img
+    blur = cv2.GaussianBlur(img, (0, 0), SHARPEN_SIGMA)
+    sharp = cv2.addWeighted(img, 1.0 + amount, blur, -amount, 0)
+    if mask is None:
+        return sharp
+    h, w = img.shape[:2]
+    m = np.clip(cv2.resize(mask, (w, h), interpolation=cv2.INTER_LINEAR),
+                0.0, 1.0)
+    return cv2.blendLinear(sharp, img, m, 1.0 - m)
+
+
+def sharpen_for(film: Film, shot: Shot) -> float:
+    """Your own recordings only. A photograph, or a clip somebody else
+    made, is left as it was made."""
+    from . import kinds
+    if shot.kind != "video":
+        return 0.0
+    return SHARPEN if kinds.is_recording(Path(shot.src).stem) else 0.0
+
+
 # --------------------------------------------------------------------------
 # Sources: stills and video both become "give me the frame at time t"
 # --------------------------------------------------------------------------
@@ -266,9 +303,10 @@ class VideoSource:
     optimise for the common case: walking forward through the clip."""
 
     segmenter = None                 # no bokeh unless __init__ says so
+    sharpness = 0.0                  # and no sharpening either
 
     def __init__(self, path: Path, shot: Shot, ow: int, oh: int, max_scale: float,
-                 bokeh: float = 0.0):
+                 bokeh: float = 0.0, sharpness: float = 0.0):
         self.cap = cv2.VideoCapture(str(path))
         if not self.cap.isOpened():
             raise SystemExit(f"Could not open video: {path}")
@@ -280,6 +318,7 @@ class VideoSource:
         # Once per decoded frame, in order, so the mask can be steadied
         # against the frame before it. A held frame is not segmented twice.
         self.bokeh = bokeh
+        self.sharpness = sharpness
         self.segmenter = segment.Segmenter() if bokeh > 0 else None
         self.smoother = segment.MaskSmoother()
         start = int(round(shot.tin * self.src_fps))
@@ -310,8 +349,11 @@ class VideoSource:
                 raise SystemExit(f"Ran out of video in {self.shot.src}")
             return self.last
         img = prepare_source(img, self.ow, self.oh, self.max_scale)
+        mask = None
         if self.segmenter is not None:
             mask = self.smoother.smooth(self.segmenter.mask(img))
+        img = sharpen(img, self.sharpness, mask)
+        if mask is not None:
             img = segment.bokeh(img, mask, self.bokeh)
         self.last = img
         return self.last
@@ -323,7 +365,8 @@ class VideoSource:
 def open_source(film: Film, shot: Shot, ow: int, oh: int, max_scale: float):
     path = film.resolve(shot.src)
     if shot.kind == "video":
-        return VideoSource(path, shot, ow, oh, max_scale, film.bokeh_for(shot))
+        return VideoSource(path, shot, ow, oh, max_scale, film.bokeh_for(shot),
+                           sharpen_for(film, shot))
     return StillSource(path, ow, oh, max_scale)
 
 
