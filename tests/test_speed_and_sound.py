@@ -715,3 +715,41 @@ def test_speech_lift_false_still_has_no_gates_at_all():
     t = tuning_for(room_db=-53.1, voice_db=-22.2)
     chain = voiced_chain(1.0, lift=False, tuning=t)
     assert not any(f.startswith("agate") for f in chain)
+
+
+# --------------------------------------------------------------------------
+# One voice chain, and a cache that knows when it changed
+# --------------------------------------------------------------------------
+
+from ffilm.audio import lift_filters, voiced_name
+
+TUNED = Tuning(gain_db=9.3, nf_db=-46.9, gate_db=-39.3, pre_gate_db=-40.7)
+
+
+def test_the_fallback_chain_shapes_the_voice_exactly_like_the_voiced_take():
+    """The same filters were written out twice, once per path. A change to
+    one and not the other would only show on the path that runs when
+    voicing a take failed -- the one nobody listens to."""
+    lift = lift_filters(TUNED)
+    voiced = voiced_chain(1.0, True, TUNED)
+    fallback = speech_chain(1.0, 5.0, 0, 1.0, True, TUNED)
+    assert voiced[-len(lift):] == lift
+    start = fallback.index(lift[0])
+    assert fallback[start:start + len(lift)] == lift
+
+
+def test_a_different_tuning_is_a_different_voiced_take():
+    """The voiced take is cached on disk. Re-ingesting a take, or changing
+    a constant, used to reuse the old file -- and the change was inaudible
+    for no reason anybody could see."""
+    base = voiced_name("rec_1", 1.2, True, voiced_chain(1.2, True, TUNED))
+    retuned = Tuning(gain_db=9.3, nf_db=-46.9, gate_db=-35.0, pre_gate_db=-40.7)
+    assert voiced_name("rec_1", 1.2, True, voiced_chain(1.2, True, retuned)) != base
+    assert voiced_name("rec_1", 1.2, True, voiced_chain(1.2, True, TUNED)) == base
+
+
+def test_a_voiced_take_is_still_named_for_its_take_and_speed():
+    """The old-version sweep finds stale copies by that prefix."""
+    name = voiced_name("rec_1", 1.2, True, voiced_chain(1.2, True, TUNED))
+    assert name.startswith("rec_1__1200__lift__v")
+    assert name.endswith(".wav")

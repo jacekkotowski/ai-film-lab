@@ -611,6 +611,27 @@ def level_gain(measured_lufs: float | None) -> float:
 VOICE_VERSION = 4
 
 
+def lift_filters(tuning: Tuning = DEFAULT_TUNING) -> list[str]:
+    """What `speech_lift` does to a voice, in order: floor and warmth,
+    bring the take to a known level, clean, even out what is left, close
+    the gaps.
+
+    One list, used by both paths. It used to be written out twice -- in
+    voiced_chain and again in speech_chain, the fallback -- and a change
+    made to one and not the other would only have been heard on the path
+    that runs when voicing a take has failed.
+    """
+    chain = voice_tone()
+    if abs(tuning.gain_db) > 0.05:
+        chain.append(f"volume={tuning.gain_db:.2f}dB")
+    chain.append(DENOISE.format(nf=tuning.nf_db))
+    if tuning.pre_gate_threshold is not None:
+        chain.append(NOISE_GATE.format(threshold=tuning.pre_gate_threshold))
+    chain.append(SPEECH_NORM)
+    chain.append(NOISE_GATE.format(threshold=tuning.gate_threshold))
+    return chain
+
+
 def voiced_chain(speed: float, lift: bool,
                  tuning: Tuning = DEFAULT_TUNING) -> list[str]:
     """The filters that shape a VOICE, applied ONCE to a whole take.
@@ -672,15 +693,7 @@ def voiced_chain(speed: float, lift: bool,
         #
         # All of it rides with `speech_lift`, so `speech_lift: false`
         # still means "exactly as I recorded it".
-        chain += voice_tone()
-        if abs(tuning.gain_db) > 0.05:
-            chain.append(f"volume={tuning.gain_db:.2f}dB")
-        chain.append(DENOISE.format(nf=tuning.nf_db))
-        if tuning.pre_gate_threshold is not None:
-            chain.append(NOISE_GATE.format(
-                threshold=tuning.pre_gate_threshold))
-        chain.append(SPEECH_NORM)
-        chain.append(NOISE_GATE.format(threshold=tuning.gate_threshold))
+        chain += lift_filters(tuning)
     return chain
 
 
@@ -721,7 +734,24 @@ def place_chain(start: float, end: float | None, delay: int,
     return chain
 
 
-def voiced_path(film, src: Path, speed: float, lift: bool) -> Path:
+def voiced_name(key: str, speed: float, lift: bool, chain: list[str]) -> str:
+    """The file name of a voiced take. Pure, so it is tested.
+
+    It carries a short hash of the exact filter chain. The name used to be
+    the take, the speed and VOICE_VERSION only, and the file was remade
+    only when the SOURCE was newer -- so re-ingesting a take (new room and
+    voice levels, so new thresholds) or changing a constant without
+    remembering to bump the version quietly reused the old sound, and the
+    change was inaudible for no reason anybody could see.
+    """
+    tag = f"{speed:.3f}".replace(".", "")
+    lift_tag = "lift" if lift else "raw"
+    digest = hashlib.sha1(",".join(chain).encode("utf-8")).hexdigest()[:8]
+    return f"{key}__{tag}__{lift_tag}__v{VOICE_VERSION}_{digest}.wav"
+
+
+def voiced_path(film, src: Path, speed: float, lift: bool,
+                chain: list[str]) -> Path:
     """Where a voiced take is kept. Derived, like a proxy: analysis/ can
     be deleted at any time and it is simply made again."""
     from . import ingest as ingest_mod
@@ -730,10 +760,7 @@ def voiced_path(film, src: Path, speed: float, lift: bool) -> Path:
         key = ingest_mod.key_of(film.root, rel)
     except (ValueError, OSError):
         key = hashlib.sha1(str(src).encode("utf-8")).hexdigest()[:10]
-    tag = f"{speed:.3f}".replace(".", "")
-    lift_tag = "lift" if lift else "raw"
-    return (film.root / "analysis" / "voice" /
-            f"{key}__{tag}__{lift_tag}__v{VOICE_VERSION}.wav")
+    return film.root / "analysis" / "voice" / voiced_name(key, speed, lift, chain)
 
 
 def tuning_for_take(film, src: Path) -> Tuning:
@@ -773,24 +800,25 @@ def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
     Cached on the source file's own timestamp, so a take is voiced once
     however many pieces come out of it and however many times you render.
     """
-    dst = voiced_path(film, src, speed, lift)
+    # Worked out before the chain is built, because the chain IS the
+    # answer. Only when the voice is being shaped at all -- `speech_lift:
+    # false` means the take is passed through as recorded, and moving its
+    # level would be moving it.
+    tuning = tuning_for_take(film, src) if lift else DEFAULT_TUNING
+    chain = voiced_chain(speed, lift, tuning)
+    dst = voiced_path(film, src, speed, lift, chain)
     try:
         if dst.exists() and dst.stat().st_mtime > src.stat().st_mtime:
             return dst
     except OSError:
         pass
     from .ffmpeg import ffmpeg_bin
-    # Worked out before the chain is built, because the chain IS the
-    # answer. Only when the voice is being shaped at all -- `speech_lift:
-    # false` means the take is passed through as recorded, and moving its
-    # level would be moving it.
-    tuning = tuning_for_take(film, src) if lift else DEFAULT_TUNING
     try:
         dst.parent.mkdir(parents=True, exist_ok=True)
         r = subprocess.run(
             [ffmpeg_bin(), "-y", "-hide_banner", "-loglevel", "error",
              "-i", str(src), "-vn",
-             "-filter:a", ",".join(voiced_chain(speed, lift, tuning)),
+             "-filter:a", ",".join(chain),
              "-c:a", "pcm_s16le", str(dst)],
             capture_output=True, text=True, errors="replace", timeout=1800)
     except (OSError, subprocess.SubprocessError):
@@ -849,15 +877,7 @@ def speech_chain(start: float, end: float | None, delay: int, speed: float,
         # they all assume it is. Same order and the same constants as
         # voiced_chain, which is the path this one stands in for; see
         # there for why the gain comes before the denoiser.
-        chain += voice_tone()
-        if abs(tuning.gain_db) > 0.05:
-            chain.append(f"volume={tuning.gain_db:.2f}dB")
-        chain.append(DENOISE.format(nf=tuning.nf_db))
-        if tuning.pre_gate_threshold is not None:
-            chain.append(NOISE_GATE.format(
-                threshold=tuning.pre_gate_threshold))
-        chain.append(SPEECH_NORM)
-        chain.append(NOISE_GATE.format(threshold=tuning.gate_threshold))
+        chain += lift_filters(tuning)
 
     # A few milliseconds at each end. Cutting a pause out of a take
     # splices two waveforms together mid-air, and without this the join
