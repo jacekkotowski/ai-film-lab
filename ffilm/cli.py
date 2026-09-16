@@ -5,6 +5,10 @@ cli.py  --  the commands you type.
                                     through, one step at a time. Start here
                                     if you do not remember the rest.
 
+    uv run film go                  the whole film in one go: look, edit,
+                                    captions, render a draft
+    uv run film record              say it to the camera, with a script scrolling
+
     uv run film ingest              look at the media, build the contact sheet
     uv run film peek                ~seconds   is the ORDER right?
     uv run film draft               ~a minute  does the MOTION feel right?
@@ -1176,7 +1180,7 @@ def main() -> None:
                    help="aim for this many seconds. Shortens and drops "
                         "PICTURES only -- never your speech.")
 
-    p = sub.add_parser("caption", help="transcribe a voiceover into captions")
+    p = sub.add_parser("caption", help="put what you said in your clips on screen (or a voiceover)")
     p.add_argument("--project", "-p", default=None)
     p.add_argument("--audio", default=None, help="path to the voiceover, if not in media/")
     p.add_argument("--model", default="small",
