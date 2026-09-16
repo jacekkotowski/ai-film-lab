@@ -173,7 +173,7 @@ def test_the_note_survives_being_read_back_as_yaml(tmp_path, shelf):
     import yaml
     stocked(shelf)
     p = project(tmp_path)
-    text = "shots:\n" + "\n".join(title_card_block(p, vertical=True)) + "\n"
+    text = "shots:\n" + "\n".join(title_card_block(p, vertical=False)) + "\n"
     shot = yaml.safe_load(text)["shots"][0]
     assert shot["src"] == "analysis/title.jpg"
     assert shot["duration"] == TITLE_CARD_SECONDS
