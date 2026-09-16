@@ -223,7 +223,29 @@ def library_lines(project: Path) -> list[str]:
         out.append(f"  ok    thumbnail picture: {back.name}"
                    + ("   (your library)" if back.shared
                       else "   (this film's own)"))
+        note = shape_note(library.is_wide(back.path), w >= h)
+        if note:
+            out.append(note)
     return out
+
+
+def shape_note(picture_wide: bool | None, film_wide: bool) -> str | None:
+    """A cover picture the wrong shape for the film. Pure.
+
+    It is never letterboxed, on purpose, so it is cropped -- and a
+    portrait on a wide film keeps a band across the middle. On "Prayer for
+    Her" that band cut the face off, and nothing said so until the
+    thumbnail was looked at.
+    """
+    if picture_wide is None or picture_wide == film_wide:
+        return None
+    if film_wide:
+        return ("        a portrait picture on a wide film: its top and "
+                "bottom are cropped.\n"
+                "        A wide one in cover\\ would fit the frame.")
+    return ("        a landscape picture on a tall film: its sides are "
+            "cropped.\n"
+            "        A tall one in cover\\ would fit the frame.")
 
 
 def music_note(m, total: float) -> str | None:

@@ -386,3 +386,15 @@ def test_one_enormous_caption_is_still_listed():
     that mysteriously has no chapters at all."""
     out = cover.upload_notes("T", film_of("y" * 6000), [])
     assert "yyyy" in out
+
+
+def test_a_picture_the_wrong_shape_for_the_film_is_named_before_the_render():
+    """Prayer for Her: a 1122x1402 portrait in its own cover/, on a
+    1920x1080 film, cropped to a band that cut the face off. Filling the
+    frame is right; not saying so was not."""
+    from ffilm.checks import shape_note
+    said = shape_note(picture_wide=False, film_wide=True)
+    assert "portrait" in said and "wide" in said
+    assert shape_note(picture_wide=True, film_wide=False) is not None
+    assert shape_note(picture_wide=True, film_wide=True) is None
+    assert shape_note(picture_wide=None, film_wide=True) is None
