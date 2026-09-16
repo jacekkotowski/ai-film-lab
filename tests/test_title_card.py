@@ -128,9 +128,20 @@ def test_refreshing_with_nothing_to_draw_on_is_not_a_crash(tmp_path, shelf):
 
 def test_init_opens_the_film_on_the_card(tmp_path, shelf):
     stocked(shelf)
-    block = "\n".join(title_card_block(project(tmp_path), vertical=True))
+    block = "\n".join(title_card_block(project(tmp_path), vertical=False))
     assert "src: analysis/title.jpg" in block
     assert f"duration: {TITLE_CARD_SECONDS:.1f}" in block
+
+
+def test_a_short_opens_on_a_shorter_card(tmp_path, shelf):
+    """On a Short the first sentence is the hook, and four seconds of a
+    still title is a long time to scroll past. Inferred, not measured:
+    it is one number in film.yaml, and deleting the block removes it."""
+    from ffilm.scaffold import SHORT_TITLE_CARD_SECONDS
+    stocked(shelf)
+    block = "\n".join(title_card_block(project(tmp_path), vertical=True))
+    assert f"duration: {SHORT_TITLE_CARD_SECONDS:.1f}" in block
+    assert SHORT_TITLE_CARD_SECONDS < TITLE_CARD_SECONDS
 
 
 def test_the_card_never_moves(tmp_path, shelf):

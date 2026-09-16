@@ -75,6 +75,10 @@ OPENER_CLOSER_SECONDS = 3.0  # a title-card image, held, is usually brief
 # ordinary shot, so it is a number you can change and a block you can
 # delete, like everything else in there.
 TITLE_CARD_SECONDS = 4.0
+# On a vertical film -- a Short -- the first sentence is the hook, and a
+# still title held for four seconds is where people scroll away. Half of
+# it. Chosen by reasoning, not measured on an audience.
+SHORT_TITLE_CARD_SECONDS = 2.0
 QUOTE_SECONDS = 5.0          # a quote needs to be READ, not glanced at
 
 # Filename hints, checked so you can drop files in fast without opening
@@ -433,7 +437,8 @@ def title_card_block(project: Path, vertical: bool) -> list[str]:
         "",
         "  - id: s00",
         f"    src: {cover.card_src(project)}",
-        f"    duration: {TITLE_CARD_SECONDS:.1f}",
+        f"    duration: "
+        f"{SHORT_TITLE_CARD_SECONDS if vertical else TITLE_CARD_SECONDS:.1f}",
         "    move: static",
         '    note: "the opening card -- the same picture and the same words',
         '      as the thumbnail, so clicking the miniature lands you on the',
