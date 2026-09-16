@@ -38,6 +38,7 @@ from . import guide
 from . import history
 from . import scaffold
 from .checks import (bokeh_notes, film_shape, framing_notes, library_lines,
+                     music_notes,
                      preflight_report, unused_media)
 from .moves import choose_moves
 from .paths import toolkit_root
@@ -534,6 +535,8 @@ def cmd_check(args) -> None:
     # the thumbnail is going to say.
     print(f"  ok    title: {film.title}")
     for line in library_lines(project):
+        print(line)
+    for line in music_notes(film):
         print(line)
     print()
     for s in film.shots:

@@ -224,3 +224,39 @@ def library_lines(project: Path) -> list[str]:
                    + ("   (your library)" if back.shared
                       else "   (this film's own)"))
     return out
+
+
+def music_note(m, total: float) -> str | None:
+    """What the check says about a track shorter than the film. Pure.
+
+    A track that runs out used to be joined to itself with nothing
+    between -- dead air, 3:08 into "I am not your fear". It is repeated
+    with a crossfade now, and a repeat is something you might still want
+    to know about before you hear it: a song with words, restarting.
+    """
+    from .audio import music_plan
+    plan = music_plan(m.head, m.tail, total, m.length)
+    if plan.repeats <= 1:
+        return None
+    usable = m.tail - m.head
+    times = {2: "once", 3: "twice"}.get(plan.repeats,
+                                          f"{plan.repeats - 1} times")
+    line = (f"  --    {usable:.0f}s of music under a {total:.1f}s film: "
+            f"it repeats {times}, crossfaded")
+    if plan.short_by > 0.5:
+        line += (f", and stops {plan.short_by:.0f}s before the end. "
+                 f"A longer track fixes that")
+    return line
+
+
+def music_notes(film) -> list[str]:
+    """The music line for `film check`, measured (once, cached)."""
+    from .audio import measure_music
+    if not film.music:
+        return []
+    track = film.resolve(film.music)
+    if not track.exists():
+        return []
+    note = music_note(measure_music(track, film.root / "analysis"),
+                      film.duration)
+    return [note] if note else []

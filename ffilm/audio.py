@@ -923,6 +923,184 @@ def speech_chain(start: float, end: float | None, delay: int, speed: float,
     return chain
 
 
+# --------------------------------------------------------------------------
+# The music: measured, level-matched, and never run out
+# --------------------------------------------------------------------------
+
+# Where a music track is brought to before `music_volume` is applied: the
+# same level LEVEL_TARGET_LUFS puts the voice at. So `music_volume: 1.0`
+# means "as loud as the voice" on every film, and the default 0.6 means
+# 4.4dB under it.
+#
+# Before this, a track came in at whatever it was mastered at. The two on
+# the machine on 2026-09-16 measured -13.5 and -44.3 LUFS: under the same
+# 0.6 one sat 2.1dB ABOVE the voice between sentences and the other 28.7dB
+# below it, which is to say not there. Chosen by reasoning, not by ear --
+# it anchors the knob to the voice, the one level here that is known.
+MUSIC_TARGET_LUFS = -20.0
+MUSIC_MAX_LIFT_DB = 30.0
+MUSIC_MAX_CUT_DB = -20.0
+
+# Where a track's own quiet ends stop: this far under its measured
+# loudness. A fixed -50dB line trimmed 3.5s off a track whose fade-out
+# takes 25s (-21 down to -93 dBFS, "Red Giant"), and repeating it still
+# left 11s of near-silence at the join. Measured on the music bed of a
+# 215.9s film, longest stretch under -50 dBFS at the join:
+#
+#     fixed -50dB     11.0s      23dB under    2.75s
+#     18dB under       1.0s      15dB under    0.75s + 0.5s + 0.5s
+#
+# 18 under -13.5 LUFS is -31.5. A track that is quiet all the way through
+# (-44 LUFS, level to within 6dB for eleven minutes) loses nothing.
+MUSIC_ENDS_BELOW_DB = 18.0
+MUSIC_SILENCE_DB = -50.0            # when the loudness could not be measured
+
+
+def music_silence_threshold(lufs: float | None) -> float:
+    return MUSIC_SILENCE_DB if lufs is None else lufs - MUSIC_ENDS_BELOW_DB
+
+# The join when a track is repeated. `-stream_loop` used to join the
+# track's own fade-out, a second of digital silence and its own slow
+# intro: 17.5s with no music at 3:08 of "I am not your fear", and -88
+# dBFS -- dead air -- in the final.
+MUSIC_CROSSFADE = 5.0
+
+# A five-second jingle under a ten-minute film would be 120 inputs on one
+# command line. Past this it stops, and the music ends early.
+MUSIC_MAX_REPEATS = 12
+
+
+@dataclass(frozen=True)
+class MusicMeasure:
+    lufs: float | None
+    head: float          # where the audible track starts, seconds
+    tail: float          # where its quiet ending starts
+    length: float = 0.0  # the whole file
+
+
+@dataclass(frozen=True)
+class MusicPlan:
+    repeats: int
+    crossfade: float
+    short_by: float      # seconds of film left with no music at the end
+    end: float = 0.0     # where each copy is cut
+
+
+def parse_music_measure(text: str, duration: float) -> MusicMeasure:
+    """One pass of `ebur128,silencedetect`, read back. Pure, so tested.
+
+    Only silence that touches an END counts. A quiet passage in the middle
+    of a track is part of the music.
+    """
+    import re
+    lufs = None
+    for line in text.splitlines():
+        m = re.match(r"\s*I:\s*(-?[\d.]+)\s*LUFS", line)
+        if m:
+            lufs = float(m.group(1))
+    starts = [float(x) for x in re.findall(r"silence_start:\s*(-?[\d.]+)", text)]
+    ends = [float(x) for x in re.findall(r"silence_end:\s*(-?[\d.]+)", text)]
+    head, tail = 0.0, duration
+    if starts and starts[0] <= 0.01 and ends:
+        head = ends[0]
+    if starts and duration > 0:
+        last = starts[-1]
+        closed = [e for e in ends if e >= last]
+        if (not closed or closed[0] >= duration - 0.05) and last > head:
+            tail = last
+    if tail - head < 1.0:                   # nothing sensible found
+        head, tail = 0.0, duration
+    return MusicMeasure(lufs, head, tail, duration)
+
+
+def music_plan(head: float, tail: float, total: float,
+               length: float = 0.0) -> MusicPlan:
+    """How many times to play the track under a film `total` long.
+
+    A film that fits inside the track's quiet ending plays into that
+    ending once rather than restarting the song a few seconds before the
+    film's own fade-out: on "I am not your fear" that is 176s of loud
+    track under 178.7s of film, with 8.7s of the track's fade still there.
+    """
+    import math
+    usable = max(0.0, tail - head)
+    if usable <= 0.0:
+        return MusicPlan(1, 0.0, total, tail)
+    d = min(MUSIC_CROSSFADE, usable / 3.0)
+    if usable >= total:
+        return MusicPlan(1, d, 0.0, tail)
+    if length and head + total <= length:
+        return MusicPlan(1, d, 0.0, head + total)
+    k = math.ceil((total - d) / (usable - d) - 1e-9)
+    short = 0.0
+    if k > MUSIC_MAX_REPEATS:
+        k = MUSIC_MAX_REPEATS
+        short = max(0.0, total - (k * usable - (k - 1) * d))
+    return MusicPlan(k, d, short, tail)
+
+
+def music_gain(lufs: float | None) -> float:
+    """The gain that puts a track at MUSIC_TARGET_LUFS. None, or quieter
+    than a room, means nothing measurable is there: leave it."""
+    if lufs is None or lufs < LEVEL_FLOOR_LUFS:
+        return 0.0
+    return max(MUSIC_MAX_CUT_DB, min(MUSIC_MAX_LIFT_DB,
+                                     MUSIC_TARGET_LUFS - lufs))
+
+
+def measure_music(path: Path, cache_dir: Path | None = None) -> MusicMeasure:
+    """Loudness and silent ends of a track, one decode, cached by the
+    file's path, size and time. 0.7s for a 3-minute mp3, 2.2s for an
+    11-minute m4a, twice over -- not worth paying on every peek."""
+    import json
+    from .ffmpeg import ffmpeg_bin
+    try:
+        st = path.stat()
+        key = f"{path.resolve()}|{st.st_size}|{st.st_mtime:.0f}"
+    except OSError:
+        return MusicMeasure(None, 0.0, 0.0)
+    cache = (cache_dir / "music.json") if cache_dir else None
+    known = {}
+    if cache is not None:
+        try:
+            known = json.loads(cache.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            known = {}
+        if key in known and "length" in known[key]:
+            v = known[key]
+            return MusicMeasure(v.get("lufs"), v["head"], v["tail"],
+                                v["length"])
+    duration = _dur(path)
+
+    def listen(af: str) -> str:
+        r = subprocess.run(
+            [ffmpeg_bin(), "-hide_banner", "-nostats", "-i", str(path),
+             "-af", af, "-f", "null", "-"],
+            capture_output=True, text=True, errors="replace", timeout=600)
+        return r.stderr
+
+    try:
+        # Twice: the loudness first, because where the quiet ends are is
+        # judged against it. Once per track, then cached.
+        lufs = parse_music_measure(listen("ebur128=framelog=quiet"),
+                                   duration).lufs
+        edge = music_silence_threshold(lufs)
+        ends = parse_music_measure(
+            listen(f"silencedetect=n={edge:.1f}dB:d=0.5"), duration)
+    except (OSError, subprocess.SubprocessError):
+        return MusicMeasure(None, 0.0, duration)
+    m = MusicMeasure(lufs, ends.head, ends.tail, duration)
+    if cache is not None:
+        try:
+            cache.parent.mkdir(parents=True, exist_ok=True)
+            known[key] = {"lufs": m.lufs, "head": m.head, "tail": m.tail,
+                          "length": m.length}
+            cache.write_text(json.dumps(known, indent=1), encoding="utf-8")
+        except OSError:
+            pass
+    return m
+
+
 def build_soundtrack(film: Film, silent_video: Path, out: Path,
                      fps: int | None = None, quiet: bool = False) -> Path:
     """Mux speech + narration + music onto an already-rendered video.
@@ -1053,27 +1231,51 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
                                  and specs) else []
 
     # ---- 3. the music bed ----
+    #
+    # Measured once per track (cached): its loudness, and where its own
+    # silent head and tail are. Cut to what is audible, brought to
+    # MUSIC_TARGET_LUFS, repeated with a crossfade if the film is longer,
+    # then music_volume and the fades as before. See MUSIC_CROSSFADE for
+    # what `-stream_loop` used to leave in the middle of a film.
     music_label = None
+    music_note = ""
     if film.music:
         mus = film.resolve(film.music)
         if mus.exists():
-            mdur = _dur(mus)
+            m = measure_music(mus, film.root / "analysis")
+            plan = music_plan(m.head, m.tail, total, m.length)
+            gain = music_gain(m.lufs)
             fade = max(0.0, min(film.music_fade, total / 3.0))
             fade_start = max(0.0, total - fade)
-            # Loop only if the track is shorter than the film -- looping
-            # a long track would be pointless work.
-            loop = ["-stream_loop", "-1"] if 0 < mdur < total else []
-            inputs += loop + ["-i", str(mus)]
+            pieces = []
+            for k in range(plan.repeats):
+                inputs += ["-i", str(mus)]
+                filters.append(f"[{idx}:a]atrim=start={m.head:.3f}:"
+                               f"end={plan.end:.3f},asetpts=PTS-STARTPTS,"
+                               f"aresample=44100[mc{k}]")
+                pieces.append(f"mc{k}")
+                idx += 1
+            bed = pieces[0]
+            for k, nxt in enumerate(pieces[1:], 1):
+                filters.append(f"[{bed}][{nxt}]acrossfade="
+                               f"d={plan.crossfade:.2f}:c1=tri:c2=tri[mx{k}]")
+                bed = f"mx{k}"
             filters.append(
-                f"[{idx}:a]atrim=start=0:end={total:.3f},"
+                f"[{bed}]volume={gain:.2f}dB,"
+                f"apad,atrim=start=0:end={total:.3f},"
                 f"asetpts=PTS-STARTPTS,"
-                f"aresample=44100,"
                 f"volume={film.music_volume:.3f},"
                 f"afade=t=in:st=0:d={fade:.2f},"
                 f"afade=t=out:st={fade_start:.2f}:d={fade:.2f}[mus]"
             )
             music_label = "mus"
-            idx += 1
+            if m.lufs is not None:
+                music_note = (f", measured {m.lufs:.1f} LUFS and set to "
+                              f"{MUSIC_TARGET_LUFS:.0f}")
+            if plan.repeats > 1:
+                music_note += f", repeated {plan.repeats}x with a crossfade"
+            if plan.short_by > 0.5:
+                music_note += f", {plan.short_by:.0f}s short at the end"
 
     # ---- nothing to do? just copy the video through ----
     if not speech_labels and music_label is None:
@@ -1216,8 +1418,10 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
         if music_label:
             if speech_labels and film.music_duck > 0:
                 bits.append(f"music at {int(film.music_volume * 100)}% where "
-                            f"nobody is talking, ducked under where they are")
+                            f"nobody is talking, ducked under where they "
+                            f"are{music_note}")
             else:
-                bits.append(f"music at {int(film.music_volume * 100)}%")
+                bits.append(f"music at {int(film.music_volume * 100)}%"
+                            f"{music_note}")
         print(f"  sound: {', '.join(bits)}")
     return out
