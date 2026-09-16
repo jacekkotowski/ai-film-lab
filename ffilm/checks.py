@@ -282,3 +282,27 @@ def music_notes(film) -> list[str]:
     note = music_note(measure_music(track, film.root / "analysis"),
                       film.duration)
     return [note] if note else []
+
+
+# The editor's rulebook keeps captions under about a fifth of the runtime.
+CAPTION_SHARE_TASTE = 0.20
+
+
+def caption_share_line(film) -> str | None:
+    """How much of the film has words on screen. Pure.
+
+    A talking film captioned word for word is far over the taste rule,
+    and that may be exactly right for a Short watched with the sound
+    off -- so this says the number and does not decide.
+    """
+    total = sum(s.duration for s in film.shots)
+    shown = sum(min(c.dur, max(0.0, s.duration - c.at))
+                for s in film.shots for c in s.captions)
+    if total <= 0 or shown <= 0:
+        return None
+    share = shown / total
+    if share <= CAPTION_SHARE_TASTE:
+        return f"  ok    captions: {share:.0%} of the runtime"
+    return (f"  --    captions: {share:.0%} of the runtime, over the "
+            f"{CAPTION_SHARE_TASTE:.0%} taste rule. Right for a film "
+            f"watched muted; cut the ones that repeat the picture otherwise")

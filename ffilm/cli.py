@@ -42,7 +42,7 @@ from . import guide
 from . import history
 from . import scaffold
 from .checks import (bokeh_notes, film_shape, framing_notes, library_lines,
-                     music_notes,
+                     caption_share_line, music_notes,
                      preflight_report, unused_media)
 from .moves import choose_moves
 from .paths import toolkit_root
@@ -542,6 +542,9 @@ def cmd_check(args) -> None:
         print(line)
     for line in music_notes(film):
         print(line)
+    share = caption_share_line(film)
+    if share:
+        print(share)
     print()
     for s in film.shots:
         caps = f"  {len(s.captions)} caption(s)" if s.captions else ""

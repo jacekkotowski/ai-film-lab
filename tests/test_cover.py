@@ -398,3 +398,19 @@ def test_a_picture_the_wrong_shape_for_the_film_is_named_before_the_render():
     assert shape_note(picture_wide=True, film_wide=False) is not None
     assert shape_note(picture_wide=True, film_wide=True) is None
     assert shape_note(picture_wide=None, film_wide=True) is None
+
+
+def test_the_check_says_how_much_of_the_film_is_captioned():
+    """projects/CLAUDE.md keeps captions under about a fifth of the
+    runtime. Nothing measured it, so nobody could tell."""
+    from ffilm.checks import caption_share_line
+    from ffilm.spec import Caption, Film, Shot
+    film = Film(shots=[Shot(src="a.jpg", duration=10.0, captions=[
+        Caption(text="x", at=0.0, dur=1.5)]),
+        Shot(src="b.jpg", duration=10.0)])
+    assert caption_share_line(film).startswith("  ok    captions: 8%")
+    film.shots[1].captions = [Caption(text="y", at=0.0, dur=6.0)]
+    said = caption_share_line(film)
+    assert said.startswith("  --    captions: 38%")
+    assert "20%" in said
+    assert caption_share_line(Film(shots=[Shot(src="a.jpg", duration=5.0)])) is None
