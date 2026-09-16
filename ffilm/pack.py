@@ -45,6 +45,10 @@ TOOLKIT = [
     # hooks. Without them a copy's Claude edits the machine instead of
     # the film. settings.local.json is NOT listed -- it is one person's.
     "docs", "projects/CLAUDE.md",
+    # Not the model files -- they are other people's, and each machine
+    # fetches its own, checked by SHA-256 (see ffilm/models.py). The
+    # README is what says so to whoever unpacks this.
+    "models/README.md",
     ".claude/settings.json", ".claude/skills", ".claude/hooks",
 ]
 

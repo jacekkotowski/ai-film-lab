@@ -23,12 +23,12 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from .paths import toolkit_root
+from . import models
 
-MODEL_FILE = "selfie_segmenter_landscape.tflite"
-MODEL_URL = ("https://storage.googleapis.com/mediapipe-models/image_segmenter/"
-             "selfie_segmenter_landscape/float16/latest/"
-             "selfie_segmenter_landscape.tflite")
+# The file itself, its URL and its checksum are in models.CATALOGUE, which
+# is what downloads it. These two names stay for the code that reads them.
+MODEL_FILE = models.SELFIE.file
+MODEL_URL = models.SELFIE.url
 MODEL_SIZE = (256, 144)            # what the model looks at, width x height
 
 # How soft the room is at `bokeh: 1`: the blur's sigma as a fraction of
@@ -41,7 +41,7 @@ SMOOTH = 0.5
 
 
 def models_dir() -> Path:
-    return toolkit_root() / "models"
+    return models.models_dir()
 
 
 def missing_model(folder: Path | None = None) -> str | None:
@@ -51,7 +51,9 @@ def missing_model(folder: Path | None = None) -> str | None:
         return None
     return (f"`bokeh:` needs the model file {MODEL_FILE}, and it is not in\n"
             f"{folder}\n"
-            f"Download it once (250 KB) from\n  {MODEL_URL}\n"
+            f"It downloads on its own the first time bokeh is used, or now:\n"
+            f"  uv run film models\n"
+            f"By hand, 250 KB from\n  {MODEL_URL}\n"
             f"into that folder. It is never committed; see models/README.md.")
 
 
@@ -59,10 +61,10 @@ class Segmenter:
     """One frame in, a small person-probability mask out (1 = person)."""
 
     def __init__(self, folder: Path | None = None):
-        msg = missing_model(folder)
-        if msg:
-            raise SystemExit(msg)
-        path = (folder or models_dir()) / MODEL_FILE
+        path = models.ensure(models.SELFIE, folder)
+        if path is None:
+            raise SystemExit(missing_model(folder) or
+                             f"{MODEL_FILE} could not be read.")
         self.net = cv2.dnn.readNetFromTFLite(str(path))
 
     def mask(self, bgr: np.ndarray) -> np.ndarray:

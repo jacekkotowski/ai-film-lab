@@ -61,6 +61,16 @@ Expand-Archive "$HOME\Downloads\AI-Film-Lab.zip" -DestinationPath "$HOME" -Force
 This creates a folder called `AI-Film` in your home folder. You're done
 installing. **You will never do Part 1 again.**
 
+Two small model files (about half a megabyte together) download on their
+own the first time a film needs them: one blurs the room behind you, one
+cleans the room noise out from under your voice. They go into the
+`models\` folder inside `AI-Film`, where you can see them. To fetch them
+now instead, while you still have a connection:
+
+```powershell
+uv run film models
+```
+
 ---
 
 # FILL IN YOUR LIBRARY (5 minutes, once)

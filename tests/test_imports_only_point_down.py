@@ -24,7 +24,7 @@ LAYERS = {
     "__init__": 0, "kinds": 0, "pix": 0, "paths": 0, "ffmpeg": 0,
     "fonts": 0, "history": 0, "pack": 0,
     # 1  the shared shelf
-    "library": 1,
+    "library": 1, "models": 1,
     # 2  what a film IS
     "spec": 2,
     # 3  the movement vocabulary

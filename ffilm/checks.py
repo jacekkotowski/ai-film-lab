@@ -185,6 +185,8 @@ def preflight_report(project: Path) -> tuple[list[str], list[str]]:
 
     lines.append("  ok    captions available" if voice_installed()
                  else "  --    captions off (uv sync --extra voice turns them on)")
+    from .models import status_lines
+    lines.extend(status_lines())
     return lines, problems
 
 

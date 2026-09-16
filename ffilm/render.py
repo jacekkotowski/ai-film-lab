@@ -304,6 +304,7 @@ class VideoSource:
 
     segmenter = None                 # no bokeh unless __init__ says so
     sharpness = 0.0                  # and no sharpening either
+    _told_no_bokeh = False
 
     def __init__(self, path: Path, shot: Shot, ow: int, oh: int, max_scale: float,
                  bokeh: float = 0.0, sharpness: float = 0.0):
@@ -319,7 +320,16 @@ class VideoSource:
         # against the frame before it. A held frame is not segmented twice.
         self.bokeh = bokeh
         self.sharpness = sharpness
-        self.segmenter = segment.Segmenter() if bokeh > 0 else None
+        self.segmenter = None
+        if bokeh > 0:
+            try:
+                self.segmenter = segment.Segmenter()
+            except SystemExit as e:
+                # No model and no way to fetch it: the film renders without
+                # the blur rather than not at all, and says so once.
+                if not VideoSource._told_no_bokeh:
+                    print(f"\n  bokeh left out: {str(e).splitlines()[0]}")
+                    VideoSource._told_no_bokeh = True
         self.smoother = segment.MaskSmoother()
         start = int(round(shot.tin * self.src_fps))
         if start > 0:

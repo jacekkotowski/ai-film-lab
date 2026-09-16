@@ -20,6 +20,7 @@ cli.py  --  the commands you type.
     uv run film check               validate film.yaml without rendering
     uv run film undo                back to a version you already watched
     uv run film library             the music + cover pictures every film uses
+    uv run film models              fetch the model files once (also automatic)
 """
 
 from __future__ import annotations
@@ -886,6 +887,18 @@ def cmd_cover(args) -> None:
               + ("   (your library)" if back.shared else ""))
 
 
+def cmd_models(args) -> None:
+    """Fetch any model file that is not here yet, and say what is."""
+    from . import models
+    print(f"Models:  {models.models_dir()}")
+    print()
+    if not args.check:
+        for m in models.CATALOGUE:
+            models.ensure(m)
+    for line in models.status_lines():
+        print(line)
+
+
 def cmd_library(args) -> None:
     """Open the shelf, and say what is on it."""
     base = library.ensure()
@@ -1250,6 +1263,12 @@ def main() -> None:
                    help="pack every project's originals too")
     p.add_argument("--out", default=None, help="where to write the zip")
 
+    p = sub.add_parser("models",
+                       help="fetch the model files (bokeh, voice cleaning) "
+                            "into models/")
+    p.add_argument("--check", action="store_true",
+                   help="just say which are there, fetch nothing")
+
     p = sub.add_parser("library",
                        help="the music and cover pictures every film uses")
     p.add_argument("--no-open", action="store_true",
@@ -1339,6 +1358,8 @@ def main() -> None:
             cmd_cover(args)
         elif args.cmd == "library":
             cmd_library(args)
+        elif args.cmd == "models":
+            cmd_models(args)
         elif args.cmd == "pack":
             cmd_pack(args)
         elif args.cmd == "record":
