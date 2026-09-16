@@ -212,27 +212,16 @@ shots:
         pos: lower_third
         words: [0.00, 0.50, 0.78, 1.30, 2.43, 2.78, 3.02, 3.43]
 
-  - id: s07
-    src: media/rec_20260916-113221.mp4
-    in: "01:26.40"
-    out: "01:39.05"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.522, 0.413]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 7 of 23 -- one take with the long pauses cut out. Every word is kept"
-
   - id: s08
     src: media/rec_20260916-113221.mp4
     in: "01:40.15"
     out: "02:04.05"
     speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_left
+    move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 8 of 23 -- one take with the long pauses cut out. Every word is kept"
+    note: "part 8 of 23 -- one take with the long pauses cut out. Every word is kept. The second reading -- the first one (s07) was cut 2026-09-16; put it back with `film undo`"
     captions:
       - text: "I am not the fear you're holding onto,"
         at: 1.32
@@ -270,27 +259,16 @@ shots:
         pos: lower_third
         words: [0.00, 0.50, 0.65]
 
-  - id: s09
-    src: media/rec_20260916-113221.mp4
-    in: "02:05.70"
-    out: "02:14.05"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.522, 0.413]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 9 of 23 -- one take with the long pauses cut out. Every word is kept"
-
   - id: s10
     src: media/rec_20260916-113221.mp4
     in: "02:15.30"
     out: "02:23.45"
     speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
+    move: drift_left
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 10 of 23 -- one take with the long pauses cut out. Every word is kept"
+    note: "part 10 of 23 -- one take with the long pauses cut out. Every word is kept. The second reading -- the first one (s09) was cut 2026-09-16; put it back with `film undo`"
     captions:
       - text: "You don't have to hide the butterfly over your heart,"
         at: 0.00
@@ -350,50 +328,44 @@ shots:
         pos: lower_third
         words: [0.00, 0.47, 0.62, 0.87, 1.50]
 
-  - id: s12
-    src: media/rec_20260916-113221.mp4
-    in: "02:54.65"
-    out: "03:06.75"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_left
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.522, 0.413]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 12 of 23 -- one take with the long pauses cut out. Every word is kept"
-    captions:
-      - text: "I love you, I respect your pace,"
-        at: 0.16
-        dur: 3.33
-        pos: lower_third
-        words: [0.00, 0.42, 0.87, 1.77, 2.17, 2.68, 2.95]
-      - text: "and I am right here in this present moment,"
-        at: 3.49
-        dur: 3.91
-        pos: lower_third
-        words: [0.00, 0.98, 1.80, 1.97, 2.20, 2.58, 2.87, 3.08, 3.47]
-      - text: "offering safety."
-        at: 7.41
-        dur: 2.21
-        pos: lower_third
-        words: [0.00, 0.78]
-
   - id: s13
     src: media/rec_20260916-113221.mp4
     in: "03:07.90"
     out: "03:23.30"
     speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
+    move: drift_right
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 13 of 23 -- one take with the long pauses cut out. Every word is kept"
+    note: "part 13 of 23 -- one take with the long pauses cut out. Every word is kept. The second reading -- the first one (s12) was cut 2026-09-16; put it back with `film undo`"
+    captions:
+      - text: "I love you,"
+        at: 0.00
+        dur: 1.61
+        pos: lower_third
+        words: [0.00, 0.83, 1.28]
+      - text: "I respect your pace,"
+        at: 1.82
+        dur: 1.51
+        pos: lower_third
+        words: [0.00, 0.25, 0.87, 1.17]
+      - text: "and I am right here in this present moment,"
+        at: 3.33
+        dur: 2.86
+        pos: lower_third
+        words: [0.00, 0.98, 1.22, 1.42, 1.75, 1.97, 2.15, 2.48]
+      - text: "offering safety."
+        at: 6.20
+        dur: 1.69
+        pos: lower_third
+        words: [0.00, 0.72]
 
   - id: s14
     src: media/rec_20260916-113221.mp4
     in: "03:24.30"
     out: "03:30.50"
     speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
+    move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
@@ -415,22 +387,17 @@ shots:
     in: "03:31.50"
     out: "03:34.20"
     speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.522, 0.413]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 15 of 23 -- one take with the long pauses cut out. Every word is kept"
-
-  - id: s16
-    src: media/rec_20260916-113221.mp4
-    in: "03:35.20"
-    out: "03:38.65"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
     move: drift_left
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 16 of 23 -- one take with the long pauses cut out. Every word is kept"
+    note: "part 15 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "And I will be there for you."
+        at: 0.00
+        dur: 2.03
+        pos: lower_third
+        words: [0.00, 0.58, 0.95, 1.18, 1.50, 1.75]
 
   - id: s17
     src: media/rec_20260916-113221.mp4
@@ -441,7 +408,7 @@ shots:
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 17 of 23 -- one take with the long pauses cut out. Every word is kept"
+    note: "part 17 of 23 -- one take with the long pauses cut out. Every word is kept. The second reading -- the first one (s16) was cut 2026-09-16; put it back with `film undo`"
     captions:
       - text: "You are a magnificent person."
         at: 0.00
@@ -449,27 +416,16 @@ shots:
         pos: lower_third
         words: [0.00, 0.55, 0.93, 1.25, 1.60]
 
-  - id: s18
-    src: media/rec_20260916-113221.mp4
-    in: "03:43.55"
-    out: "03:51.55"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.522, 0.413]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 18 of 23 -- one take with the long pauses cut out. Every word is kept"
-
   - id: s19
     src: media/rec_20260916-113221.mp4
     in: "03:52.50"
     out: "04:00.20"
     speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
+    move: drift_right
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 19 of 23 -- one take with the long pauses cut out. Every word is kept"
+    note: "part 19 of 23 -- one take with the long pauses cut out. Every word is kept. The second reading -- the first one (s18) was cut 2026-09-16; put it back with `film undo`"
     captions:
       - text: "Your beauty makes this world beautiful and worth living,"
         at: 1.57
@@ -487,7 +443,7 @@ shots:
     in: "04:01.30"
     out: "04:30.75"
     speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_left
+    move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
@@ -524,18 +480,29 @@ shots:
     in: "04:31.90"
     out: "04:37.45"
     speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
+    move: drift_left
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 21 of 23 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "You are essential to this world."
+        at: 0.00
+        dur: 2.37
+        pos: lower_third
+        words: [0.00, 0.87, 1.25, 1.85, 2.17, 2.40]
+      - text: "Essential to me."
+        at: 2.37
+        dur: 1.84
+        pos: lower_third
+        words: [0.00, 1.10, 1.58]
 
   - id: s22
     src: media/rec_20260916-113221.mp4
     in: "04:38.75"
     out: "04:41.35"
     speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
+    move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
@@ -552,13 +519,13 @@ shots:
     in: "04:47.20"
     out: "04:48.05"
     speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: static
+    move: drift_right
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "part 23 of 23 -- one take with the long pauses cut out. Every word is kept"
 
-# 23 shots, about 212 seconds.
+# 18 talking shots after the re-reads were cut (2026-09-16).
 # Speech captions are left out on purpose -- run
 # `uv run film caption` once you're happy with the shots,
 # or watch it once and add what actually needs saying.
