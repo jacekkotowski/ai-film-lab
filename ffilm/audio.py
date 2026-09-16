@@ -632,7 +632,7 @@ def level_gain(measured_lufs: float | None) -> float:
 
 # Bumped whenever the voice chain below changes, so a take voiced by an
 # older version is made again rather than reused.
-VOICE_VERSION = 6
+VOICE_VERSION = 7
 
 
 # RNNoise: the room under and between the words, which the gates cannot
@@ -654,6 +654,51 @@ VOICE_VERSION = 6
 SPEECH_DENOISE = ["aresample=48000",
                   f"arnndn=m={models.SPEECH_DENOISE.file}",
                   "aresample=44100"]
+
+
+# RNNoise flushes a burst when its stream ends. On the voiced take of "I am
+# not your fear" the last 20 ms peaked at +3 dBFS, and the final of
+# 2026-09-16 ended on that click -- the last shot ran to the end of the
+# take. Nothing said in the last 50 ms of a recording is worth it, so they
+# are silenced after the take is voiced, with a short fade before.
+TAKE_TAIL_SILENCE = 0.05
+TAKE_TAIL_FADE = 0.02
+
+
+def silence_tail(samples, rate: int):
+    """The voiced take with its last TAKE_TAIL_SILENCE seconds silent and
+    a TAKE_TAIL_FADE fade leading into that. Pure; `samples` is an int16
+    array of shape (frames, channels)."""
+    import numpy as np
+    out = samples.copy()
+    tail = int(round(TAKE_TAIL_SILENCE * rate))
+    fade = int(round(TAKE_TAIL_FADE * rate))
+    n = len(out)
+    out[max(0, n - tail):] = 0
+    start = max(0, n - tail - fade)
+    length = n - tail - start
+    if length > 0:
+        ramp = np.linspace(1.0, 0.0, length, endpoint=False)
+        shape = (length,) + (1,) * (out.ndim - 1)
+        out[start:n - tail] = (out[start:n - tail].astype(np.float32)
+                               * ramp.reshape(shape)).astype(out.dtype)
+    return out
+
+
+def _silence_tail_of_file(path: Path) -> None:
+    """silence_tail, applied to a 16-bit wav on disk."""
+    import wave
+    import numpy as np
+    with wave.open(str(path), "rb") as w:
+        params = w.getparams()
+        raw = w.readframes(params.nframes)
+    if params.sampwidth != 2:
+        return
+    data = np.frombuffer(raw, dtype=np.int16).reshape(-1, params.nchannels)
+    data = silence_tail(data, params.framerate)
+    with wave.open(str(path), "wb") as w:
+        w.setparams(params)
+        w.writeframes(data.tobytes())
 
 
 def lift_filters(tuning: Tuning = DEFAULT_TUNING,
@@ -879,6 +924,11 @@ def voiced_take(film, src: Path, speed: float, lift: bool) -> Path | None:
     except (OSError, subprocess.SubprocessError):
         return None
     if r.returncode != 0 or not dst.exists() or dst.stat().st_size < 1024:
+        dst.unlink(missing_ok=True)
+        return None
+    try:
+        _silence_tail_of_file(dst)             # see TAKE_TAIL_SILENCE
+    except (OSError, EOFError, ValueError):
         dst.unlink(missing_ok=True)
         return None
     # A voiced take is a whole uncompressed copy of the recording -- 40MB
@@ -1149,9 +1199,10 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
     # Absolute, because ffmpeg may be run from models/ (see SPEECH_DENOISE)
     # and a relative --out would then land somewhere else.
     silent_video, out = Path(silent_video).resolve(), Path(out).resolve()
-    # The fallback path below does not fetch: voiced_take has already
-    # tried once, and a second minute of network timeout buys nothing.
-    speech_model = film.speech_lift and models.is_present(models.SPEECH_DENOISE)
+    # The fallback path below shapes each piece on its own, and RNNoise
+    # flushes a burst at the end of every stream it runs on -- per piece,
+    # that is a click on every join. So the fallback never uses it.
+    speech_model = False
 
     fps = fps or film.fps
     # The film's real length is whole frames, not the sum of the numbers

@@ -801,3 +801,35 @@ def test_speech_lift_off_still_means_exactly_as_recorded():
     from ffilm.audio import VOICE_CHARACTER
     raw = voiced_chain(1.0, False, TUNED)
     assert not any(f in raw for f in VOICE_CHARACTER)
+
+
+def test_the_end_of_a_voiced_take_is_silent():
+    """RNNoise flushes a burst when the stream ends: the last 20 ms of the
+    voiced take of "I am not your fear" peaked at +3 dBFS, and the final
+    of 2026-09-16 ended on that click. Nothing said in the last 50 ms of
+    a recording is worth that."""
+    import numpy as np
+    from ffilm.audio import TAKE_TAIL_SILENCE, silence_tail
+    rate = 44100
+    samples = np.full((rate, 2), 20000, dtype=np.int16)
+    out = silence_tail(samples, rate)
+    tail = int(TAKE_TAIL_SILENCE * rate)
+    assert not out[-tail:].any()
+    assert (out[: rate // 2] == 20000).all()          # the rest untouched
+    assert np.abs(out[-tail - 1:-tail + 1]).max() < 20000   # faded, not cut
+
+
+def test_a_take_shorter_than_the_tail_is_simply_silent():
+    import numpy as np
+    from ffilm.audio import silence_tail
+    out = silence_tail(np.full((100, 2), 5, dtype=np.int16), 44100)
+    assert not out.any()
+
+
+def test_the_fallback_path_never_runs_the_denoiser_per_piece():
+    """Per piece, RNNoise would flush its burst at the end of every piece,
+    which is a click on every join."""
+    import inspect
+    from ffilm import audio
+    src = inspect.getsource(audio.build_soundtrack)
+    assert "speech_model = False" in src
