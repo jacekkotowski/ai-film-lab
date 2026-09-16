@@ -44,9 +44,9 @@ shots:
 
   - id: s00
     src: analysis/title.jpg
-    duration: 4.0
+    duration: 2.5
     move: static
-    note: "the opening card -- the same picture and the same words
+    note: "2.5 s, down from 4.0 (2026-09-16): holding the last look 3.3 s longer took the film to 181.1 s, past YouTube's 180 s for a Short. The opening card -- the same picture and the same words
       as the thumbnail, so clicking the miniature lands you on the
       frame you clicked. Made from your library; delete this whole
       block if you would rather open on yourself talking."
@@ -500,13 +500,13 @@ shots:
   - id: s22
     src: media/rec_20260916-113221.mp4
     in: "04:38.75"
-    out: "04:41.35"
+    out: "04:45.00"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.522, 0.413]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 22 of 23 -- one take with the long pauses cut out. Every word is kept"
+    note: "the last shot. Out moved from 04:41.35 to 04:45.00 so the film holds about 3.3 s on a steady look after the last word and the music can fade; the film used to stop 1 s after it. Past 04:45 you blink and start to speak, so s23 (04:47.20-04:48.05, the take's own end) was cut (2026-09-16)"
     captions:
       - text: "I love you."
         at: 0.00
@@ -514,15 +514,4 @@ shots:
         pos: lower_third
         words: [0.00, 0.60, 1.58]
 
-  - id: s23
-    src: media/rec_20260916-113221.mp4
-    in: "04:47.20"
-    out: "04:48.05"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.522, 0.413]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 23 of 23 -- one take with the long pauses cut out. Every word is kept"
-
-# 18 talking shots after the re-reads were cut (2026-09-16).
+# 17 talking shots after the re-reads were cut, ending on a held look (2026-09-16).
