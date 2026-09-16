@@ -167,3 +167,35 @@ def test_the_note_survives_being_read_back_as_yaml(tmp_path, shelf):
     assert shot["src"] == "analysis/title.jpg"
     assert shot["duration"] == TITLE_CARD_SECONDS
     assert "thumbnail" in shot["note"]
+
+
+def test_a_new_cover_picture_rebuilds_the_card(tmp_path, shelf):
+    """Measured 2026-09-16: a picture dropped into cover/ after the card
+    was made was chosen for the next cover, and the card stayed the old
+    one -- it only ever looked at film.yaml's time."""
+    import os
+    stocked(shelf)
+    p = project(tmp_path)
+    cover.build_card(p, 1080, 1920)
+    before = cover.card_path(p).read_bytes()
+    os.utime(p / "film.yaml", (1, 1))
+    os.utime(cover.card_path(p), (2, 2))
+    picture(p / "cover" / "mine.jpg", 900, 1600)     # newer than both
+    Image.new("RGB", (900, 1600), (200, 40, 40)).save(p / "cover" / "mine.jpg")
+    cover.refresh_card(p, 1080, 1920)
+    assert cover.card_path(p).read_bytes() != before
+
+
+def test_a_new_cover_picture_makes_the_thumbnail_stale(tmp_path, shelf):
+    import os
+    stocked(shelf)
+    p = project(tmp_path)
+    (p / "out").mkdir()
+    (p / "out" / "cover.jpg").write_bytes(b"x")
+    os.utime(p / "film.yaml", (1, 1))
+    os.utime(p / "out" / "cover.jpg", (2, 2))
+    for f in (shelf / "cover").iterdir():
+        os.utime(f, (1, 1))
+    assert not cover.is_stale(p)
+    picture(p / "cover" / "mine.jpg", 900, 1600)
+    assert cover.is_stale(p)

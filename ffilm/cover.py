@@ -302,6 +302,31 @@ def build_card(project: Path, width: int, height: int,
     return out
 
 
+def _pictures_changed(project: Path) -> float:
+    """When a picture either cover could be built on last changed.
+
+    The card and the thumbnail used to be compared with film.yaml alone,
+    so a picture dropped into cover/ after they were made was chosen for
+    the NEXT cover and never reached this one (measured 2026-09-16). Both
+    shapes on the shelf count, because which one is used depends on the
+    film's shape, and asking that here would mean reading film.yaml.
+    """
+    from . import library
+    found = []
+    d = cover_dir(project)
+    if d.is_dir():
+        found += [q for q in d.iterdir()
+                  if q.is_file() and q.suffix.lower() in kinds.POSTER]
+    found += library.backdrops()
+    times = []
+    for q in found:
+        try:
+            times.append(q.stat().st_mtime)
+        except OSError:
+            pass
+    return max(times, default=0.0)
+
+
 def refresh_card(project: Path, width: int, height: int,
                  font: str | None = None) -> Path | None:
     """Rebuild the card if the film has moved on without it.
@@ -320,7 +345,7 @@ def refresh_card(project: Path, width: int, height: int,
         edited = (project / "film.yaml").stat().st_mtime
     except OSError:
         edited = 0.0
-    if mine and mine >= edited:
+    if mine and mine >= max(edited, _pictures_changed(project)):
         return card
     return build_card(project, width, height, font)
 
@@ -343,7 +368,7 @@ def is_stale(project: Path) -> bool:
     mine = when(out_path(project))
     if not mine:
         return True
-    return mine < when(project / "film.yaml")
+    return mine < max(when(project / "film.yaml"), _pictures_changed(project))
 
 
 def read(image: Path) -> np.ndarray:
