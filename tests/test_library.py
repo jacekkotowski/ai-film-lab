@@ -236,3 +236,13 @@ def test_a_name_already_written_as_words_is_not_title_cased():
     assert pretty_name("The Medallion") == "The Medallion"
     # ...and underscores still behave exactly as they did
     assert pretty_name("the_medallion") == "The Medallion"
+
+
+def test_a_date_in_a_folder_name_keeps_its_hyphens():
+    """Pressing ENTER at "A name for it" gives Night_2026-09-05_2, and the
+    title card and thumbnail then read "Night 2026 09 05 2". A hyphen
+    between two digits is a date, not a space."""
+    assert pretty_name("Night_2026-09-05_2") == "Night 2026-09-05 2"
+    assert pretty_name("Morning_2026-09-05") == "Morning 2026-09-05"
+    assert pretty_name("morning-walk") == "Morning Walk"
+    assert pretty_name("thought_experiment") == "Thought Experiment"

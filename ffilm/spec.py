@@ -295,7 +295,10 @@ def pretty_name(stem: str) -> str:
     stem = stem.strip()
     if " " in stem:
         return stem
-    words = re.split(r"[_\-]+", stem)
+    # A hyphen between two digits is a date, not a space. Without this,
+    # the name `film new` gives when you press ENTER -- Night_2026-09-05_2
+    # -- went onto the title card and thumbnail as "Night 2026 09 05 2".
+    words = re.split(r"_+|(?<!\d)-+|-+(?!\d)", stem)
     return " ".join(w.capitalize() for w in words if w)
 
 
