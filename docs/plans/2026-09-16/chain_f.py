@@ -22,7 +22,6 @@ def stats(name, chain):
     subprocess.run(["ffmpeg","-y","-v","error","-ss","6","-t","12","-i",str(out),"-c:a","pcm_s16le",str(S/f"listen_{name}.wav")])
 print("34s excerpt, take 20-54s; bands are dB relative to the speech's own total")
 stats("A_current", base)
-char = ["equalizer=f=3200:width_type=q:w=1.0:g=2.0", "deesser=i=0.3:m=0.5:f=0.5", "acompressor=threshold=-20dB:ratio=2.5:attack=8:release=120:makeup=2", "highshelf=f=9000:g=-2.5"]
-stats("F2_char_no_echo", base + char)
-stats("F_char_echo", base + char + ["aecho=0.9:0.25:22|37:0.10|0.06"])
 stats("G_warmer_only", base + ["lowshelf=f=180:g=2", "equalizer=f=3200:width_type=q:w=1.0:g=2.0", "highshelf=f=9000:g=-2.5"])
+stats("Gplus", base + ["lowshelf=f=180:g=2", "equalizer=f=3500:width_type=q:w=1:g=4", "highshelf=f=9000:g=-2.5"])
+stats("Gplus_deess", base + ["lowshelf=f=180:g=2", "equalizer=f=3500:width_type=q:w=1:g=4", "highshelf=f=9000:g=-2.5", "deesser=i=0.3"])

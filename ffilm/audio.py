@@ -171,6 +171,29 @@ VOICE_WARMTH_HZ = 110
 VOICE_WARMTH_DB = 2.5
 
 
+# The voice's character, after the gates. Warmer, clearer consonants,
+# softer on top. Chosen 2026-09-16 by measurement, not by ear, on a 34s
+# stretch of "I am not your fear" (bands are dB of the speech's own
+# total; floor is the room between words):
+#
+#                            floor   100-300   3-6k   6-10k
+#     before                 -49.6    -3.7    -13.8   -21.7
+#     this (G)               -48.6    -3.1    -13.6   -23.0
+#     presence +4dB at 3.5k  -48.6    -3.2    -12.4   -22.5
+#
+# The stronger presence boost was asked to lift 3-6k by 1.5dB over this
+# and managed 1.2, so it was not taken. A compressor made the voice
+# fuller and lifted the room between words by 5.5dB; not taken either.
+#
+# After both gates, because that is where it was measured: moved in front
+# of them, the gates would be judging a different signal.
+VOICE_CHARACTER = [
+    "lowshelf=f=180:g=2",                              # chest
+    "equalizer=f=3200:width_type=q:w=1.0:g=2.0",       # consonants
+    "highshelf=f=9000:g=-2.5",                         # softer top
+]
+
+
 def voice_tone() -> list[str]:
     """The two filters that make a spoken take sound recorded rather
     than captured. Ordered floor-first so the shelf is not lifting
@@ -608,7 +631,7 @@ def level_gain(measured_lufs: float | None) -> float:
 
 # Bumped whenever the voice chain below changes, so a take voiced by an
 # older version is made again rather than reused.
-VOICE_VERSION = 4
+VOICE_VERSION = 5
 
 
 def lift_filters(tuning: Tuning = DEFAULT_TUNING) -> list[str]:
@@ -629,6 +652,7 @@ def lift_filters(tuning: Tuning = DEFAULT_TUNING) -> list[str]:
         chain.append(NOISE_GATE.format(threshold=tuning.pre_gate_threshold))
     chain.append(SPEECH_NORM)
     chain.append(NOISE_GATE.format(threshold=tuning.gate_threshold))
+    chain += VOICE_CHARACTER
     return chain
 
 

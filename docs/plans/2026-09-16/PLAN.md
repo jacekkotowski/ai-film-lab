@@ -124,33 +124,19 @@ Left out. If ever wanted: `afir` with a short impulse-response wav kept
 in `library/` (a data file). No library earns a fifth package for any of
 this; everything is in ffmpeg.
 
-**Decided 2026-09-16: F2 is the chain.** Jacek chose it by ear, and
-also said he is half deaf (artillery). So this item is not judged by
-listening again, by him or by a session: it is judged by the table
-above, and the compressor is *in*, because compression is what carries a
-voice on a phone speaker and for listeners who lose quiet syllables.
-Its cost (+5.5 dB of room between words) is why item 1's denoiser test
-runs on **this** chain, not on the old one.
+**Superseded 2026-09-16, and done.** Jacek replaced the F2 decision:
+test G+ (presence `equalizer f=3500 q=1 g=4`) against A and G, accept it
+only if 3-6 kHz rises >= 1.5 dB over G, the room stays within 1 dB of G,
+and 6-10 kHz stays <= -21.7; otherwise keep G. Measured:
 
-Steps:
-1. Put the EQ into `audio.voice_tone()` (it already holds the 80 Hz
-   floor and the 110 Hz warmth; these are three more lines of the same
-   kind), constants beside `VOICE_WARMTH_DB` with a one-line reason each:
-   `lowshelf=f=180:g=2`, `equalizer=f=3200:width_type=q:w=1:g=2`,
-   `highshelf=f=9000:g=-2.5`.
-2. After **both gates** (they must see the ungated signal first, and the
-   de-esser must see the gated one): `deesser=i=0.3:m=0.5:f=0.5`, then
-   `acompressor=threshold=-20dB:ratio=2.5:attack=8:release=120:makeup=2`.
-   Both ride with `speech_lift`.
-3. Bump `VOICE_VERSION`. Test: `test_the_voice_tone_is_the_same_on_both_chains`
-   (falls out of item 6a) and `test_the_character_block_comes_after_the_gates`.
-4. Acceptance, by numbers (`chain_f.py`, 34 s excerpt): p50 within 1 dB
-   of −21.4, 3–6 kHz band within 1 dB of −11.5, p90 between −15 and −13.
-   Then a draft of s01; the note in the commit says what changed.
+| | floor | 3-6k | 6-10k |
+|---|---:|---:|---:|
+| G | -48.6 | -13.6 | -23.0 |
+| G+ | -48.6 | -12.4 (+1.2) | -22.5 |
 
-**P:** wants the density and gets it. **D:** accepts the +5.5 dB of room
-only because item 1 is measured on top of it next; if item 1 is a
-no-go, drop `makeup` to 1.4 and re-measure, do not drop the compressor.
+G+ failed the first condition, so **G is in the chain** as
+`audio.VOICE_CHARACTER`, after both gates, `VOICE_VERSION` 5. The chain
+itself now measures exactly as the G row. No compressor, no de-esser.
 
 ## 3. Bug: a repeated caption does not show up
 

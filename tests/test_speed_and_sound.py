@@ -753,3 +753,19 @@ def test_a_voiced_take_is_still_named_for_its_take_and_speed():
     name = voiced_name("rec_1", 1.2, True, voiced_chain(1.2, True, TUNED))
     assert name.startswith("rec_1__1200__lift__v")
     assert name.endswith(".wav")
+
+
+def test_the_voice_character_comes_after_both_gates():
+    """Measured with the tone shaping LAST, after the gates have closed
+    the pauses. Moved in front of them, the gates would be judging a
+    different signal than the one the numbers were taken on."""
+    from ffilm.audio import VOICE_CHARACTER
+    chain = lift_filters(TUNED)
+    last_gate = max(i for i, f in enumerate(chain) if f.startswith("agate"))
+    assert chain[last_gate + 1:] == VOICE_CHARACTER
+
+
+def test_speech_lift_off_still_means_exactly_as_recorded():
+    from ffilm.audio import VOICE_CHARACTER
+    raw = voiced_chain(1.0, False, TUNED)
+    assert not any(f in raw for f in VOICE_CHARACTER)
