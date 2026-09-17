@@ -101,9 +101,11 @@ class VoiceSource:
 def voice_sources(project: Path) -> list[VoiceSource]:
     """What can be transcribed, in priority order:
 
-    1. A file named `voiceover.*` in media/ -- always wins outright, on
-       the assumption that if you bothered to record and name one, that
-       IS the narration, even if your clips also have sound.
+    1. A file named `voiceover*` in media/ -- `voiceover.mp3` or a dated
+       `voiceover_20260917-104512.wav` (`film record --voice`) alike --
+       always wins outright, on the assumption that if you bothered to
+       record and name one, that IS the narration, even if your clips
+       also have sound.
     2. Any other standalone audio file in media/ (a phone voice memo,
        an mp3) -- same idea, just not specially named.
     3. Otherwise, every video clip that has its own audio track gets its
@@ -128,7 +130,10 @@ def voice_sources(project: Path) -> list[VoiceSource]:
     here = [p for p in sorted(media.rglob("*"))
             if p.is_file() and not kinds.is_aside(p, media)]
 
-    named = [p for p in here if p.name.lower().startswith("voiceover.")]
+    # A prefix, not "voiceover." exactly -- `film record --voice` names a
+    # dated take `voiceover_20260917-104512.wav` (record.take_name), and
+    # that still has to win outright, the same as a plain `voiceover.mp3`.
+    named = [p for p in here if p.name.lower().startswith("voiceover")]
     if named:
         return [VoiceSource(named[0], named[0].name, [])]
 
