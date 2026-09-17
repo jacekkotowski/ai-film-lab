@@ -15,7 +15,7 @@ from pathlib import Path
 from . import kinds, segment
 from .moves import choose_moves
 from .record import REC_SPEED, is_recording
-from .spec import Caption, Shot, pretty_name
+from .spec import VOICE_TAIL, Caption, Shot, pretty_name
 
 
 # A person talking to a lens is not a photograph. There is nowhere to
@@ -326,11 +326,24 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     if not shots:
         raise SystemExit("No usable media found. Is anything in media/ ?")
 
+    # A narration over photographs, with no script to cut it by: give
+    # each picture its own piece of it, cut at the longest pauses. That
+    # is the only way anything in film.yaml can say which picture goes
+    # with which words -- see cut_into_slides.
+    #
+    # Photographs only. A film that also has footage keeps the flat
+    # `audio:` track: a clip carries its own sound, and cutting one
+    # narration across pictures and clips alike is a bigger decision
+    # than `init` should be making on its own.
+    slide_notes: list[str] = []
+    if audio and all(s.kind == "still" for s in shots):
+        slide_notes = cut_into_slides(shots, meta, project, audio)
+    slides = bool(slide_notes)
+
     target_notes: list[str] = []
-    if audio:
-        from .audio import _dur
+    if audio and not slides:
         target_notes += stretch_to_narration(
-            shots, meta, _dur(audio) + NARRATION_FADE_ROOM)
+            shots, meta, narration_seconds(audio) + NARRATION_FADE_ROOM)
     if target:
         target_notes += fit_to_target(shots, meta, float(target))
         keep = [(s, m) for s, m in zip(shots, meta) if s.duration > 0]
@@ -372,7 +385,13 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     card_seconds = ((SHORT_TITLE_CARD_SECONDS if vertical else TITLE_CARD_SECONDS)
                     if card_block else 0.0)
 
-    if audio:
+    if audio and slides:
+        # No `audio:` here on purpose. It would play the whole narration
+        # flat under the film IN ADDITION to the pieces on the slides --
+        # every word said twice, a beat apart.
+        L.append("# Each picture carries its own piece of")
+        L.append(f"# {audio.relative_to(project).as_posix()} -- see `voice:` below.")
+    elif audio:
         L.append(f'audio: {audio.relative_to(project).as_posix()}')
         if card_seconds:
             L.append(f"audio_offset: {card_seconds:.1f}   "
@@ -412,7 +431,7 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     L.append("")
     total = sum(s.duration for s in shots)
     L.append(f"# {len(shots)} shots, about {total:.0f} seconds.")
-    for note in target_notes:
+    for note in target_notes + slide_notes:
         L.append(note)
     if ambiguous_quotes:
         L.append("#")
@@ -421,7 +440,9 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
         L.append("# was NOT something the filename could tell me. Check the")
         L.append("# order above; if it's wrong, either reorder the shots: blocks")
         L.append("# below, or rename files 00_, 01_, 02_... and run init again.")
-    if not any(m.get("role") == "quote" for m in meta):
+    # Not on a slide film. The words ARE the film there, and `caption`
+    # is the next step the footer above already names.
+    if not slides and not any(m.get("role") == "quote" for m in meta):
         L.extend(NO_CAPTIONS_YET)
     L.append("")
     return "\n".join(L)
@@ -496,6 +517,14 @@ def shot_block(s: Shot, m: dict) -> list[str]:
         if abs(s.speed - 1.0) > 1e-3:
             L.append(f"    speed: {s.speed}              # 1.0 is the speed "
                      f"you actually spoke at")
+    elif s.voice:
+        # A slide: the picture from `src`, the words from `voice`, and
+        # in/out their times inside it. No `duration:` -- it defaults to
+        # the words plus a breath, which is what a slide is for. Write
+        # one to hold the picture longer; the words do not stretch.
+        L.append(f"    voice: {s.voice}")
+        L.append(f"    in: {tc(s.tin)}")
+        L.append(f"    out: {tc(s.tout)}")
     else:
         L.append(f"    duration: {s.duration:.1f}")
     L.append(f"    move: {s.move}")
@@ -512,6 +541,9 @@ def shot_block(s: Shot, m: dict) -> list[str]:
         L.append('    note: "closer"')
     elif role == "quote":
         L.append('    note: "quote card -- title from filename"')
+    elif m.get("slide"):
+        L.append(f'    note: "picture {m['part']} of {m['parts']} -- holds '
+                 f'while these words are said"')
     elif m.get("talking"):
         if m["parts"] > 1:
             note = (f"part {m['part']} of {m['parts']} -- one take with "
@@ -579,6 +611,128 @@ def stretch_to_narration(shots: list[Shot], meta: list[dict],
     notes.append(f"# Photographs held longer -- {room:.0f}s of pictures in "
                  f"all -- to cover the narration to its end.")
     return notes
+
+
+def cut_at_pauses(start: float, end: float, quiet: list,
+                  pieces: int) -> list[tuple[float, float]]:
+    """Cut a narration into `pieces` consecutive windows, at its longest
+    pauses. Pure -- hand it a pause list and it is arithmetic.
+
+    The same idea as `talking_segments`, and the same constants: a cut
+    takes BREATH off each side of the pause, so the words either side of
+    it survive and the join lands on a natural beat. What falls in the
+    gap between two windows is silence, and is not heard -- which is
+    exactly what happens to a talking take today.
+
+    The cuts are the LONGEST pauses, not the first ones: where somebody
+    stopped for three seconds is where they finished a thought, and
+    where they stopped for eight tenths is where they took a breath
+    mid-sentence. A cut that would leave a picture on screen for less
+    than MIN_SHOT is not made at all, and the next-longest pause is
+    tried instead -- one enormous pause right after the first word is
+    the end of a false start, not the end of a paragraph.
+
+    Fewer pauses than asked-for cuts means fewer pieces. The caller is
+    handed what it got and says so; inventing empty slides to reach a
+    number would put a photograph on screen with nothing said over it.
+    """
+    a = max(0.0, start - BREATH)
+    b = end + BREATH
+    inner = sorted(((s, e) for s, e in quiet if a < s and e < b),
+                   key=lambda p: p[1] - p[0], reverse=True)
+
+    cuts: list[tuple[float, float]] = []
+    for s, e in inner:
+        if len(cuts) >= pieces - 1:
+            break
+        trial = sorted(cuts + [(s, e)])
+        starts = [a] + [y - BREATH for _x, y in trial]
+        ends = [x + BREATH for x, _y in trial] + [b]
+        if all(hi - lo >= MIN_SHOT for lo, hi in zip(starts, ends)):
+            cuts = trial
+
+    out: list[tuple[float, float]] = []
+    cursor = a
+    for s, e in cuts:
+        out.append((round(cursor, 2), round(s + BREATH, 2)))
+        cursor = e - BREATH
+    out.append((round(cursor, 2), round(b, 2)))
+    return out
+
+
+def narration_seconds(path: Path) -> float:
+    """How long the narration file is. Its own function so a test can
+    stand in for it without decoding anything."""
+    from .audio import _dur
+    return _dur(path)
+
+
+def narration_pauses(path: Path) -> tuple[float, float, list]:
+    """(first word, last word, the pauses between) for a narration file.
+
+    The same measurement `ingest` already makes on every clip -- window
+    RMS, the room and the voice found in this take's own distribution,
+    the line put between them. See ingest.quiet_stretches for why it is
+    not `silencedetect`. Run here on a standalone audio file, which
+    ingest itself never looks at: its manifest is pictures and clips.
+
+    Its own function, and the only impure part of the slide path, so
+    that everything above it can be tested on a pause list.
+    """
+    from . import ingest as ingest_mod
+    dur = narration_seconds(path)
+    snd = ingest_mod.detect_sound(path, dur)
+    if not snd.get("has"):
+        return 0.0, dur, []
+    return (float(snd.get("in", 0.0)), float(snd.get("out", dur)),
+            [(float(s), float(e)) for s, e in snd.get("quiet", [])])
+
+
+def cut_into_slides(shots: list[Shot], meta: list[dict], project: Path,
+                    audio: Path) -> list[str]:
+    """Give each photograph its own piece of the narration.
+
+    Turns plain stills into SLIDES -- `voice:`, `in:`, `out:` -- in the
+    order they are already in, and hands back the footer lines saying
+    what it did. An empty list back means it did not do it, and the
+    caller keeps the flat `audio:` track.
+    """
+    start, end, quiet = narration_pauses(audio)
+    if end - start < MIN_SHOT:
+        return []
+    pieces = cut_at_pauses(start, end, quiet, len(shots))
+    if not pieces:
+        return []
+
+    rel = audio.relative_to(project).as_posix()
+    for i, (s, (a, b)) in enumerate(zip(shots, pieces)):
+        s.voice = rel
+        s.tin, s.tout = a, b
+        s.duration = (b - a) + VOICE_TAIL
+        meta[i]["slide"] = True
+        meta[i]["part"] = i + 1
+        meta[i]["parts"] = len(pieces)
+    # More pictures than pieces: the ones past the end have no words and
+    # would sit there in silence. Left as plain photographs, at the end.
+    for s in shots[len(pieces):]:
+        s.voice = None
+
+    total = narration_seconds(audio)
+    L = ["#",
+         f"# {len(pieces)} slide(s) cut from a {total:.0f}s narration at its "
+         f"pauses.",
+         "# Each `in:`/`out:` is that picture's words, on the narration's own",
+         "# clock. Move a shot and its words move with it; swap `src:` to put",
+         "# a different picture under the same words; hold one longer with",
+         "# `duration:` and the words stay where they were said."]
+    if len(pieces) < len(shots):
+        L.append(f"# {len(shots) - len(pieces)} picture(s) came after the "
+                 f"last words and are held silent.")
+    L += ["#",
+          "# Guessed from where you paused. To say it exactly, put your words",
+          "# in script.txt, one paragraph per picture, and run",
+          "# `uv run film caption --apply` -- it re-cuts these by paragraph."]
+    return L
 
 
 def fit_to_target(shots: list[Shot], meta: list[dict],
