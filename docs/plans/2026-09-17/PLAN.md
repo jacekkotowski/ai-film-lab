@@ -149,6 +149,68 @@ look at the result, not the log:
 Acceptance is a peek Jacek watches, not a number. Write what was seen
 into this file.
 
+**Done, 2026-09-17, by the scheduled run.** Numbers only below; the
+peeks themselves are for Jacek to watch, not for this session to judge.
+
+- **AI-made intro clip with no speech.** Checked `projects/`, `library/`
+  and the repo root: all 16 original clips in every project's `media/`
+  are `rec_*.mp4` talking-head takes (confirms the plan's own premise
+  from 2026-09-16). No suitable file exists, so none was added, per
+  the plan's own instruction to skip rather than fake one.
+
+  The decision asked for anyway, with the numbers that exist without
+  one: today `keep_clip_audio` puts EVERY video shot with an audio
+  track through `emit("sp")` in `audio.build_soundtrack` -- there is no
+  branch on whether ingest's `ratio` cleared `SOUND_FLOOR` (0.03).
+  That means the piece is run through `voiced_take`/`speech_chain`:
+  `afftdn` denoise, `speechnorm` (p=0.7, e=2), the two noise gates,
+  RNNoise, then the EQ in `VOICE_CHARACTER` -- a chain built and
+  measured entirely on spoken voice (docs/decisions/0003, 0008). None
+  of that is a defined thing to do to music; `speechnorm` treats a
+  quiet passage as room tone to be lifted, which is exactly backwards
+  for a fade-in.
+
+  So "muted or at music level" is not yet a switch that exists to flip
+  -- both options need `is_talking(entry)` (already in scaffold.py, at
+  `SOUND_FLOOR`) threaded into `build_soundtrack` so a non-talking
+  clip's own audio either (a) skips `emit("sp")` entirely and is muted,
+  or (b) is mixed in through the MUSIC path (`MUSIC_TARGET_LUFS`,
+  `music_volume`, no speech-lift chain) instead. Reasoned, not
+  measured -- there is no file to measure it on. **Still open: Jacek's
+  call between the two**, and it is `change-the-machine` work, not
+  today's.
+
+- **A .HEIC photograph.** Checked `projects/`, `docs/`, and the repo
+  root: none exists on this machine, confirming the 2026-09-16 finding
+  again. Skipped.
+
+- **A vertical film of the scratch project.** Done:
+  `uv run film ingest/init -p <scratch>` then
+  `uv run film shape --vertical -p <scratch>`. Measured:
+
+  | what | before (`film check`, wide) | after (`film shape --vertical`) |
+  |---|---|---|
+  | resolution | 1920x1080 | 1080x1920 |
+  | thumbnail chosen | horizontal.png | vertical.png (shape-matched automatically) |
+  | film duration (reported) | 27.4s | 27.4s |
+
+  Vertical `film peek`, measured with ffprobe rather than assumed:
+  output 202x360 (peek tier -- keeps the 1080:1920 aspect), 27.5s
+  (frame-rounded from the 27.4s film.yaml total, as `spec.frames_for`
+  says it should be). No ffmpeg errors.
+
+  `framing_notes` did **not** fire on the wide clip. Read the reason in
+  `checks.framing_notes` rather than assume a bug: it only warns when
+  the shot's `focus` sits within `EDGE` (0.28) of a side, and this
+  take's detected focus is `[0.515, 0.420]` -- close to centre, so the
+  crop for a vertical frame loses background on both sides evenly and
+  nothing near an edge is cut off. The mechanism itself already has
+  its own tests (`tests/test_nothing_goes_missing.py`); this scratch
+  clip simply is not the case that trips it. Photographs cropped
+  around their own focus points with no error, matching the documented
+  behaviour -- watched in numbers (resolution, duration, no ffmpeg
+  errors), not by eye, per how this session works.
+
 ### 6. Not touched tomorrow
 
 The voice chain (0003, 0008), the music bed (0007), the look, captions
