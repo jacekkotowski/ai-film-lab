@@ -181,6 +181,26 @@ def read_script(project: Path, given: str | None) -> str:
     return ""
 
 
+def compose_hint(voice_only: bool) -> str:
+    """The line under "What do you want to say?", on the first screen.
+
+    Pure, and its own function, because the window it goes in cannot be
+    tested and this sentence is the only place anybody is told that a
+    blank line changes the picture. Somebody pastes a script once, at
+    the start; if it is not said here it is not said in time.
+
+    Not said when there is a camera running: talking to a lens has no
+    pictures to change, and the paragraph rule would be noise.
+    """
+    if voice_only:
+        return ("One paragraph per picture -- each paragraph becomes one "
+                "slide, holding the words you say over it. Or leave it "
+                "empty and just speak: the pictures change at your "
+                "longest pauses.")
+    return ("Paste it here and it will scroll while you talk. "
+            "Or leave it empty and just speak.")
+
+
 def save_script(path: Path, text: str) -> None:
     """Never lose what somebody typed. Called on every way out of the
     compose screen, including closing the window."""
@@ -359,7 +379,7 @@ class Take:
 
 def session(script: str, script_path: Path, wpm: int, title: str,
             start, finish, seconds: float | None = None,
-            discard=None) -> None:
+            discard=None, voice_only: bool = False) -> None:
     """Open the window and stay in it until the person is finished.
 
     `start()`         begins one recording and returns the running Take.
@@ -404,8 +424,7 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     # ---- screen 1: the words ------------------------------------------
     compose = tk.Frame(root, bg=BG)
     big(compose, "What do you want to say?", 30).pack(anchor="w", pady=(4, 2))
-    big(compose, "Paste it here and it will scroll while you talk. "
-                 "Or leave it empty and just speak.",
+    big(compose, compose_hint(voice_only),
         15, DIM).pack(anchor="w", pady=(0, 14))
 
     editor = tk.Text(compose, bg="#151518", fg=FG, insertbackground=FG,

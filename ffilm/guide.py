@@ -360,11 +360,16 @@ def next_steps(project: Path) -> list[Step]:
     # `peek` and quietly play the new narration under the old pictures.
     narration = _newest(project / "media", AUDIO_EXT)
     if narration and narration > edited:
+        # `go --rewrite`, not `init --force`. Both write the slides; only
+        # `go` goes on to transcribe them, so `init` alone left the words
+        # on the soundtrack and never on the screen -- which is exactly
+        # what Jacek's test of test_story found on 2026-09-17.
         return [Step("Fold your narration into the edit",
-                     ["init", "--force"] + p,
-                     why="A voiceover arrived after the last edit. "
-                         "Rewriting stretches the photographs to cover "
-                         "it. What you had is kept as film.yaml.bak.")]
+                     ["go", "--rewrite"] + p,
+                     why="A voiceover arrived after the last edit. This "
+                         "gives each photograph its own piece of it, puts "
+                         "the words on screen, and renders a draft. What "
+                         "you had is kept as film.yaml.bak.")]
 
     out = project / "out"
     # A render answers every question a rougher one would have: `go`

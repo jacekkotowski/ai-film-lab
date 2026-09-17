@@ -44,7 +44,7 @@ from . import history
 from . import scaffold
 from .checks import (bokeh_notes, film_shape, framing_notes, library_lines,
                      caption_share_line, music_notes, narration_notes,
-                     preflight_report, unused_media)
+                     preflight_report, shot_lines, unused_media)
 from .moves import choose_moves
 from .paths import toolkit_root
 from .render import QUALITIES, render
@@ -591,9 +591,8 @@ def cmd_check(args) -> None:
     if share:
         print(share)
     print()
-    for s in film.shots:
-        caps = f"  {len(s.captions)} caption(s)" if s.captions else ""
-        print(f"  {s.id}  {s.duration:5.1f}s  {s.move:<12} {s.src}{caps}")
+    for line in shot_lines(film):
+        print(line)
 
     missing = unused_media(project, film)
     if missing:
@@ -859,7 +858,7 @@ def cmd_record(args) -> None:
         booth.session(script=script, script_path=project / "script.txt",
                       wpm=args.wpm, title=project.name,
                       start=new_take, finish=took, seconds=args.seconds,
-                      discard=drop_last)
+                      discard=drop_last, voice_only=args.voice)
     else:
         print("\nJust talk." if args.voice else
               "\nLook at the camera, not at the screen.")
@@ -899,8 +898,9 @@ def cmd_record(args) -> None:
     print(f"\n  {len(takes)} take{'s' if len(takes) > 1 else ''}, "
           f"{_secs(total)}, saved in {project.name}\\media\\")
     if args.voice:
-        print("  `film init` reads it as the narration and stretches your "
-              "photographs to cover it.")
+        print("  Each photograph gets its own piece of it -- `film go "
+              "--rewrite` cuts them,")
+        print("  puts the words on screen, and renders a draft.")
     else:
         print(f"  In the edit they play at {rec.REC_SPEED}x so they do not "
               f"drag,")

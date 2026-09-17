@@ -375,8 +375,9 @@ def test_a_narration_recorded_after_the_edit_offers_to_fold_it_in(tmp_path):
     wav = root / "media" / "voiceover_20260917-104512.wav"
     wav.write_bytes(b"x")
     os.utime(wav, (400, 400))
-    assert "init" in first(root)
-    assert "--force" in " ".join(next_steps(root)[0].args)
+    # `go`, not `init`: both write the slides, only `go` captions them.
+    assert next_steps(root)[0].args[0] == "go"
+    assert "--rewrite" in " ".join(next_steps(root)[0].args)
 
 
 def test_an_older_narration_does_not_reopen_an_edit_already_folding_it_in(

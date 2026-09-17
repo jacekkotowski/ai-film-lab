@@ -222,6 +222,44 @@ seconds, exactly as before. Nothing you said is ever sampled.
 If a take drags, shorten it: change its `in:` or `out:` in `film.yaml`,
 or just tell Claude *"the second bit of the statement is too slow."*
 
+## Photos with your voice over them
+
+Put your photographs in `media\`, then record the narration:
+
+```powershell
+uv run film record --voice -p my_movie
+```
+
+The same window as talking to camera, minus the camera. **One paragraph
+per picture** — leave a blank line between them, and each paragraph
+becomes one slide, holding the words you say over it. Or leave the box
+empty and just talk: the pictures then change at your longest pauses,
+which is a guess, and `film.yaml` says so.
+
+When you're done:
+
+```powershell
+uv run film go --rewrite -p my_movie
+```
+
+Each photograph comes out as a shot with its own piece of the narration:
+
+```yaml
+  - id: s01
+    src: media/1declaration_of_love.png
+    voice: media/voiceover_20260917-105656.wav
+    in: "00:01.54"
+    out: "00:18.43"
+```
+
+Move the shot and its words move with it. Swap `src:` to put a different
+picture under the same words. Delete the shot and its words go too. Add
+a `duration:` to hold the picture longer — the words stay where you said
+them.
+
+Changed your mind about where the paragraphs break? Edit `script.txt`
+and run `uv run film caption --apply -p my_movie` again.
+
 ## Making it a particular length
 
 ```powershell

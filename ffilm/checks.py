@@ -23,6 +23,31 @@ def voice_installed() -> bool:
         return False
 
 
+def shot_lines(film) -> list[str]:
+    """One line per shot for `film check`. Pure.
+
+    A slide says which words it is holding. Without that the listing
+    showed a photograph and a length and nothing else, so the only way
+    to see what a shot was quoting was to open film.yaml -- and the
+    whole point of `check` is answering that without opening anything.
+    """
+    out = []
+    for s in film.shots:
+        caps = f"  {len(s.captions)} caption(s)" if s.captions else ""
+        words = ""
+        if s.voice:
+            words = (f"  <- voice {_clock(s.tin)}-"
+                     f"{_clock(s.tout if s.tout is not None else s.tin + s.duration)}")
+        out.append(f"  {s.id}  {s.duration:5.1f}s  {s.move:<12} "
+                   f"{s.src}{words}{caps}")
+    return out
+
+
+def _clock(seconds: float) -> str:
+    m, s = divmod(max(0.0, float(seconds)), 60)
+    return f"{int(m):02d}:{s:05.2f}"
+
+
 def unused_media(project: Path, film) -> list[str]:
     """Files in media/ that no shot in the film uses.
 
