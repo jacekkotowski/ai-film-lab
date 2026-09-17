@@ -310,6 +310,87 @@ def test_a_film_with_no_sound_is_worth_mentioning():
     assert cover.shorts_problems(1080, 1920, 30.0, has_audio=False) != []
 
 
+# --------------------------------------------------------------------------
+# Photographs and a narration -- the 2026-09-17 plan, item 4
+# --------------------------------------------------------------------------
+
+def manifest_of(root: Path, entries: str) -> None:
+    (root / "analysis" / "manifest.json").write_text(
+        '{"count": 1, "unreadable": [], "media": [' + entries + ']}',
+        encoding="utf-8")
+
+
+def test_wants_voiceover_is_true_for_photos_with_nobody_talking():
+    entries = [{"path": "media/a.jpg", "kind": "still"}]
+    assert guide.wants_voiceover(entries, film_has_audio=False)
+
+
+def test_wants_voiceover_is_false_once_a_narration_is_set():
+    entries = [{"path": "media/a.jpg", "kind": "still"}]
+    assert not guide.wants_voiceover(entries, film_has_audio=True)
+
+
+def test_wants_voiceover_is_false_with_a_talking_clip_in_the_mix():
+    """A clip somebody already talked over is its own narration -- offering
+    to record a second one over the top would compete with it."""
+    entries = [{"path": "media/a.jpg", "kind": "still"},
+              {"path": "media/b.mp4", "kind": "video",
+               "sound": {"has": True, "ratio": 0.5}}]
+    assert not guide.wants_voiceover(entries, film_has_audio=False)
+
+
+def test_wants_voiceover_is_false_with_no_photographs_at_all():
+    entries = [{"path": "media/b.mp4", "kind": "video"}]
+    assert not guide.wants_voiceover(entries, film_has_audio=False)
+
+
+def test_a_photo_only_film_is_offered_the_voiceover_alternative(tmp_path):
+    root = project(tmp_path, media=100, manifest=200, yml=300)
+    manifest_of(root, '{"path": "media/a.jpg", "kind": "still"}')
+    assert "say the words over these pictures" in titles(root)
+
+
+def test_a_talking_clip_does_not_get_the_voiceover_offer(tmp_path):
+    root = project(tmp_path, media=100, manifest=200, yml=300)
+    manifest_of(root, '{"path": "media/a.jpg", "kind": "still"}, '
+                      '{"path": "media/b.mp4", "kind": "video", '
+                      '"sound": {"has": true, "ratio": 0.5}}')
+    assert "say the words over these pictures" not in titles(root)
+
+
+def test_a_film_with_narration_already_set_does_not_repeat_the_offer(tmp_path):
+    root = project(tmp_path, media=100, manifest=200)
+    manifest_of(root, '{"path": "media/a.jpg", "kind": "still"}')
+    (root / "film.yaml").write_text("audio: media/voiceover.wav\n",
+                                    encoding="utf-8")
+    os.utime(root / "film.yaml", (300, 300))
+    assert "say the words over these pictures" not in titles(root)
+
+
+def test_a_narration_recorded_after_the_edit_offers_to_fold_it_in(tmp_path):
+    """The manifest is not older than the media, and film.yaml already
+    exists -- today that would offer `peek` and quietly play the new
+    voiceover under the old, unstretched pictures."""
+    root = project(tmp_path, media=100, manifest=200, yml=300)
+    wav = root / "media" / "voiceover_20260917-104512.wav"
+    wav.write_bytes(b"x")
+    os.utime(wav, (400, 400))
+    assert "init" in first(root)
+    assert "--force" in " ".join(next_steps(root)[0].args)
+
+
+def test_an_older_narration_does_not_reopen_an_edit_already_folding_it_in(
+        tmp_path):
+    root = project(tmp_path, media=100, manifest=200)
+    wav = root / "media" / "voiceover_20260917-104512.wav"
+    wav.write_bytes(b"x")
+    os.utime(wav, (250, 250))
+    (root / "film.yaml").write_text("audio: media/voiceover_20260917-104512.wav\n",
+                                    encoding="utf-8")
+    os.utime(root / "film.yaml", (300, 300))
+    assert "init" not in first(root)
+
+
 def test_one_alternative_is_offered_as_one_number_not_a_range():
     """The walk-through said "2-2 for another" whenever there was exactly
     one alternative -- a range with nothing in it."""

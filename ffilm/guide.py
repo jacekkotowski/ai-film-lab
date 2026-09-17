@@ -287,6 +287,33 @@ def _get_material(project: Path, unreadable: int = 0) -> list[Step]:
         folders=[media])] + record_step
 
 
+def wants_voiceover(entries: list[dict], film_has_audio: bool) -> bool:
+    """Photographs with nobody talking over them, and no narration set
+    yet -- exactly the film that `record --voice` finishes. Pure, off
+    entries the shape ingest's manifest already writes them in.
+
+    A talking clip already IS a narration of sorts, so offering to
+    record a second one over the top would compete with it rather than
+    help -- same reasoning as voice.voice_sources rule 1 outranking a
+    clip's own speech.
+    """
+    if film_has_audio:
+        return False
+    from . import scaffold
+    has_still = any(e.get("kind") == "still" for e in entries)
+    has_talking = any(e.get("kind") == "video" and scaffold.is_talking(e)
+                      for e in entries)
+    return has_still and not has_talking
+
+
+def _manifest_media(manifest: Path) -> list[dict]:
+    try:
+        d = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    return d.get("media") or []
+
+
 def next_steps(project: Path) -> list[Step]:
     """What to do next, best first. The rest are the sensible alternatives."""
     name = project.name
@@ -324,6 +351,21 @@ def next_steps(project: Path) -> list[Step]:
                          "durations, camera moves. All of it changeable.")]
 
     edited = _mtime(yml)
+
+    # A voiceover recorded (or dropped in) after the last edit has not
+    # been folded into it: `init` is what stretches the photographs to
+    # cover it and starts it after the opening card (2026-09-17 plan,
+    # items 2 and 3). Without this check, the manifest is not older than
+    # the media -- ingest never reads audio -- so the guide would offer
+    # `peek` and quietly play the new narration under the old pictures.
+    narration = _newest(project / "media", AUDIO_EXT)
+    if narration and narration > edited:
+        return [Step("Fold your narration into the edit",
+                     ["init", "--force"] + p,
+                     why="A voiceover arrived after the last edit. "
+                         "Rewriting stretches the photographs to cover "
+                         "it. What you had is kept as film.yaml.bak.")]
+
     out = project / "out"
     # A render answers every question a rougher one would have: `go`
     # makes a draft, and a draft settles the order too; `final` settles
@@ -334,13 +376,24 @@ def next_steps(project: Path) -> list[Step]:
     draft_ok = final_ok or _mtime(out / "draft.mp4") >= edited
 
     if not peek_ok and not draft_ok:
-        return [
+        steps = [
             Step("Watch it -- is the ORDER right?", ["peek"] + p,
                  why="Seconds to render. Small and choppy on purpose."),
             Step("...or open the bench and click the shots first",
                  ["edit"] + p,
                  why="Click a photo to say what the camera should look at."),
         ]
+        from .spec import headers
+        if (sys.platform == "win32"
+                and wants_voiceover(_manifest_media(manifest),
+                                    bool(headers(yml).get("audio")))):
+            steps.append(Step(
+                "...or say the words over these pictures",
+                ["record", "--voice"] + p,
+                why="Same window as talking to the camera, minus the "
+                    "camera. `init` picks it up as the narration and "
+                    "stretches the photographs to cover it."))
+        return steps
 
     if not draft_ok:
         return [
