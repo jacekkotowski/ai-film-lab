@@ -29,8 +29,7 @@ nothing else.**
 | captions | 3 / 3 / 4, one per slide's own paragraph, no "cut short" warning |
 | `upload.txt` | 10 chapter lines, 0:02 to 0:54, straight from the captions |
 | narration end vs film end | film 57.33s, speech ends 56.95s, tail 0.38s. That is VOICE_TAIL, and the music fade sits inside it |
-| `film undo` | brought back the version before -- and exposed a real bug, fixed in `ff92275`: it was writing `
-` on every line |
+| `film undo` | brought back the version before -- and exposed a real bug, fixed in `ff92275`: it was writing a doubled carriage return on every line |
 | reorder by hand (s02/s03 swapped) then peek | the words moved with the pictures. Transcribing the render gives paragraph 1, then 3, then 2 |
 
 ### Two things measured that differ from what this plan assumed
