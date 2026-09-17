@@ -119,6 +119,22 @@ def versions(project: Path, limit: int = 12) -> list[tuple[str, str]]:
     return out
 
 
+def one_newline(text: str) -> str:
+    """Git's bytes as plain lines, whatever they were committed with.
+
+    `Path.write_text` opens in text mode, where Python turns every `\\n`
+    it is handed into `os.linesep`. So a blob committed with CRLF came
+    back out of `undo` as `\\r\\r\\n` on every line -- a blank line
+    between every line of film.yaml, doubling again on the next undo.
+    YAML tolerates it, so the film still loaded and nothing said a word.
+
+    It also broke the "nothing to undo" check, which compares this text
+    against `read_text` -- and `read_text` translates endings on the way
+    IN, so a CRLF blob never equalled the identical file on disk.
+    """
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def restore(project: Path, sha: str) -> str | None:
     """Put a saved version of film.yaml back. Returns its text, or None.
 
@@ -136,4 +152,4 @@ def restore(project: Path, sha: str) -> str | None:
     r = _git(root, "show", f"{sha}:{rel}")
     if r is None or r.returncode != 0 or not r.stdout:
         return None
-    return r.stdout
+    return one_newline(r.stdout)
