@@ -313,8 +313,12 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
         raise SystemExit("No usable media found. Is anything in media/ ?")
 
     target_notes: list[str] = []
+    if audio:
+        from .audio import _dur
+        target_notes += stretch_to_narration(
+            shots, meta, _dur(audio) + NARRATION_FADE_ROOM)
     if target:
-        target_notes = fit_to_target(shots, meta, float(target))
+        target_notes += fit_to_target(shots, meta, float(target))
         keep = [(s, m) for s, m in zip(shots, meta) if s.duration > 0]
         shots = [s for s, _ in keep]
         meta = [m for _, m in keep]
@@ -517,6 +521,50 @@ def shot_block(s: Shot, m: dict) -> list[str]:
 
 
 MIN_SHOT = 2.0               # no still is worth less screen time than this
+
+# Room left after the narration ends, so the music has somewhere to fade
+# out into rather than being cut off on the last word. Same number as
+# Film.music_fade's own default (spec.py) -- if that default moves, this
+# should move with it.
+NARRATION_FADE_ROOM = 2.0
+
+
+def stretch_to_narration(shots: list[Shot], meta: list[dict],
+                         target: float) -> list[str]:
+    """Grow the photographs so the film covers a narration longer than
+    they are. The inverse of fit_to_target's shrink -- and deliberately
+    not the same function.
+
+    fit_to_target's target is a CEILING for a Short: a film already
+    under it is left alone, however far under
+    (test_a_target_that_is_already_met_changes_nothing in
+    test_editing_rules.py runs it at 300s against 18s of stills and
+    expects nothing to move). This target is a FLOOR the narration
+    needs met. They are not the same kind of number -- "no more than"
+    and "at least" -- and making one function serve both would have
+    made that test wrong.
+
+    Only ever touches photographs. A video clip is stretched by slowing
+    it down, which is record.REC_SPEED's decision to make on a take,
+    not a duration target's to make silently on whatever clip is in
+    the film.
+    """
+    notes: list[str] = []
+    total = sum(s.duration for s in shots)
+    if total >= target:
+        return notes
+    photos = [i for i, m in enumerate(meta)
+             if m["entry"].get("kind") == "still"]
+    photo_total = sum(shots[i].duration for i in photos)
+    if photo_total <= 0:
+        return notes
+    room = target - (total - photo_total)
+    factor = room / photo_total
+    for i in photos:
+        shots[i].duration *= factor
+    notes.append(f"# Photographs held longer -- {room:.0f}s of pictures in "
+                 f"all -- to cover the narration to its end.")
+    return notes
 
 
 def fit_to_target(shots: list[Shot], meta: list[dict],
