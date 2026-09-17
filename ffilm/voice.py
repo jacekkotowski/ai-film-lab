@@ -41,6 +41,11 @@ class Line:
     start: float
     end: float
     words: list[float] = field(default_factory=list)   # when each word starts
+    # Which sentence of the script this came from, or -1 when there was
+    # no script and the line was made by listening. It is what lets a
+    # paragraph be found again in the finished timing -- see
+    # paragraph_windows. Never written to film.yaml.
+    unit: int = -1
 
     def __post_init__(self):
         # The speech model hands back numpy scalars, not Python floats.
@@ -356,6 +361,13 @@ def _key(text: str) -> list[str]:
 SENTENCE_END = re.compile("[.!?…]+[\"'”’»)\\]]*\\s+")
 
 
+# A paragraph may open by naming the picture it belongs to: `[3]` or
+# `[3_declaration_of_love.png]`. It is an instruction, not something to
+# read out, so it is taken off here -- otherwise it would be captioned
+# onto the screen and matched against what was actually said.
+PICTURE_TAG = re.compile(r"^\[([^\]]*)\]\s*")
+
+
 def script_units(text: str) -> list[str]:
     """The script, cut where its author cut it.
 
@@ -366,7 +378,7 @@ def script_units(text: str) -> list[str]:
     """
     units: list[str] = []
     for line in text.splitlines():
-        line = line.strip()
+        line = PICTURE_TAG.sub("", line.strip()).strip()
         if not line:
             continue
         start = 0
@@ -379,6 +391,80 @@ def script_units(text: str) -> list[str]:
         if tail:
             units.append(tail)
     return units
+
+
+@dataclass
+class Paragraph:
+    """One paragraph of script.txt: the picture it names, if it named
+    one, and the sentences in it."""
+    picture: str | None
+    units: list[str]
+
+
+def script_paragraphs(text: str) -> list[Paragraph]:
+    """The script, split where its author left a blank line.
+
+    A line break inside a paragraph is already a decision -- it is where
+    a caption may end. A BLANK line is the bigger one: it is where the
+    subject changes, and so it is where the picture changes. One
+    paragraph, one slide.
+
+    The units come out of `script_units`, block by block, so the flat
+    list of them is exactly `script_units` of the whole script. That
+    matters: the matcher is given one list and the cutting reads the
+    other, and a sentence that belonged to a different paragraph in each
+    would put a picture under somebody else's words.
+    """
+    out: list[Paragraph] = []
+    for block in re.split(r"\n\s*\n", text or ""):
+        if not block.strip():
+            continue
+        first = block.lstrip().splitlines()[0] if block.strip() else ""
+        m = PICTURE_TAG.match(first.strip())
+        units = script_units(block)
+        if units:
+            out.append(Paragraph(m.group(1).strip() if m else None, units))
+    return out
+
+
+def paragraph_windows(lines: list[Line], paragraphs: list[Paragraph],
+                      breath: float = 0.3) -> list[tuple[float, float] | None]:
+    """When each paragraph was said: first word to last, plus a breath.
+
+    `lines` are what `align_to_script` gave back -- every written
+    sentence with the times of the words that said it -- and each one
+    carries the index of the sentence it came from. Grouping those by
+    paragraph is the whole trick; the timing was already done.
+
+    None for a paragraph nobody read out. A window is never allowed to
+    reach into the next one: padding both ends by a breath can make two
+    neighbours overlap, and two slides quoting the same moment would
+    say it twice, a beat apart.
+    """
+    at: dict[int, int] = {}
+    n = 0
+    for p, para in enumerate(paragraphs):
+        for _ in para.units:
+            at[n] = p
+            n += 1
+
+    spans: list[tuple[float, float] | None] = []
+    for p in range(len(paragraphs)):
+        here = [ln for ln in lines if at.get(ln.unit) == p]
+        if not here:
+            spans.append(None)
+            continue
+        spans.append((max(0.0, min(ln.start for ln in here) - breath),
+                      max(ln.end for ln in here) + breath))
+
+    said = [i for i, s in enumerate(spans) if s is not None]
+    for i, j in zip(said, said[1:]):
+        a, b = spans[i], spans[j]
+        if b[0] < a[1]:
+            mid = (a[1] + b[0]) / 2.0
+            spans[i], spans[j] = (a[0], mid), (mid, b[1])
+    return [None if s is None else (round(s[0], 2), round(s[1], 2))
+            for s in spans]
 
 
 # A caption has to be short enough to READ, and matching a script does
@@ -665,7 +751,8 @@ def _align_once(words: list, units: list[str],
             here = [when[p] for p in range(lo, hi) if p in when]
             if not here:
                 continue                  # this clause was never said
-            out.append(Line(text, float(here[0].start), float(here[-1].end)))
+            out.append(Line(text, float(here[0].start), float(here[-1].end),
+                            unit=u))
     return out
 
 

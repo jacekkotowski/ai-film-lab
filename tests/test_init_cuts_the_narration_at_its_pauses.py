@@ -169,7 +169,9 @@ def test_it_no_longer_claims_the_captions_were_left_out(tmp_path,
 
 def test_it_says_what_it_did_and_how_to_do_better(tmp_path, monkeypatch):
     text = built(tmp_path, monkeypatch)
-    assert "3 slide(s) cut from a 60s narration at its pauses" in text
+    assert "3 slide(s), one per picture" in text
+    assert "the 60s narration" in text
+    assert "GUESSED" in text
     assert "script.txt" in text
 
 

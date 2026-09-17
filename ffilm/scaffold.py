@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from . import kinds, segment
@@ -719,20 +720,35 @@ def cut_into_slides(shots: list[Shot], meta: list[dict], project: Path,
 
     total = narration_seconds(audio)
     L = ["#",
-         f"# {len(pieces)} slide(s) cut from a {total:.0f}s narration at its "
-         f"pauses.",
-         "# Each `in:`/`out:` is that picture's words, on the narration's own",
-         "# clock. Move a shot and its words move with it; swap `src:` to put",
-         "# a different picture under the same words; hold one longer with",
-         "# `duration:` and the words stay where they were said."]
+         f"# {len(pieces)} slide(s), one per picture, each holding its own "
+         f"piece of",
+         f"# the {total:.0f}s narration. Each `in:`/`out:` is that picture's "
+         f"words, on",
+         "# the narration's own clock. Move a shot and its words move with it;",
+         "# swap `src:` to put a different picture under the same words; hold",
+         "# one longer with `duration:` and the words stay where they were said."]
     if len(pieces) < len(shots):
         L.append(f"# {len(shots) - len(pieces)} picture(s) came after the "
                  f"last words and are held silent.")
-    L += ["#",
-          "# Guessed from where you paused. To say it exactly, put your words",
-          "# in script.txt, one paragraph per picture, and run",
-          "# `uv run film caption --apply` -- it re-cuts these by paragraph."]
+    L += ["#"] + list(SLIDES_GUESSED)
     return L
+
+
+# Where the cuts came from, written into the file so that the answer to
+# "why is this picture up for thirty seconds" is in the file itself.
+# `recut_slides` swaps the first for the second, the way `add_captions`
+# takes out NO_CAPTIONS_YET: after a script has said where the paragraphs
+# are, a file still claiming the cuts were guessed is simply wrong.
+SLIDES_GUESSED = (
+    "# Where the cuts go was GUESSED, from where you paused. To say it",
+    "# exactly, put your words in script.txt, one paragraph per picture,",
+    "# and run `uv run film caption --apply`.",
+)
+SLIDES_BY_SCRIPT = (
+    "# Cut by the paragraphs of script.txt -- one paragraph, one picture.",
+    "# Change the paragraphs there and run `uv run film caption --apply`",
+    "# again, or move these `in:`/`out:` numbers by hand.",
+)
 
 
 def fit_to_target(shots: list[Shot], meta: list[dict],
@@ -961,6 +977,277 @@ NO_CAPTIONS_YET = (
     "# `uv run film caption` once you're happy with the shots,",
     "# or watch it once and add what actually needs saying.",
 )
+
+
+@dataclass
+class SlideCut:
+    """One slide as a script says it should be. `sid` is the shot this
+    replaces, or "" for one that has to be added to the film."""
+    sid: str
+    src: str
+    voice: str
+    tin: float
+    tout: float
+    note: str = ""
+
+
+def slide_cuts(film, paragraphs, windows) -> list["SlideCut"]:
+    """Match the paragraphs somebody wrote to the pictures they have.
+
+    Pure: `windows` is what `voice.paragraph_windows` measured, one per
+    paragraph, None where a paragraph was never read out.
+
+    Pictures go to paragraphs in order, unless a paragraph named one --
+    `[3]` matches a picture whose filename starts with that number,
+    `[3_declaration_of_love.png]` matches it outright.
+
+    The two uneven cases, both of which happen the moment somebody
+    rewrites a script without renaming files:
+
+      more paragraphs than pictures -- the last picture is used again,
+      and the extra slides are added to the film;
+      more pictures than paragraphs -- the leftover pictures SHARE the
+      last paragraph, its window divided between them. Not repeated:
+      two slides quoting the same words would say them twice.
+    """
+    slides = [s for s in film.shots if s.voice]
+    if not slides:
+        return []
+    voice_src = slides[0].voice
+    pictures = [s.src for s in slides]
+    sids = [s.id for s in slides]
+
+    spoken = [(p, w) for p, w in zip(paragraphs, windows) if w is not None]
+    if not spoken:
+        return []
+
+    def named(tag: str) -> str | None:
+        for src in pictures:
+            name = Path(src).name
+            if name == tag or Path(name).stem == tag:
+                return src
+            if _hint(Path(name).stem)[1] is not None and tag.isdigit():
+                if _hint(Path(name).stem)[1] == int(tag):
+                    return src
+        return None
+
+    cuts: list[SlideCut] = []
+    free = list(pictures)
+    for i, (para, (a, b)) in enumerate(spoken):
+        pick = named(para.picture) if para.picture else None
+        if pick is None:
+            pick = free[i] if i < len(free) else free[-1]
+        cuts.append(SlideCut(
+            sid=sids[i] if i < len(sids) else "",
+            src=pick, voice=voice_src, tin=a, tout=b,
+            note=f"paragraph {i + 1} of {len(spoken)} -- "
+                 f"{_opening_words(para.units)}"))
+
+    # More pictures than paragraphs: the ones with nothing of their own
+    # share the last paragraph, in equal parts.
+    spare = len(pictures) - len(cuts)
+    if spare > 0:
+        last = cuts[-1]
+        share = (last.tout - last.tin) / (spare + 1)
+        base_note = last.note
+        cuts[-1] = replace(last, tout=round(last.tin + share, 2),
+                           note=f"{base_note} (1 of {spare + 1} pictures)")
+        for k in range(spare):
+            i = len(cuts)
+            cuts.append(SlideCut(
+                sid=sids[i] if i < len(sids) else "",
+                src=pictures[i], voice=voice_src,
+                tin=round(last.tin + share * (k + 1), 2),
+                tout=round(last.tin + share * (k + 2), 2)
+                if k + 2 <= spare else last.tout,
+                note=f"{base_note} ({k + 2} of {spare + 1} pictures)"))
+    return cuts
+
+
+def apply_cuts(film, cuts: list["SlideCut"]):
+    """The same film with its slides re-cut. Nothing is written.
+
+    `film caption` fits the captions BEFORE it decides whether to write
+    anything -- the run without `--apply` is a preview, and a preview
+    fitted against the windows the script has just replaced would show
+    lines on the wrong pictures and warn about shots that are about to
+    change length.
+    """
+    from .spec import Film
+
+    by_id = {c.sid: c for c in cuts if c.sid}
+    shots = []
+    for s in film.shots:
+        c = by_id.get(s.id)
+        if c is None:
+            shots.append(s)
+            continue
+        shots.append(replace(s, src=c.src, voice=c.voice, tin=c.tin,
+                             tout=c.tout,
+                             duration=(c.tout - c.tin) + VOICE_TAIL,
+                             note=c.note or s.note))
+    nth = max((int(m.group(1)) for m in
+               (re.match(r"^s(\d+)$", s.id) for s in film.shots) if m),
+              default=0)
+    for c in cuts:
+        if c.sid and c.sid in by_id and any(s.id == c.sid for s in film.shots):
+            continue
+        nth += 1
+        shots.append(Shot(src=c.src, kind="still", voice=c.voice, tin=c.tin,
+                          tout=c.tout, duration=(c.tout - c.tin) + VOICE_TAIL,
+                          move=_EXTRA_SLIDE_MOVE, note=c.note,
+                          id=f"s{nth:02d}"))
+    return replace(film, shots=shots)
+
+
+def _opening_words(units: list[str], words: int = 6) -> str:
+    """The first few words of a paragraph, for the note on its shot --
+    so you can tell at a glance which block of the script a picture is
+    holding, without counting paragraphs."""
+    said = " ".join(units).split()
+    short = " ".join(said[:words])
+    return f"'{short}{'...' if len(said) > words else ''}'"
+
+
+# The keys a slide's own line carries, in the order they are written.
+_SLIDE_KEYS = ("src", "voice", "in", "out")
+
+
+def recut_slides(text: str, cuts: list["SlideCut"]) -> str:
+    """Write the re-cut slides into film.yaml AS TEXT.
+
+    Same rule as `add_captions`, for the same reason: comments are not
+    data, and `yaml.safe_dump` deletes every one of them -- including
+    the header `init` writes explaining what each number means. So each
+    shot's block is found by its `- id:` line and only the four lines
+    that changed are replaced. The move somebody chose, the focus point
+    they clicked, the blank lines and the footer are all left alone.
+
+    A cut with no `sid` is a slide the script asked for and the film
+    does not have. It is appended after the last shot -- inside
+    `shots:`, before whatever follows it, because nothing outside that
+    list is ever read.
+    """
+    lines = text.splitlines()
+    blocks = _shot_blocks(lines)
+    by_id = {sid: (at, end, indent) for sid, at, end, indent in blocks}
+
+    drop: set[int] = set()
+    inserts: dict[int, list[str]] = {}
+    for c in (c for c in cuts if c.sid and c.sid in by_id):
+        at, end, dash = by_id[c.sid]
+        indent = dash + "  "
+        want = {"src": f"{indent}src: {c.src}",
+                "voice": f"{indent}voice: {c.voice}",
+                "in": f"{indent}in: {tc(c.tin)}",
+                "out": f"{indent}out: {tc(c.tout)}"}
+        # `duration:` is derived from in/out plus a breath. One left
+        # behind from the pause-cut version would pin the picture to the
+        # old window while the words moved to the new one.
+        seen: set[str] = set()
+        for j in range(at + 1, end):
+            key = lines[j].strip().split(":")[0]
+            if key in want:
+                lines[j] = want[key]
+                seen.add(key)
+            elif key == "duration":
+                drop.add(j)
+            elif key == "note" and c.note:
+                lines[j] = f"{indent}note: {quoted(c.note)}"
+                seen.add("note")
+        missing = [want[k] for k in _SLIDE_KEYS if k not in seen]
+        if c.note and "note" not in seen:
+            missing.append(f"{indent}note: {quoted(c.note)}")
+        if missing:
+            inserts.setdefault(at + 1, []).extend(missing)
+
+    out: list[str] = []
+    swapped = False
+    for i, line in enumerate(lines):
+        if i in inserts:
+            out.extend(inserts.pop(i))
+        if i in drop:
+            continue
+        if line in SLIDES_GUESSED:
+            if not swapped:
+                out.extend(SLIDES_BY_SCRIPT)
+                swapped = True
+            continue
+        out.append(line)
+
+    extra = [c for c in cuts if not c.sid or c.sid not in by_id]
+    if extra:
+        # After the last shot in the list, never at the end of the file:
+        # `shots:` may be followed by a footer, and a block below that is
+        # outside the list and is not read at all.
+        end = blocks[-1][2] if blocks else len(out)
+        while end > 0 and not out[end - 1].strip():
+            end -= 1
+        dash = blocks[-1][3] if blocks else "  "
+        indent = dash + "  "
+        nth = _highest_id(blocks)
+        block: list[str] = []
+        for c in extra:
+            nth += 1
+            block += ["",
+                      f"{dash}- id: s{nth:02d}",
+                      f"{indent}src: {c.src}",
+                      f"{indent}voice: {c.voice}",
+                      f"{indent}in: {tc(c.tin)}",
+                      f"{indent}out: {tc(c.tout)}",
+                      f"{indent}move: {_EXTRA_SLIDE_MOVE}"]
+            if c.note:
+                block.append(f"{indent}note: {quoted(c.note)}")
+        out[end:end] = block
+    return "\n".join(out) + "\n"
+
+
+# A picture the script asked for that the film had no shot for. `static`
+# because there is nothing known about it: the move `init` would have
+# chosen came from looking at the picture, and nothing has.
+_EXTRA_SLIDE_MOVE = "static"
+
+
+def _highest_id(blocks) -> int:
+    """The largest sNN already in the file, so an added shot never
+    collides with one that is there."""
+    best = 0
+    for sid, *_rest in blocks:
+        m = re.match(r"^s(\d+)$", sid)
+        if m:
+            best = max(best, int(m.group(1)))
+    return best
+
+
+def _shot_blocks(lines: list[str]) -> list[tuple[str, int, int, str]]:
+    """(id, first line, one past the last, the dash's indent) for every
+    shot in the file.
+
+    A block runs to the next shot, or to the first line at or left of
+    the dash's own indent -- which is where `shots:` ends and whatever
+    follows it begins. A comment at column 0 counts and has to: `init`
+    signs the file off with `# 3 shots, about 16 seconds.`, and treating
+    that as part of the last shot put its captions below the footer,
+    outside the list, where nothing would read them. An INDENTED comment
+    is a note inside the shot and stays in it.
+    """
+    starts: list[tuple[int, str, str]] = []
+    for i, line in enumerate(lines):
+        m = re.match(r"^(\s*)-\s+id:\s*(\S+)\s*$", line)
+        if m:
+            starts.append((i, m.group(2).strip('"\''), m.group(1)))
+
+    out: list[tuple[str, int, int, str]] = []
+    for n, (at, sid, dash) in enumerate(starts):
+        end = starts[n + 1][0] if n + 1 < len(starts) else len(lines)
+        for j in range(at + 1, end):
+            if not lines[j].strip():
+                continue                  # a blank line settles nothing
+            if len(lines[j]) - len(lines[j].lstrip()) <= len(dash):
+                end = j
+                break
+        out.append((sid, at, end, dash))
+    return out
 
 
 def add_captions(text: str, by_shot: dict[str, list]) -> str:

@@ -55,38 +55,91 @@ shots:
   - id: s01
     src: media/1declaration_of_love.png
     voice: media/voiceover_20260917-105656.wav
-    in: "00:01.75"
-    out: "00:34.75"
+    in: "00:01.54"
+    out: "00:18.43"
     move: tilt_up
     focus: [0.649, 0.539]
-    note: "picture 1 of 3 -- holds while these words are said"
+    note: "paragraph 1 of 3 -- 'I remember I was stressed and...'"
+    captions:
+      - text: "I remember I was stressed and I just said,"
+        at: 0.30
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.78, 1.22, 1.52, 1.72, 2.26, 3.88]
+      - text: "what I just said,"
+        at: 6.14
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 2.14]
+      - text: "I'm stressed right now as much as I was then."
+        at: 11.75
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 1.86, 2.22, 2.72, 3.12, 3.42, 3.70, 3.88, 4.06, 4.36]
 
   - id: s02
     src: media/2declaration of love.png
     voice: media/voiceover_20260917-105656.wav
-    in: "00:37.10"
-    out: "00:50.85"
+    in: "00:19.41"
+    out: "00:39.78"
     move: push_in
     focus: [0.668, 0.565]
-    note: "picture 2 of 3 -- holds while these words are said"
+    note: "paragraph 2 of 3 -- 'I said I wanted only to...'"
+    captions:
+      - text: "I said I wanted only to say and I had a hidden rose behind me."
+        at: 0.30
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.78, 2.24, 3.38, 3.88, 4.22, 4.42]
+      - text: "I wanted only to say and she answered,"
+        at: 10.76
+        dur: 4.01
+        pos: lower_third
+        words: [0.00, 0.62, 0.98, 1.28, 1.48, 1.88, 2.96, 3.48]
+      - text: "I know what you want to say."
+        at: 17.77
+        dur: 2.29
+        pos: lower_third
+        words: [0.00, 0.48, 0.86, 1.46, 1.62, 1.78, 1.94]
 
   - id: s03
     src: media/3_declaration_of_love.png
     voice: media/voiceover_20260917-105656.wav
-    in: "00:52.40"
-    out: "00:58.80"
+    in: "00:40.64"
+    out: "00:57.55"
     move: pull_out
     focus: [0.767, 0.045]
-    note: "picture 3 of 3 -- holds while these words are said"
+    note: "paragraph 3 of 3 -- 'It's better that you never come...'"
+    captions:
+      - text: "It's better that you never come back."
+        at: 0.30
+        dur: 3.53
+        pos: lower_third
+        words: [0.00, 0.52, 0.84, 2.04, 2.34, 2.92, 3.24]
+      - text: "It would be easier for us if you forget me,"
+        at: 5.24
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.66, 0.84, 1.06, 1.38, 1.62, 1.98, 2.38, 2.92, 4.22]
+      - text: "but I didn't."
+        at: 11.21
+        dur: 1.83
+        pos: lower_third
+        words: [0.00, 1.00, 1.16]
+      - text: "I refused to forget."
+        at: 14.05
+        dur: 2.56
+        pos: lower_third
+        words: [0.00, 1.20, 1.80, 2.18]
 
 # 3 shots, about 54 seconds.
 #
-# 3 slide(s) cut from a 60s narration at its pauses.
-# Each `in:`/`out:` is that picture's words, on the narration's own
-# clock. Move a shot and its words move with it; swap `src:` to put
-# a different picture under the same words; hold one longer with
-# `duration:` and the words stay where they were said.
+# 3 slide(s), one per picture, each holding its own piece of
+# the 60s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
 #
-# Guessed from where you paused. To say it exactly, put your words
-# in script.txt, one paragraph per picture, and run
-# `uv run film caption --apply` -- it re-cuts these by paragraph.
+# Cut by the paragraphs of script.txt -- one paragraph, one picture.
+# Change the paragraphs there and run `uv run film caption --apply`
+# again, or move these `in:`/`out:` numbers by hand.

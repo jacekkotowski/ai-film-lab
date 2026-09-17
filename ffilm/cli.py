@@ -360,18 +360,40 @@ def cmd_caption(args) -> None:
     all_warnings: list[str] = []
     all_lines_for_transcript = []
 
+    cuts: list = []
     for src in sources:
         print(f"-- {src.label} --")
         # The words you wrote, if you wrote any. They decide where a
         # caption ends; the transcript only decides when.
         from . import booth
+        script = booth.read_script(project, None)
         lines = voice.transcribe(src.audio_path, model_size=args.model,
-                                 language=args.lang,
-                                 script=booth.read_script(project, None))
+                                 language=args.lang, script=script)
         all_lines_for_transcript.append((src.label, lines))
 
         if args.transcript_only:
             continue
+
+        # One paragraph of the script is one slide. `init` cut this
+        # narration at its longest pauses, which is a guess and says so;
+        # the script is where the person actually said where the subject
+        # changes. Applied to the film in memory first, so the preview
+        # below shows the film being asked for and not the one being
+        # replaced.
+        paragraphs = voice.script_paragraphs(script or "")
+        if paragraphs and any(s.voice for s in film.shots):
+            windows = voice.paragraph_windows(
+                lines, paragraphs, breath=scaffold.BREATH)
+            cuts = scaffold.slide_cuts(film, paragraphs, windows)
+            if cuts:
+                film = scaffold.apply_cuts(film, cuts)
+                missed = sum(1 for w in windows if w is None)
+                print(f"  {len(cuts)} slide(s) re-cut by paragraph"
+                      + (f", {missed} paragraph(s) not found in what was "
+                         f"said" if missed else ""))
+                for c, s in zip(cuts, [s for s in film.shots if s.voice]):
+                    print(f"  [{s.id}] {c.tin:6.2f}-{c.tout:6.2f}  "
+                          f"{Path(c.src).name}")
 
         placed, warnings = caption_fit.fit_lines_to_shots(film, src, lines)
         for sid, caps in placed.items():
@@ -420,6 +442,9 @@ def cmd_caption(args) -> None:
               f"the earlier shot if the later reading is the keeper.")
 
     if not args.apply:
+        if cuts:
+            print("\nThe slide windows above are a preview too -- --apply "
+                  "writes them into film.yaml alongside the captions.")
         print("\nThis was a preview. Run again with --apply to write these "
               "into film.yaml (existing captions on affected shots are kept, "
               "new ones are added after them). You can also hand-edit any "
@@ -434,7 +459,11 @@ def cmd_caption(args) -> None:
     # anybody had read the file once.
     yml = project / "film.yaml"
     before = yml.read_text(encoding="utf-8")
-    yml.write_text(scaffold.add_captions(before, all_placed), encoding="utf-8")
+    # The slides move first, then the captions are placed on them. The
+    # other order would fit every line to a window that is about to
+    # change.
+    text = scaffold.recut_slides(before, cuts) if cuts else before
+    yml.write_text(scaffold.add_captions(text, all_placed), encoding="utf-8")
     try:
         Film.load(yml)                 # validate what we just wrote
     except SystemExit as e:
