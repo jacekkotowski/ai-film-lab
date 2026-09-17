@@ -345,9 +345,22 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
         L.append("resolution: [1080, 1920]   # vertical, for YouTube Shorts")
     else:
         L.append("resolution: [1920, 1080]")
+
+    # Built here, before `audio_offset` is decided, rather than where it
+    # is written into `shots:` below -- the narration needs to know
+    # whether there IS a card, and how long it holds, before it can know
+    # where to start.
+    card_block = title_card_block(project, vertical)
+    card_seconds = ((SHORT_TITLE_CARD_SECONDS if vertical else TITLE_CARD_SECONDS)
+                    if card_block else 0.0)
+
     if audio:
         L.append(f'audio: {audio.relative_to(project).as_posix()}')
-        L.append("audio_offset: 0.0")
+        if card_seconds:
+            L.append(f"audio_offset: {card_seconds:.1f}   "
+                     f"# the narration waits for the opening card")
+        else:
+            L.append("audio_offset: 0.0")
     else:
         L.append("# audio: media/voiceover.mp3   # optional separate narration")
     L.append("# title: the words on the thumbnail. Left out, the film is")
@@ -373,7 +386,7 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     L.extend(bokeh_lines(segment.missing_model() is None))
     L.append("")
     L.append("shots:")
-    L.extend(title_card_block(project, vertical))
+    L.extend(card_block)
 
     for s, m in zip(shots, meta):
         L.extend(shot_block(s, m))
