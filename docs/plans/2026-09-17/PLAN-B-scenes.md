@@ -4,7 +4,63 @@ Written by Claude (Fable 5.1) after Jacek's own test, `projects/test_story`
 (three vertical pictures, a 59.5 s narration recorded with
 `film record --voice`, no script). The morning's run declared its items
 done on a scratch project; this test is the acceptance it never had.
-**Executed by Opus. Acceptance is `test_story`, nothing else.**
+**Executed by Opus on 2026-09-17/18. Acceptance is `test_story`,
+nothing else.**
+
+---
+
+## Status: items 1-6 all done, whole suite green throughout
+
+| item | commit | measured |
+|---|---|---|
+| 1. a leading number orders a file | `fe02cdc` | test_story comes out 1, 2, 3 (was 3, 1, 2) |
+| 2. `voice:` on a still shot | `d6e022a` | spec, soundtrack, captions, checks, and the bench carrying it |
+| 3. `init` cuts at the pauses | `5130d4c` | 3 slides, 33.4 / 14.2 / 6.8s, every word kept |
+| 4. `caption --apply` re-cuts by paragraph | `2be9e45` | 3 slides, 17.3 / 20.8 / 17.3s, 10 captions, none cut short |
+| 5. the path a person walks | `81fe8fb` | booth, guide, `record --voice`, `check`, HOW_TO_USE |
+| 6. acceptance on test_story | below | every row passed |
+
+### Item 6, filled in by measurement
+
+| check | result |
+|---|---|
+| shot order | 1, 2, 3 |
+| each slide's `in`/`out` | 1.54-18.43, 19.41-39.78, 40.64-57.55. Inside the file, no overlap, and both gaps fall inside measured pauses (18.20-20.10 and 39.55-41.25) |
+| captions | 3 / 3 / 4, one per slide's own paragraph, no "cut short" warning |
+| `upload.txt` | 10 chapter lines, 0:02 to 0:54, straight from the captions |
+| narration end vs film end | film 57.33s, speech ends 56.95s, tail 0.38s. That is VOICE_TAIL, and the music fade sits inside it |
+| `film undo` | brought back the version before -- and exposed a real bug, fixed in `ff92275`: it was writing `
+` on every line |
+| reorder by hand (s02/s03 swapped) then peek | the words moved with the pictures. Transcribing the render gives paragraph 1, then 3, then 2 |
+
+### Two things measured that differ from what this plan assumed
+
+**The pauses.** This plan says the three longest are 34.45-37.4,
+7.7-9.55 and 10.25-12.2. Measured, the second and third are 50.55-52.70
+(2.15s) and 53.60-55.60 (2.00s); 10.25-12.20 is only fourth. So the
+pause-cut split is 33.4 / 14.2 / 6.8, not the more even one the plan
+expected. It is the honest answer to "cut at the longest pauses" and the
+file says it is a guess. **A script fixes it completely** -- item 4 gives
+17.3 / 20.8 / 17.3 on the same take.
+
+**The bench needed a change after all.** This plan says `film undo` and
+the bench need none. `editor.dump` rewrites the whole film.yaml on Save
+and had no idea what `voice:` was, so one click would have turned a
+narrated film back into a silent slideshow. Carried through in `d6e022a`.
+
+### Needs Jacek
+
+- `projects/test_story/script.txt` was written by Claude from the
+  transcript, to have something to cut by. Replace it with the real
+  words and run `uv run film caption --apply -p test_story`.
+- Still open from the morning plan: a clip with no speech, muted or at
+  music level. `keep_clip_audio` runs every clip's audio through the
+  speech-lift chain either way. Not touched; it is a sound decision.
+- Never tested for real: whether `record --voice` opens the booth
+  cleanly with no camera attached.
+
+---
+
 
 Rules as before: `change-the-machine`, test first, whole suite with the
 exit code checked, one item per commit, measure before claiming. Never
