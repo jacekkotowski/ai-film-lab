@@ -981,11 +981,6 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
 
     if not quiet:
         say(f"\r  {quality.name}  100.0%{' ' * 24}\n")
-        if stopped_early and film.audio:
-            say("  note: the voiceover is shorter than the video, so the "
-                "clip was cut to match the audio. Lengthen the last shot(s), "
-                "or trim media to the voiceover's length, if that's not "
-                "what you want.\n")
     if proc.returncode not in (0, None) and not stopped_early:
         raise SystemExit("ffmpeg failed while encoding.")
 

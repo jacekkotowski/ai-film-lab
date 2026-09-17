@@ -286,6 +286,37 @@ def music_notes(film) -> list[str]:
     return [note] if note else []
 
 
+def narration_note(audio_seconds: float, film_seconds: float) -> str | None:
+    """What to say when a separately-recorded narration (`audio:`) runs
+    past the end of the pictures it plays under. Pure.
+
+    audio.build_soundtrack's last filter is `apad,atrim=0:total` -- a
+    narration longer than the film is silently cut to fit, with nothing
+    said about it anywhere. A narration that ends in silence, with no
+    warning, was judged the worst outcome on the 2026-09-17 plan's list.
+    """
+    over = audio_seconds - film_seconds
+    if over <= 0.5:
+        return None
+    return (f"  --    {audio_seconds:.0f}s of narration under a "
+            f"{film_seconds:.1f}s film: the last {over:.0f}s will not be "
+            f"heard. Hold the photographs longer, or "
+            f"`film go --target {audio_seconds:.0f}`")
+
+
+def narration_notes(film) -> list[str]:
+    """The narration line for `film check` and the render, measured off
+    the file `audio:` points at."""
+    from .audio import _dur
+    if not film.audio:
+        return []
+    path = film.resolve(film.audio)
+    if not path.exists():
+        return []
+    note = narration_note(_dur(path), film.duration)
+    return [note] if note else []
+
+
 # The editor's rulebook keeps captions under about a fifth of the runtime.
 CAPTION_SHARE_TASTE = 0.20
 

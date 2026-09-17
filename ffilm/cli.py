@@ -43,7 +43,7 @@ from . import guide
 from . import history
 from . import scaffold
 from .checks import (bokeh_notes, film_shape, framing_notes, library_lines,
-                     caption_share_line, music_notes,
+                     caption_share_line, music_notes, narration_notes,
                      preflight_report, unused_media)
 from .moves import choose_moves
 from .paths import toolkit_root
@@ -197,6 +197,8 @@ def cmd_render(args, quality_name: str) -> None:
 
     out = Path(args.out) if args.out else project / "out" / f"{quality_name}.mp4"
     print(f"{film.duration:.1f}s / {len(film.shots)} shots -> {out}")
+    for line in narration_notes(film):
+        print(line)
 
     # Record the film.yaml we are about to render, if it changed since the
     # last render. Silent when nothing changed, silent when there is no
@@ -542,6 +544,8 @@ def cmd_check(args) -> None:
     for line in library_lines(project):
         print(line)
     for line in music_notes(film):
+        print(line)
+    for line in narration_notes(film):
         print(line)
     share = caption_share_line(film)
     if share:
