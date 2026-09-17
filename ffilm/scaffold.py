@@ -86,6 +86,7 @@ QUOTE_SECONDS = 5.0          # a quote needs to be READ, not glanced at
 # fall back to plain alphabetical order.
 #
 #   00_thing.jpg, 01_thing.jpg    explicit numbered order (checked first)
+#   1thing.jpg                    the separator is optional -- see below
 #   open_thing.jpg                use as the opening shot
 #   close_thing.jpg               use as the closing shot
 #   open_close_thing.jpg          use the SAME image to open AND close
@@ -96,7 +97,20 @@ QUOTE_SECONDS = 5.0          # a quote needs to be READ, not glanced at
 #
 # A file can only be recognized by one of these -- the most specific
 # match wins (open_close over open, a number over a word-hint).
-_NUM_PREFIX = re.compile(r"^(\d{1,3})[_.\-\s]+")
+# A leading run of up to three digits is the order you asked for, and
+# whatever separates it from the name -- an underscore, a dot, a dash, a
+# space, or nothing at all -- is not part of the request. This used to
+# demand a separator, and Jacek's three pictures, `1declaration…`,
+# `2declaration of love` and `3_declaration…`, came out 3, 1, 2: only the
+# third was read as numbered, so it went first and the other two followed
+# alphabetically behind it. The file the machine writes promises that
+# `00_ 01_` orders files; it was keeping that promise for one spelling of
+# it.
+#
+# `(?!\d)` is what keeps a date or a camera counter out of this:
+# `20260917.jpg` and `IMG_0042.jpg` are not somebody asking for position
+# 202 or 42.
+_NUM_PREFIX = re.compile(r"^(\d{1,3})(?!\d)[_.\-\s]*")
 
 
 def _hint(stem: str) -> tuple[str | None, int | None, str]:
