@@ -720,18 +720,31 @@ def cmd_record(args) -> None:
             "then try again.")
 
     saved = rec.load_choice()
-    video, audio, notes = rec.choose_devices(
-        devices, saved, args.camera, args.mic)
+    if args.voice:
+        # No camera at all -- not "whatever choose_devices would have
+        # picked, discarded". Asking camera_modes() below would open the
+        # device just to throw the answer away, and the whole point of
+        # --voice is a narration read over PHOTOGRAPHS, not a clip.
+        _, audio, notes = rec.choose_devices(devices, saved, None, args.mic)
+        video = None
+        rec.save_choice(saved.get("video"), audio)
+    else:
+        video, audio, notes = rec.choose_devices(
+            devices, saved, args.camera, args.mic)
+        rec.save_choice(video, audio)
     if not video and not audio:
         raise SystemExit("I found no camera and no microphone to record with.")
-    rec.save_choice(video, audio)
 
     mode = rec.best_mode(rec.camera_modes(video)) if video else None
     script = booth.read_script(project, args.script)
     windowed = booth.available() and not args.no_window
 
-    shape = f", {mode[0]}x{mode[1]}" if mode else ""
-    print(f"\nCamera:      {video or '(none)'}{shape}")
+    if args.voice:
+        print("\nVoice only -- no camera. Reads over your photographs, "
+              "not to a lens.")
+    else:
+        shape = f", {mode[0]}x{mode[1]}" if mode else ""
+        print(f"\nCamera:      {video or '(none)'}{shape}")
     print(f"Microphone:  {audio or '(none)'}")
     for n in notes:
         print(f"             ({n})")
@@ -745,7 +758,7 @@ def cmd_record(args) -> None:
         and out of existence is the last thing you want in front of
         somebody who is already rattled."""
         (project / "media").mkdir(parents=True, exist_ok=True)
-        out = rec.next_take_path(project / "media")
+        out = rec.next_take_path(project / "media", audio_only=args.voice)
         cmd = rec.record_command(out, video, audio, mode, args.seconds,
                                  ffmpeg=ffmpeg_bin(), window=True)
         return booth.Take(cmd, out).start()
@@ -808,10 +821,11 @@ def cmd_record(args) -> None:
                       start=new_take, finish=took, seconds=args.seconds,
                       discard=drop_last)
     else:
-        print("\nLook at the camera, not at the screen.")
+        print("\nJust talk." if args.voice else
+              "\nLook at the camera, not at the screen.")
         while True:
             (project / "media").mkdir(parents=True, exist_ok=True)
-            out = rec.next_take_path(project / "media")
+            out = rec.next_take_path(project / "media", audio_only=args.voice)
             cmd = rec.record_command(out, video, audio, mode, args.seconds,
                                      ffmpeg=ffmpeg_bin(), window=False)
             print(f"\n  Take {len(takes) + 1}")
@@ -844,8 +858,14 @@ def cmd_record(args) -> None:
     total = sum(rec.verify_take(t, None, False)[0] for t in takes)
     print(f"\n  {len(takes)} take{'s' if len(takes) > 1 else ''}, "
           f"{_secs(total)}, saved in {project.name}\\media\\")
-    print(f"  In the edit they play at {rec.REC_SPEED}x so they do not drag,")
-    print("  and the silences get trimmed. Both are numbers you can change.")
+    if args.voice:
+        print("  `film init` reads it as the narration and stretches your "
+              "photographs to cover it.")
+    else:
+        print(f"  In the edit they play at {rec.REC_SPEED}x so they do not "
+              f"drag,")
+        print("  and the silences get trimmed. Both are numbers you can "
+              "change.")
     guide.print_next(project)
 
 
@@ -1297,6 +1317,9 @@ def main() -> None:
     p.add_argument("--camera", default=None,
                    help="camera name (see `film devices`)")
     p.add_argument("--mic", default=None, help="microphone name")
+    p.add_argument("--voice", action="store_true",
+                   help="microphone only -- no camera. For a narration "
+                        "read over photographs; writes voiceover_*.wav")
     p.add_argument("--script", default=None,
                    help="text file to scroll while you talk "
                         "(default: script.txt in the project)")
