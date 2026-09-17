@@ -37,7 +37,7 @@ from urllib.parse import unquote, urlparse
 
 from .moves import EASINGS, MOVES
 from .scaffold import _seconds_list, quoted
-from .spec import Film
+from .spec import VOICE_TAIL, Film
 
 PAGE = r"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -468,6 +468,12 @@ def state(project: Path) -> dict:
             # windows somebody tuned by hand and does not want guessed at.
             "dissolve": s.dissolve,
             "fill": s.fill,
+            # A slide's words: the voice file, and where in it they are.
+            # The bench has no controls for these either, and losing them
+            # would turn a narrated film back into a silent slideshow on
+            # the first click of Save.
+            "voice": s.voice,
+            "tout": s.tout,
             "frm": None if s.frm is None else vars(s.frm),
             "to": None if s.to is None else vars(s.to),
             "captions": [{"text": c.text, "at": c.at, "dur": c.dur, "pos": c.pos,
@@ -538,6 +544,24 @@ def dump(project: Path, data: dict) -> str:
             # by 20% the first time you save.
             if abs(speed - 1.0) > 0.001:
                 L.append(f"    speed: {speed}")
+        elif s.get("voice"):
+            # A slide. `duration` is written too and is the one the bench
+            # may have changed -- holding the picture longer is an
+            # ordinary edit. The words stay where they were said, which
+            # is why in/out are copied and not recomputed from it.
+            L.append(f"    voice: {s['voice']}")
+            tin = max(0.0, float(s.get("tin", 0.0)))
+            tout = float(s.get("tout") if s.get("tout") is not None
+                         else tin + dur)
+            L.append(f'    in: "{int(tin // 60):02d}:{tin % 60:05.2f}"')
+            L.append(f'    out: "{int(tout // 60):02d}:{tout % 60:05.2f}"')
+            # Only when the picture is being held for something other
+            # than its words plus a breath, which is what a slide does
+            # on its own. Written at a hundredth, not a tenth like a
+            # plain photograph: a tenth here moves the picture off the
+            # end of the words it is timed to.
+            if abs(dur - ((tout - tin) + VOICE_TAIL)) > 0.005:
+                L.append(f"    duration: {dur:.2f}")
         else:
             L.append(f"    duration: {dur:.1f}")
         L.append(f"    move: {s['move']}")

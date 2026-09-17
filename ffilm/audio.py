@@ -1183,6 +1183,65 @@ def measure_music(path: Path, cache_dir: Path | None = None) -> MusicMeasure:
     return m
 
 
+def speech_specs(film: Film, fps: int, audio_for) -> list[tuple]:
+    """Every piece of recorded speech in this film, and where it goes.
+
+    One entry per piece: (file, start, end or None for "to the end of
+    the file", delay in milliseconds, speed). Two things become one:
+
+      a CLIP with sound -- its own in/out on its own clock, at the
+      position its picture occupies in the finished film;
+      a SLIDE -- a photograph with `voice:` -- exactly the same, with the
+      picture coming from one file and the words from another.
+
+    `audio_for(shot) -> Path | None` is the one impure part, handed in:
+    which file on disk actually carries this shot's sound, or None when
+    it has none. That is where the proxy is swapped back for the
+    original and where the disk is asked whether there is an audio
+    stream at all -- so everything that can be silently wrong about
+    WHEN a word is heard is here, and testable without ffmpeg.
+
+    Counted in FRAMES, not seconds. The picture advances a whole frame
+    at a time, so a soundtrack that advances by film.yaml's decimals
+    parts company with it a little at every cut, and the gap is the
+    running total of every rounding so far.
+    """
+    from .spec import frames_for
+
+    specs: list[tuple] = []
+    at = 0
+    for shot in film.shots:
+        n = frames_for(shot.duration, fps)
+        # `keep_clip_audio` is about speech recorded in your video clips.
+        # A slide's `voice:` is the narration, which is not that, and
+        # turning one off must not silence the other.
+        if shot.kind == "video" and not film.keep_clip_audio:
+            at += n
+            continue
+        src = audio_for(shot)
+        if src is None:
+            at += n
+            continue
+        if shot.kind == "video":
+            # The segment is as long as the PICTURE is: n/fps seconds of
+            # screen, times speed, is how much of the take was shown.
+            start, end, speed = shot.tin, shot.tin + (n / fps) * shot.speed, \
+                shot.speed
+        else:
+            # A slide's words are where they were said, whatever the
+            # picture does. Holding the photograph longer does not
+            # stretch them; that is the point of the two being separate.
+            start, end, speed = shot.tin, shot.tout, 1.0
+        specs.append((src, start, end, int(round(at / fps * 1000)), speed))
+        at += n
+
+    if film.audio:
+        nar = film.resolve(film.audio)
+        if nar.exists():
+            specs.append((nar, film.audio_offset, None, 0, 1.0))
+    return specs
+
+
 def build_soundtrack(film: Film, silent_video: Path, out: Path,
                      fps: int | None = None, quiet: bool = False) -> Path:
     """Mux speech + narration + music onto an already-rendered video.
@@ -1219,50 +1278,35 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
     # Collected as plain descriptions first, because the ducking below
     # needs to build this same set of streams a second time.
     # (src, start, end or None for "to the end", delay in ms, speed)
-    specs: list[tuple[Path, float, float | None, int, float]] = []
+    def audio_for(shot) -> Path | None:
+        """Which file carries this shot's sound. The disk-touching half
+        of speech_specs; everything about WHEN lives in there."""
+        src = film.resolve(shot.voice or shot.src)
+        if shot.kind != "video":
+            # A slide names its voice file outright, and Film.validate
+            # has already refused a film where it is missing.
+            return src if shot.voice and src.exists() else None
+        # peek/draft swap in a 480p proxy, and proxies are built with
+        # -an to keep them small -- so always go back to the ORIGINAL
+        # file for sound, whatever the picture is coming from.
+        if "analysis" in src.parts and "proxies" in src.parts:
+            # Match on the STEM, not the filename. Every proxy is a
+            # .mp4 whatever the original was, so looking for
+            # media/<name>.mp4 finds nothing when you shot .mkv or
+            # .mov -- and the speech then vanishes from peek and draft
+            # without a word, while final (which uses the originals)
+            # still has it. A silent draft of a talking film.
+            found = next((p for p in (film.root / "media").glob(
+                _glob_escape(src.stem) + ".*")
+                if p.suffix.lower() in Shot.VIDEO_EXT), None)
+            if found is not None:
+                src = found
+        if not src.exists() or not _has_audio(src):
+            return None
+        return src
 
-    if film.keep_clip_audio:
-        # Counted in FRAMES, not seconds. The picture advances a whole
-        # frame at a time, so a soundtrack that advances by film.yaml's
-        # decimals parts company with it a little at every cut, and the
-        # gap is the running total of every rounding so far.
-        at = 0
-        for shot in film.shots:
-            n = frames_for(shot.duration, fps)
-            if shot.kind != "video":
-                at += n
-                continue
-            src = film.resolve(shot.src)
-            # peek/draft swap in a 480p proxy, and proxies are built with
-            # -an to keep them small -- so always go back to the ORIGINAL
-            # file for sound, whatever the picture is coming from.
-            if "analysis" in src.parts and "proxies" in src.parts:
-                # Match on the STEM, not the filename. Every proxy is a
-                # .mp4 whatever the original was, so looking for
-                # media/<name>.mp4 finds nothing when you shot .mkv or
-                # .mov -- and the speech then vanishes from peek and draft
-                # without a word, while final (which uses the originals)
-                # still has it. A silent draft of a talking film.
-                found = next((p for p in (film.root / "media").glob(
-                    _glob_escape(src.stem) + ".*")
-                    if p.suffix.lower() in Shot.VIDEO_EXT), None)
-                if found is not None:
-                    src = found
-            if not src.exists() or not _has_audio(src):
-                at += n
-                continue
-            # The segment is as long as the PICTURE is, for the same
-            # reason: n/fps seconds of screen, times speed, is how much
-            # of the take was actually shown.
-            specs.append((src, shot.tin,
-                          shot.tin + (n / fps) * shot.speed,
-                          int(round(at / fps * 1000)), shot.speed))
-            at += n
-
-    if film.audio:
-        nar = film.resolve(film.audio)
-        if nar.exists():
-            specs.append((nar, film.audio_offset, None, 0, 1.0))
+    specs: list[tuple[Path, float, float | None, int, float]] = \
+        speech_specs(film, fps, audio_for)
 
     # Voice each distinct (take, speed) ONCE, and cut the pieces out of
     # the result. The recording is continuous; only the picture was cut.

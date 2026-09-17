@@ -98,7 +98,33 @@ class VoiceSource:
     shot_srcs: list[str]     # film.yaml `src:` values this audio covers
 
 
-def voice_sources(project: Path) -> list[VoiceSource]:
+def slides_using(film, path: Path) -> list[str]:
+    """The `voice:` values in this film that name this file.
+
+    A narration cut into slides is NOT a global source, even though it
+    is one file playing over the whole film. A global source is matched
+    against the FILM's clock -- "which shot is on screen at 0:42?" --
+    and a slide film's narration is not on that clock: its pieces are
+    scattered across the shots that quote them, in whatever order those
+    shots ended up in. Handed back as the source's `shot_srcs`, it is
+    matched on the narration's own clock instead, exactly the way a
+    talking clip's audio already is.
+    """
+    if film is None:
+        return []
+    want = Path(path).resolve()
+    out: list[str] = []
+    for s in film.shots:
+        if s.voice and s.voice not in out:
+            try:
+                if film.resolve(s.voice).resolve() == want:
+                    out.append(s.voice)
+            except OSError:
+                continue
+    return out
+
+
+def voice_sources(project: Path, film=None) -> list[VoiceSource]:
     """What can be transcribed, in priority order:
 
     1. A file named `voiceover*` in media/ -- `voiceover.mp3` or a dated
@@ -135,7 +161,8 @@ def voice_sources(project: Path) -> list[VoiceSource]:
     # that still has to win outright, the same as a plain `voiceover.mp3`.
     named = [p for p in here if p.name.lower().startswith("voiceover")]
     if named:
-        return [VoiceSource(named[0], named[0].name, [])]
+        return [VoiceSource(named[0], named[0].name,
+                            slides_using(film, named[0]))]
 
     clips = [p for p in here if p.suffix.lower() in VIDEO_EXT]
     standalone = [p for p in here if p.suffix.lower() in AUDIO_EXT]
@@ -150,7 +177,8 @@ def voice_sources(project: Path) -> list[VoiceSource]:
                   "narration. If that")
             print("  file is music, move it to the music\\ folder next door "
                   "and run this again.")
-        return [VoiceSource(standalone[0], standalone[0].name, [])]
+        return [VoiceSource(standalone[0], standalone[0].name,
+                            slides_using(film, standalone[0]))]
 
     sources = []
     for p in clips:

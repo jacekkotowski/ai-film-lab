@@ -325,13 +325,20 @@ def cmd_caption(args) -> None:
             "default (it's about 100 MB, so it stays optional). Install it "
             "once with:\n\n  uv sync --extra voice\n\nthen run this again."
         )
+    # Loaded before the sources are chosen, because a film whose slides
+    # carry `voice:` changes what its narration IS: not one track under
+    # the whole film, but a source whose pieces are quoted by particular
+    # shots. See voice.slides_using.
+    film = Film.load(project / "film.yaml") if not args.transcript_only else None
+
     if args.audio:
         audio = Path(args.audio)
         if not audio.is_absolute():
             audio = project / audio
-        sources = [voice.VoiceSource(audio, audio.name, [])]
+        sources = [voice.VoiceSource(audio, audio.name,
+                                     voice.slides_using(film, audio))]
     else:
-        sources = voice.voice_sources(project)
+        sources = voice.voice_sources(project, film)
 
     if not sources:
         raise SystemExit(
@@ -341,10 +348,14 @@ def cmd_caption(args) -> None:
             "  - pass --audio path\\to\\file directly."
         )
 
-    kind = "voiceover track" if not sources[0].shot_srcs else "clip(s) with talking"
+    if any(s.voice for s in (film.shots if film else [])):
+        kind = "narration, cut across the slides"
+    elif sources[0].shot_srcs:
+        kind = "clip(s) with talking"
+    else:
+        kind = "voiceover track"
     print(f"Found {len(sources)} {kind} to transcribe.\n")
 
-    film = Film.load(project / "film.yaml") if not args.transcript_only else None
     all_placed: dict[str, list] = {}
     all_warnings: list[str] = []
     all_lines_for_transcript = []

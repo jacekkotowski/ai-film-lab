@@ -32,6 +32,11 @@ A film.yaml looks like this:
         out: "00:02:19.0"
         move: punch_in
 
+      - src: media/harbour.jpg        # a SLIDE: a photograph with a
+        voice: media/voiceover.wav    # piece of the narration on it.
+        in: "00:02.05"                # in/out are the words' times
+        out: "00:18.20"               # inside the voice file
+
 Coordinate conventions, used everywhere:
   cx, cy   centre of the crop window, 0..1 across the SOURCE image
            (0,0 = top-left, 1,1 = bottom-right, 0.5,0.5 = dead centre)
@@ -180,6 +185,14 @@ def parse_time(v: Any) -> float:
     return secs
 
 
+# How long a photograph stays on screen after the last word said over
+# it. A picture that cuts on the final syllable reads as a mistake; this
+# is one breath, not a pause. It is only the DEFAULT -- write a
+# `duration:` and the picture holds for exactly that, while the words
+# stay where they were said.
+VOICE_TAIL = 0.4
+
+
 @dataclass
 class Shot:
     src: str
@@ -190,6 +203,23 @@ class Shot:
     tin: float = 0.0
     tout: float | None = None
     speed: float = 1.0
+
+    # A photograph with a piece of a narration on it -- a SLIDE. `src` is
+    # the picture, `voice` is the sound file, and `in`/`out` are the
+    # words' own times inside that file, exactly as they are on a clip:
+    #
+    #   - id: s01
+    #     src: media/1declaration_of_love.png
+    #     voice: media/voiceover_20260917-105656.wav
+    #     in: "00:02.05"
+    #     out: "00:18.20"
+    #
+    # That is the whole feature. Reorder the shots and the narration
+    # reorders with them; swap `src` to put a different picture under the
+    # same words; delete the shot and its words go too. Before this there
+    # was only the film-wide `audio:`, which plays flat underneath
+    # everything and cannot be edited at all.
+    voice: str | None = None
 
     # camera
     move: str = "auto"
@@ -228,13 +258,25 @@ class Shot:
 
         tin = parse_time(d.get("in", 0.0))
         tout = parse_time(d["out"]) if "out" in d else None
+        voice = str(d["voice"]) if d.get("voice") else None
 
         duration = d.get("duration")
         duration = float(duration) if duration is not None else None
         if duration is None and kind == "video" and tout is not None:
             duration = (tout - tin) / float(d.get("speed", 1.0))
+        # A slide is on screen for as long as its words take, plus one
+        # breath. Never sped up: `speed` is a correction for talking to a
+        # lens, and there is no lens here.
+        if duration is None and voice and tout is not None:
+            duration = (tout - tin) + VOICE_TAIL
         if duration is None:
             duration = 5.0
+        # `out:` left off a slide means "for as long as the picture is
+        # up". Filled in here rather than left as None, because None
+        # means "to the end of the file" everywhere downstream -- which
+        # on a narration is every remaining word, under one photograph.
+        if voice and tout is None and kind == "still":
+            tout = tin + duration
 
         focus = d.get("focus")
         if focus is not None:
@@ -246,6 +288,7 @@ class Shot:
             duration=duration,
             tin=tin,
             tout=tout,
+            voice=voice,
             speed=float(d.get("speed", 1.0)),
             move=str(d.get("move", "auto")),
             focus=focus,
@@ -542,6 +585,15 @@ class Film:
                 problems.append(f"[{s.id}] file not found: {p}")
             if s.duration <= 0:
                 problems.append(f"[{s.id}] duration must be positive.")
+            if s.voice:
+                v = self.resolve(s.voice)
+                if not v.exists():
+                    problems.append(f"[{s.id}] voice file not found: {v}")
+                if s.tout is not None and s.tout <= s.tin:
+                    problems.append(
+                        f"[{s.id}] voice out: ({s.tout:g}) is not after in: "
+                        f"({s.tin:g}). Those are the start and end of this "
+                        f"slide's words inside {Path(s.voice).name}.")
         if problems:
             raise SystemExit(
                 "film.yaml has problems:\n  - " + "\n  - ".join(problems)

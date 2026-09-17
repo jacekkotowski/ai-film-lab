@@ -139,7 +139,12 @@ def fit_per_clip(film: Film, source: VoiceSource,
     """A track extracted from one specific video clip -- match by the
     CLIP's own original timeline, restricted to shots that use it."""
     warnings: list[str] = []
-    shots = [s for s in film.shots if s.src in source.shot_srcs]
+    # A shot's sound source, which is not always the file on screen: a
+    # slide's picture is `src` and its words come from `voice`. Matching
+    # on `src` put both of two slides' captions on both slides whenever
+    # one photograph was used twice -- which the last picture is,
+    # whenever there are more paragraphs than pictures.
+    shots = [s for s in film.shots if (s.voice or s.src) in source.shot_srcs]
     if not shots:
         return {}, [f'no shot in film.yaml uses {source.label}']
 
