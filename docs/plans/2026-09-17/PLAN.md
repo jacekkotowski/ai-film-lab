@@ -6,6 +6,48 @@ rules: the `change-the-machine` skill, a test named as a sentence first,
 one item per commit, measure before claiming. **P** is the producer,
 **D** the developer.
 
+## Status, end of 2026-09-17
+
+Run autonomously (scheduled task), on the scratch project only -- no
+real project under `projects/` was touched. Whole suite green after
+every commit (`uv run --extra dev pytest -q`, exit code checked, not
+piped through `tail`).
+
+| item | state | commit |
+|---|---|---|
+| 1. Two failure modes said out loud | done | dadab02 |
+| 2. Narration waits for the opening card | done | a175760 |
+| 3. Photographs stretch to cover a narration (first half) | done; second half (cut at the narration's breaths) not started | 35a0bad |
+| 4a. `record.take_name`/`next_take_path` (+ a wav-codec bug this surfaced) | done | 80b7313 |
+| 4b. `voice.voice_sources` matches a dated voiceover | done | d0c6900 |
+| 4c. `film record --voice` | done, but the booth window with no camera is unverified -- see "Needs Jacek" | 380287c |
+| 4d. The guide offers and folds in a voiceover | done | f64e01e |
+| 5. The other material, tested as material | done (investigation + write-up, no code) | 88a7a24 |
+
+**Needs Jacek**
+
+- **Does the booth window open cleanly with no camera?** `film record
+  --voice -p <any project>` once, and watch what the window does. This
+  session could not check it: the hard limits forbid running `film
+  record` for real (it opens the camera and the microphone). Reasoned
+  from `booth.Take._read_frames` (reads an empty stdout pipe and exits
+  its thread quietly when there is no `[pw]` video mapping) that it
+  should not crash, but reasoning is not the same as watching it. If
+  it does not open cleanly, run with `--no-window` instead -- the flag
+  is `--no-window`, not `--headless` as an earlier note in this plan
+  said; that was this plan's own mistake, corrected here.
+- **Muted or at music level, for a clip with no speech?** Item 5 found
+  that today's code cannot yet do either cleanly -- `keep_clip_audio`
+  runs every clip's audio through the full speech-lift chain regardless
+  of whether it has speech in it. The choice, and the small change to
+  thread `scaffold.is_talking` into `audio.build_soundtrack`, waits on
+  your answer. See item 5 below for the reasoning and the numbers that
+  exist without a test file.
+- **Watch the peeks**, if you want to see rather than take numbers on
+  trust: the vertical scratch render is described under item 5 below
+  (not saved anywhere persistent -- it was in the scratch folder outside
+  the repo, rebuilt several times over the session).
+
 ## What is true tonight
 
 **Measured.** Every one of the 16 projects on this machine is one
