@@ -81,6 +81,14 @@ def is_recording(stem: str) -> bool:
     return stem.lower().startswith(REC_PREFIX)
 
 
+# What a microphone-only take (`film record --voice`) is called. Its own
+# prefix, not REC_PREFIX -- a voiceover is narration read over pictures,
+# not a talking-head clip, and REC_SPEED (scaffold's 1.2x for `rec_*`)
+# has no business touching somebody's spoken narration. voice.py matches
+# on this as a PREFIX, so a dated file still counts.
+VOICEOVER_PREFIX = "voiceover_"
+
+
 def is_video(path: str | Path) -> bool:
     return Path(path).suffix.lower() in VIDEO
 

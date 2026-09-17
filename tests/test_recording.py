@@ -312,6 +312,44 @@ def test_footage_from_a_phone_or_a_camera_is_left_completely_alone():
 
 
 # --------------------------------------------------------------------------
+# A microphone-only take (`film record --voice`) is a voiceover, not a
+# clip -- ingest has nothing to look at without a camera, and scaffold's
+# rec_ prefix means "speed this up for talking to a lens", which is not
+# what a narration read over photographs wants at all.
+# --------------------------------------------------------------------------
+
+def test_a_microphone_only_take_is_a_voiceover_not_a_clip():
+    from datetime import datetime
+    from ffilm.kinds import VOICEOVER_PREFIX
+    name = take_name(datetime(2026, 9, 17, 10, 45, 12), audio_only=True)
+    assert name == f"{VOICEOVER_PREFIX}20260917-104512.wav"
+    assert not is_recording(name.rsplit(".", 1)[0])
+
+
+def test_a_camera_take_still_gets_the_rec_prefix():
+    from datetime import datetime
+    name = take_name(datetime(2026, 9, 17, 10, 45, 12), audio_only=False)
+    assert name == "rec_20260917-104512.mp4"
+
+
+def test_a_voiceover_destination_gets_raw_audio_not_aac():
+    """AAC does not go in a WAV container. Every other take still asks
+    for AAC in its mp4 -- see test_the_two_devices_are_opened_as_two_inputs
+    and the rest of this file's `cmd()` calls, all of them .mp4."""
+    c = record_command(record.Path("media/voiceover_20260917-104512.wav"),
+                       None, "Mic")
+    assert "pcm_s16le" in c
+    assert "aac" not in c
+
+
+def test_an_ordinary_take_still_gets_aac():
+    c = record_command(record.Path("media/rec_20260917-104512.mp4"),
+                       "Cam", "Mic")
+    assert "aac" in c
+    assert "pcm_s16le" not in c
+
+
+# --------------------------------------------------------------------------
 # The recording window: preview, level, and the scrolling script
 # --------------------------------------------------------------------------
 

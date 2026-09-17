@@ -36,7 +36,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from .kinds import REC_PREFIX, is_recording  # noqa: F401 -- used by scaffold, tests
+from .kinds import (REC_PREFIX, VOICEOVER_PREFIX,  # noqa: F401
+                    is_recording)  # used by scaffold, tests
 
 # Recorded takes get this in film.yaml. Not applied to the file on disk:
 # the original stays the speed you spoke at, and `speed: 1.2` is a number
@@ -72,25 +73,34 @@ FILM_FPS = 24
 RTBUFSIZE = "512M"
 
 
-def take_name(when: datetime | None = None) -> str:
+def take_name(when: datetime | None = None, audio_only: bool = False) -> str:
     """Sorts chronologically as plain text, which is what `scaffold`
-    orders on when there are no numbered filenames."""
+    orders on when there are no numbered filenames.
+
+    `audio_only` names it as a voiceover instead of a clip -- `film
+    record --voice` has no picture to give `ingest`, and `voiceover_`
+    is what tells `voice.voice_sources` this file IS the narration,
+    outright, whatever else is in media/.
+    """
     when = when or datetime.now()
+    if audio_only:
+        return f"{VOICEOVER_PREFIX}{when:%Y%m%d-%H%M%S}.wav"
     return f"{REC_PREFIX}{when:%Y%m%d-%H%M%S}.mp4"
 
 
-def next_take_path(media: Path) -> Path:
+def next_take_path(media: Path, audio_only: bool = False) -> Path:
     """Where the next take goes. Never over the top of an earlier one.
 
     Takes are named to the second, and two of them cannot normally land
     in the same second. `normally` is doing a lot of work in that
     sentence, and the cost of being wrong is somebody's first take.
     """
-    base = take_name()
+    base = take_name(audio_only=audio_only)
+    stem, ext = base.rsplit(".", 1)
     path = media / base
     n = 2
     while path.exists():
-        path = media / f"{base[:-4]}_{n}.mp4"
+        path = media / f"{stem}_{n}.{ext}"
         n += 1
     return path
 
@@ -398,7 +408,14 @@ def record_command(out: Path, video: str | None, audio: str | None,
     else:
         cmd += ["-vn"]
     if audio:
-        cmd += ["-c:a", "aac", "-b:a", "192k", "-ar", "48000"]
+        # AAC does not go in a WAV container -- and a voiceover take
+        # (film record --voice) is written straight to one, the same
+        # way every other wav in this toolkit is (see audio.voiced_take).
+        # Every other take is still an mp4, so it is still AAC.
+        if out.suffix.lower() == ".wav":
+            cmd += ["-c:a", "pcm_s16le", "-ar", "48000"]
+        else:
+            cmd += ["-c:a", "aac", "-b:a", "192k", "-ar", "48000"]
     else:
         cmd += ["-an"]
     cmd.append(str(out))
