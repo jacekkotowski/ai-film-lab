@@ -13,8 +13,8 @@
 
 fps: 24
 resolution: [1080, 1920]   # vertical, for YouTube Shorts
-audio: media/voiceover_20260917-105656.wav
-audio_offset: 2.0   # the narration waits for the opening card
+# Each picture carries its own piece of
+# media/voiceover_20260917-105656.wav -- see `voice:` below.
 # title: the words on the thumbnail. Left out, the film is
 #        called what its folder is called.
 # music: found on its own -- this project's music/ folder if it
@@ -53,26 +53,40 @@ shots:
       block if you would rather open on yourself talking."
 
   - id: s01
-    src: media/3_declaration_of_love.png
-    duration: 23.3
+    src: media/1declaration_of_love.png
+    voice: media/voiceover_20260917-105656.wav
+    in: "00:01.75"
+    out: "00:34.75"
     move: tilt_up
-    focus: [0.767, 0.045]
-    note: "face detected -- given longer screen time"
+    focus: [0.649, 0.539]
+    note: "picture 1 of 3 -- holds while these words are said"
 
   - id: s02
-    src: media/1declaration_of_love.png
-    duration: 19.1
+    src: media/2declaration of love.png
+    voice: media/voiceover_20260917-105656.wav
+    in: "00:37.10"
+    out: "00:50.85"
     move: push_in
-    focus: [0.649, 0.539]
+    focus: [0.668, 0.565]
+    note: "picture 2 of 3 -- holds while these words are said"
 
   - id: s03
-    src: media/2declaration of love.png
-    duration: 19.1
+    src: media/3_declaration_of_love.png
+    voice: media/voiceover_20260917-105656.wav
+    in: "00:52.40"
+    out: "00:58.80"
     move: pull_out
-    focus: [0.668, 0.565]
+    focus: [0.767, 0.045]
+    note: "picture 3 of 3 -- holds while these words are said"
 
-# 3 shots, about 62 seconds.
-# Photographs held longer -- 62s of pictures in all -- to cover the narration to its end.
-# Speech captions are left out on purpose -- run
-# `uv run film caption` once you're happy with the shots,
-# or watch it once and add what actually needs saying.
+# 3 shots, about 54 seconds.
+#
+# 3 slide(s) cut from a 60s narration at its pauses.
+# Each `in:`/`out:` is that picture's words, on the narration's own
+# clock. Move a shot and its words move with it; swap `src:` to put
+# a different picture under the same words; hold one longer with
+# `duration:` and the words stay where they were said.
+#
+# Guessed from where you paused. To say it exactly, put your words
+# in script.txt, one paragraph per picture, and run
+# `uv run film caption --apply` -- it re-cuts these by paragraph.
