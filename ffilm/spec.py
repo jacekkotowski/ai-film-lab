@@ -413,7 +413,10 @@ class Film:
                                       # means "the project's own name",
                                       # filled in by load() -- see there.
     audio: str | None = None
-    audio_offset: float = 0.0
+    audio_offset: float = 0.0         # seconds the narration WAITS before
+                                      # it starts -- after the opening card,
+                                      # typically. Negative skips that much
+                                      # of the recording's start instead.
     music: str | None = None          # background bed, auto-trimmed to length
     music_volume: float = 0.6         # The level while NOBODY is talking.
                                       # It used to be 0.4, because one fixed

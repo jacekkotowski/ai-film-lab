@@ -1238,7 +1238,17 @@ def speech_specs(film: Film, fps: int, audio_for) -> list[tuple]:
     if film.audio:
         nar = film.resolve(film.audio)
         if nar.exists():
-            specs.append((nar, film.audio_offset, None, 0, 1.0))
+            # `audio_offset: 2.0` is a WAIT: the narration starts two
+            # seconds into the film, after the opening card. It was
+            # passed as the point to start reading the file instead, so
+            # the narration began under the card with its first two
+            # seconds cut off -- the opposite of what film.yaml says.
+            # Negative skips that much of the recording's start.
+            off = film.audio_offset
+            if off >= 0:
+                specs.append((nar, 0.0, None, int(round(off * 1000)), 1.0))
+            else:
+                specs.append((nar, -off, None, 0, 1.0))
     return specs
 
 

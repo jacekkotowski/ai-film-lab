@@ -186,7 +186,9 @@ def test_a_film_wide_narration_still_plays_under_everything(tmp_path):
     specs = speech_specs(film, 24, lambda s: None)
     assert len(specs) == 1
     _src, start, end, delay, _speed = specs[0]
-    assert (start, end, delay) == (approx(2.0), None, 0)
+    # A wait of two seconds, not two seconds cut off the front -- see
+    # test_the_narration_offset_is_a_wait_not_a_cut.py.
+    assert (start, end, delay) == (approx(0.0), None, 2000)
 
 
 # --------------------------------------------------------------------------

@@ -329,6 +329,13 @@ def narration_note(audio_seconds: float, film_seconds: float) -> str | None:
             f"`film go --target {audio_seconds:.0f}`")
 
 
+def narration_seconds_in_film(recording: float, offset: float) -> float:
+    """Where the narration ends on the film's clock. Pure. A positive
+    `audio_offset` is a wait before it starts; a negative one skips that
+    much of the recording's start."""
+    return recording + offset
+
+
 def narration_notes(film) -> list[str]:
     """The narration line for `film check` and the render, measured off
     the file `audio:` points at."""
@@ -338,7 +345,9 @@ def narration_notes(film) -> list[str]:
     path = film.resolve(film.audio)
     if not path.exists():
         return []
-    note = narration_note(_dur(path), film.duration)
+    note = narration_note(narration_seconds_in_film(_dur(path),
+                                                    film.audio_offset),
+                          film.duration)
     return [note] if note else []
 
 

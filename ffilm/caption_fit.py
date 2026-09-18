@@ -117,6 +117,13 @@ def fit_global(film: Film, lines: list[Line]) -> tuple[dict[str, list[Caption]],
         bounds.append((s.id, t, t + s.duration))
         t += s.duration
 
+    # The narration's clock is the film's clock moved by audio_offset: a
+    # line said 1 s into a narration that waits 2 s is on screen at 3 s.
+    # See audio.speech_specs, which places the sound the same way.
+    shift = film.audio_offset
+    lines = [replace(ln, start=ln.start + shift, end=ln.end + shift,
+                     words=[w + shift for w in ln.words]) for ln in lines]
+
     out: dict[str, list[Caption]] = {sid: [] for sid, _, _ in bounds}
     for ln in lines:
         best_id, best_overlap = None, 0.0
