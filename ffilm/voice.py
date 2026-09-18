@@ -164,7 +164,11 @@ def voice_sources(project: Path, film=None) -> list[VoiceSource]:
     # A prefix, not "voiceover." exactly -- `film record --voice` names a
     # dated take `voiceover_20260917-104512.wav` (record.take_name), and
     # that still has to win outright, the same as a plain `voiceover.mp3`.
-    named = [p for p in here if p.name.lower().startswith("voiceover")]
+    # Audio only. `voiceover_....cues.json`, written beside a take by the
+    # recording window, sorts before the take itself and was handed to
+    # the speech model as if it were the narration.
+    named = [p for p in here if p.name.lower().startswith("voiceover")
+             and p.suffix.lower() in AUDIO_EXT]
     if named:
         return [VoiceSource(named[0], named[0].name,
                             slides_using(film, named[0]))]

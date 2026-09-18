@@ -125,6 +125,22 @@ def test_cues_that_are_not_numbers_are_treated_as_none(tmp_path):
     assert record.read_cues(take) is None
 
 
+def test_the_cues_file_is_never_taken_for_the_narration(tmp_path):
+    """Found by the first end-to-end run: `voice_sources` took any file
+    whose name starts `voiceover`, and `voiceover_....cues.json` sorts
+    before `voiceover_....wav`. So the speech model was handed the JSON
+    and `film caption` stopped with "Invalid data found"."""
+    from ffilm import voice
+
+    media = tmp_path / "media"
+    media.mkdir()
+    take = media / "voiceover_20260919-101500.wav"
+    take.write_bytes(b"")
+    record.write_cues(take, [17.9], ["media/a.png", "media/b.png"])
+    sources = voice.voice_sources(tmp_path)
+    assert [s.label for s in sources] == [take.name]
+
+
 # --------------------------------------------------------------------------
 # What the window shows
 # --------------------------------------------------------------------------
