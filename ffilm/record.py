@@ -106,6 +106,113 @@ def next_take_path(media: Path, audio_only: bool = False) -> Path:
 
 
 # --------------------------------------------------------------------------
+# Where the picture changed, while a narration was recorded
+#
+# In voice mode the recording window shows one photograph at a time, and
+# SPACE moves to the next. Each press is noted on the take's own clock
+# and written beside it, so `init` can cut the narration where the
+# person said the picture changed instead of guessing from the pauses.
+# --------------------------------------------------------------------------
+
+CUES_SUFFIX = ".cues.json"
+
+# A press this close to the end of the take is somebody reaching for
+# Stop, not moving to a picture that would then be on screen for no time
+# at all. Reasoned, not measured.
+CUE_END_MARGIN = 0.5
+
+
+def cues_path(take: Path) -> Path:
+    """voiceover_20260919-101500.wav -> voiceover_20260919-101500.cues.json,
+    next to it. Beside the take and not in analysis/, because analysis/
+    is derived and can be deleted and made again; these cannot -- they
+    are something the person did, like the recording itself."""
+    return take.with_name(take.stem + CUES_SUFFIX)
+
+
+def press_times(presses: list[tuple[float, float]],
+                stopped_wall: float | None,
+                take_seconds: float) -> list[float]:
+    """Each press of Next as a time inside the take. Pure.
+
+    A press is (audio clock, wall clock). The audio clock is the one to
+    trust: it is the `t:` the microphone meter printed last, on the same
+    input stream the wav is written from, so it is already where the
+    press happened in the file. Measured: ebur128 prints one every 0.1 s.
+
+    Zero means no meter line had arrived yet. Then, and only then, the
+    press is counted back from the END of the take -- the take's length
+    minus how long before Stop it came. Counting forward from when the
+    recording was launched would include however long the microphone
+    took to wake, which nobody has measured; counting back from Stop
+    only includes how long ffmpeg took to stop, which is much shorter.
+    """
+    out = []
+    for clock, wall in presses:
+        if clock > 0.0 or stopped_wall is None:
+            out.append(float(clock))
+        else:
+            out.append(take_seconds - (stopped_wall - wall))
+    return out
+
+
+def settle_cues(times: list[float], take_seconds: float,
+                shown: list[str]) -> tuple[list[float], list[str]]:
+    """The presses that mean something, and the picture on screen for
+    each stretch between them. Pure.
+
+    `shown[i]` is the picture that was up before press i. Dropped: a
+    press at or before the start (the audio had not begun), one in the
+    last CUE_END_MARGIN, and a second press on the same instant -- a
+    double tap is one decision, not an empty picture. Dropping a press
+    must not shift every picture after it onto the wrong words, so the
+    pictures are kept by the press they came from, not by counting.
+    """
+    cues: list[float] = []
+    pictures: list[str] = [shown[0]] if shown else []
+    for i, p in enumerate(times):
+        p = round(float(p), 2)
+        if p <= 0.0 or p >= take_seconds - CUE_END_MARGIN:
+            continue
+        if cues and p <= cues[-1]:
+            continue
+        cues.append(p)
+        if i + 1 < len(shown):
+            pictures.append(shown[i + 1])
+    return cues, pictures
+
+
+def clean_cues(presses: list[float], take_seconds: float) -> list[float]:
+    """Just the times -- see settle_cues."""
+    return settle_cues(presses, take_seconds, [])[0]
+
+
+def write_cues(take: Path, cues: list[float], pictures: list[str]) -> Path:
+    """Write them beside the take. `pictures` is what was on screen, in
+    order, one more than there are cues: picture 1 until the first cue,
+    picture 2 until the second, and so on."""
+    out = cues_path(take)
+    out.write_text(json.dumps({"cues": [round(c, 2) for c in cues],
+                               "pictures": list(pictures)},
+                              indent=2, ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+    return out
+
+
+def read_cues(take: Path) -> dict | None:
+    """What `write_cues` wrote, or None -- for no file, and equally for
+    a file that is not what it should be. A cues file somebody opened
+    and broke must cost them the cuts it described, not the film."""
+    try:
+        d = json.loads(cues_path(Path(take)).read_text(encoding="utf-8"))
+        cues = [float(c) for c in d.get("cues", [])]
+        pictures = [str(p) for p in d.get("pictures", [])]
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
+    return {"cues": cues, "pictures": pictures}
+
+
+# --------------------------------------------------------------------------
 # What is plugged in
 # --------------------------------------------------------------------------
 

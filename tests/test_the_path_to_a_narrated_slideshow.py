@@ -30,8 +30,10 @@ def test_a_voiceover_over_photographs_is_told_what_a_blank_line_does():
     said = booth.compose_hint(voice_only=True)
     assert "paragraph" in said.lower()
     assert "picture" in said.lower()
-    # And that saying nothing is still allowed.
-    assert "pause" in said.lower()
+    # And how to move on: SPACE, since 2026-09-18. It used to say the
+    # pictures changed at the longest pauses, which was the guess `init`
+    # made before there was a Next button.
+    assert "space" in said.lower()
 
 
 def test_talking_to_the_camera_is_told_none_of_that():

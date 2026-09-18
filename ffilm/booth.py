@@ -112,6 +112,43 @@ WARN = "#ffa06a"
 REC_ON = "#ff4b4b"
 
 _LEVEL = re.compile(rb"M:\s*(-?[\d.]+)")
+# The meter's own clock: `t: 9.899979` at the start of every ebur128
+# line, the time on the INPUT stream the wav is written from. Lower-case
+# and not after a letter, so `TARGET:` is not read as a time.
+_CLOCK = re.compile(rb"(?<![A-Za-z])t:\s*([\d.]+)")
+
+# Pictures are not blown up past this. A small picture scaled to fill a
+# screen is a smear, and it is only there to be recognised.
+MAX_PICTURE_ZOOM = 2.0
+
+
+def audio_clock(line: bytes) -> float | None:
+    """The audio's own time on one line of the meter, or None. Pure.
+
+    Measured on test_story's narration: ebur128 prints one of these
+    every 0.1 s, 595 for 59.5 s, the last reading 59.5. That is what a
+    press of Next is stamped with -- see record.press_times.
+    """
+    m = _CLOCK.search(line)
+    return float(m.group(1)) if m else None
+
+
+def fit_size(w: int, h: int, box_w: int, box_h: int) -> tuple[int, int]:
+    """A picture's size to fit inside a box, shape kept. Pure."""
+    scale = min(box_w / max(1, w), box_h / max(1, h), MAX_PICTURE_ZOOM)
+    return int(round(w * scale)), int(round(h * scale))
+
+
+def step_caption(i: int, n: int) -> str:
+    return f"picture {i + 1} of {n}"
+
+
+def next_label(i: int, n: int) -> str:
+    """The big button, which is also what SPACE does. On the last
+    picture it ends the take, and says so before it is pressed."""
+    if i + 1 >= n:
+        return "Finish      SPACE"
+    return "Next picture      SPACE"
 
 
 def available() -> bool:
@@ -193,10 +230,10 @@ def compose_hint(voice_only: bool) -> str:
     pictures to change, and the paragraph rule would be noise.
     """
     if voice_only:
-        return ("One paragraph per picture -- each paragraph becomes one "
-                "slide, holding the words you say over it. Or leave it "
-                "empty and just speak: the pictures change at your "
-                "longest pauses.")
+        return ("You will see your pictures one at a time. Talk about "
+                "each one, then press SPACE for the next. If you paste "
+                "words here, leave a blank line between paragraphs: one "
+                "paragraph is shown with each picture.")
     return ("Paste it here and it will scroll while you talk. "
             "Or leave it empty and just speak.")
 
@@ -307,6 +344,12 @@ class Take:
         self.heard = False
         self.errors: list[str] = []
         self._stop = threading.Event()
+        # Where the take is, on the audio's own clock. See audio_clock.
+        self.clock = 0.0
+        # Each press of Next: (audio clock, wall clock). Handed back to
+        # whoever finishes the take, which turns them into cues.
+        self.presses: list[tuple[float, float]] = []
+        self.stopped_wall: float | None = None
 
     def start(self) -> "Take":
         self.proc = subprocess.Popen(
@@ -336,6 +379,9 @@ class Take:
 
     def _read_log(self) -> None:
         for line in iter(self.proc.stderr.readline, b""):
+            c = audio_clock(line)
+            if c is not None:
+                self.clock = c
             m = _LEVEL.search(line)
             if m:
                 self.level = float(m.group(1))
@@ -355,6 +401,7 @@ class Take:
         if self._stop.is_set():
             return
         self._stop.set()
+        self.stopped_wall = time.time()
         try:
             if self.proc and self.proc.stdin and not self.proc.stdin.closed:
                 self.proc.stdin.write(b"q")
@@ -379,7 +426,8 @@ class Take:
 
 def session(script: str, script_path: Path, wpm: int, title: str,
             start, finish, seconds: float | None = None,
-            discard=None, voice_only: bool = False) -> None:
+            discard=None, voice_only: bool = False,
+            steps: list | None = None) -> None:
     """Open the window and stay in it until the person is finished.
 
     `start()`         begins one recording and returns the running Take.
@@ -393,10 +441,14 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     """
     import tkinter as tk
     from tkinter import font as tkfont
-    from PIL import Image, ImageTk
+    from PIL import Image, ImageOps, ImageTk
 
     S = {"stage": "compose", "take": None, "wpm": wpm, "y": 0.0,
-         "t0": 0.0, "count": 0, "rolling": False, "script": script, "photo": None}
+         "t0": 0.0, "count": 0, "rolling": False, "script": script, "photo": None,
+         "step": 0, "pic": None}
+    # One (picture, words) per step when narrating photographs. Empty
+    # otherwise, and then everything below behaves exactly as it did.
+    steps = list(steps or [])
 
     root = tk.Tk()
     root.title("film record" + (f" -- {title}" if title else ""))
@@ -448,7 +500,11 @@ def session(script: str, script_path: Path, wpm: int, title: str,
 
     view = tk.Label(strip, bg="#000000", borderwidth=0,
                     highlightthickness=0)
-    view.pack(side="left")
+    # Narrating photographs, there is no camera to show -- the pictures
+    # are on the big part of the screen instead, and a black rectangle
+    # here was just a black rectangle.
+    if not steps:
+        view.pack(side="left")
     # A black frame straight away. Without an image, a Label's width and
     # height are counted in CHARACTERS, so the empty preview would open
     # as a black rectangle 384 characters wide.
@@ -471,28 +527,42 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     controls = tk.Frame(strip, bg=BG)
     controls.pack(side="right", anchor="n", padx=(14, 0))
 
-    speed_row = tk.Frame(controls, bg=BG)
-    speed_row.pack(anchor="e")
-    button(speed_row, "slower", lambda: nudge_wpm(-WPM_STEP),
-           small=True).pack(side="left", padx=(0, 6))
-    button(speed_row, "faster", lambda: nudge_wpm(WPM_STEP),
-           small=True).pack(side="left")
-    # Without this the speed is invisible: you click, the words change
-    # pace slightly, and there is nothing on screen saying what you just
-    # set it to or how far it will still go.
     wpm_label = big(controls, "", 12, DIM)
-    wpm_label.pack(anchor="e", pady=(4, 6))
+    next_btn = None
+    if steps:
+        # One picture at a time: the big button moves on, and on the
+        # last picture it finishes. Stop is still there for giving up on
+        # a take, and is deliberately the smaller of the two.
+        next_btn = button(controls, next_label(0, len(steps)),
+                          lambda: next_step(), primary=True)
+        next_btn.pack(anchor="e", pady=(0, 10))
+        button(controls, "Stop this take", lambda: stop_take(),
+               small=True).pack(anchor="e")
+        big(strip, "SPACE  next picture\n"
+                   "Esc  stop this take",
+            13, DIM, justify="right").pack(side="right", anchor="n")
+    else:
+        speed_row = tk.Frame(controls, bg=BG)
+        speed_row.pack(anchor="e")
+        button(speed_row, "slower", lambda: nudge_wpm(-WPM_STEP),
+               small=True).pack(side="left", padx=(0, 6))
+        button(speed_row, "faster", lambda: nudge_wpm(WPM_STEP),
+               small=True).pack(side="left")
+        # Without this the speed is invisible: you click, the words change
+        # pace slightly, and there is nothing on screen saying what you
+        # just set it to or how far it will still go.
+        wpm_label.pack(anchor="e", pady=(4, 6))
 
-    button(controls, "start the words again", lambda: reset_words(),
-           small=True).pack(anchor="e", pady=(0, 8))
+        button(controls, "start the words again", lambda: reset_words(),
+               small=True).pack(anchor="e", pady=(0, 8))
 
-    button(controls, "Stop this take", lambda: stop_take(),
-           primary=True).pack(anchor="e")
+        button(controls, "Stop this take", lambda: stop_take(),
+               primary=True).pack(anchor="e")
 
-    big(strip, "SPACE  stop this take\n"
-               "R  start the words again\n"
-               "UP / DOWN  faster, slower",
-        13, DIM, justify="right").pack(side="right", anchor="n")
+        big(strip, "SPACE  stop this take\n"
+                   "R  start the words again\n"
+                   "UP / DOWN  faster, slower",
+            13, DIM, justify="right").pack(side="right", anchor="n")
 
     gauges = tk.Frame(strip, bg=BG)
     gauges.pack(side="left", fill="both", expand=True, padx=22)
@@ -581,6 +651,12 @@ def session(script: str, script_path: Path, wpm: int, title: str,
             canvas.delete(item["id"])
             item["id"] = None
         canvas.delete("hint")
+        canvas.delete("step")
+        if steps:
+            # Nothing scrolls. Each picture brings its own paragraph --
+            # see draw_step -- and they are drawn once the countdown is
+            # over, when the canvas has its real size.
+            return
         if S["script"]:
             # A narrow column: long lines make the eye track sideways,
             # and sideways is where the camera is not. Width comes from
@@ -607,6 +683,59 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         S["y"] = canvas.winfo_height() * 0.16
         if item["id"] is not None:
             canvas.coords(item["id"], sw // 2, S["y"])
+
+    # ---- one picture at a time ----------------------------------------
+    def draw_step() -> None:
+        """The picture being narrated, large, and its paragraph beside it."""
+        canvas.delete("step")
+        i, n = S["step"], len(steps)
+        pic, text = steps[i]
+        root.update_idletasks()
+        cw = canvas.winfo_width() if canvas.winfo_width() > 50 else sw
+        ch = (canvas.winfo_height() if canvas.winfo_height() > 50
+              else int(root.winfo_screenheight() * 0.7))
+        pad = 28
+        box_w = int(cw * (0.55 if text else 0.9)) - pad
+        box_h = ch - 2 * pad
+        # The words start right beside the picture, not beside the box it
+        # could have filled: a tall photograph in a wide box left a gap
+        # the width of a second picture between the two.
+        shown_w = box_w // 2
+        try:
+            im = ImageOps.exif_transpose(Image.open(pic)).convert("RGB")
+            im = im.resize(fit_size(im.width, im.height, box_w, box_h))
+            shown_w = im.width
+            S["pic"] = ImageTk.PhotoImage(im)
+            cx = pad + shown_w // 2 if text else cw // 2
+            canvas.create_image(cx, ch // 2, image=S["pic"], tags="step")
+        except Exception:
+            logging.exception("booth: could not show %s", pic)
+            canvas.create_text(pad, ch // 2, fill=WARN, tags="step",
+                               font=("Segoe UI", 18), anchor="w",
+                               text=f"Could not open\n{Path(pic).name}")
+        x0 = (pad * 3 + shown_w) if text else pad
+        canvas.create_text(x0, pad, text=step_caption(i, n), fill=DIM,
+                           font=("Segoe UI", 16), anchor="nw", tags="step")
+        if text:
+            canvas.create_text(x0, pad + 44, text=text, fill=FG,
+                               font=("Georgia", 26), anchor="nw",
+                               width=max(200, cw - x0 - pad), tags="step")
+        if next_btn is not None:
+            next_btn.configure(text=next_label(i, n))
+
+    def next_step(_=None) -> None:
+        """SPACE, or the big button: note where the audio is, show the
+        next picture. On the last picture it ends the take instead, and
+        that is not a cue -- there is no picture after it to change to."""
+        take = S["take"]
+        if take is None or S["stage"] != "rec":
+            return
+        if S["step"] + 1 >= len(steps):
+            stop_take()
+            return
+        take.presses.append((take.clock, time.time()))
+        S["step"] += 1
+        draw_step()
 
     # ---- moving between screens ---------------------------------------
     def begin(_=None):
@@ -636,6 +765,9 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         S["rolling"] = False
         show("rec")
         reset_words()
+        if steps:
+            S["step"] = 0
+            draw_step()
         root.after(TICK_MS, tick_rec)
 
     def tick_rec():
@@ -813,7 +945,10 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     # ---- keys, guarded by which screen you are on ---------------------
     def on_space(e):
         if S["stage"] == "rec":
-            stop_take()
+            if steps:
+                next_step()
+            else:
+                stop_take()
             return "break"
 
     def on_return(e):

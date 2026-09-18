@@ -778,6 +778,19 @@ def cmd_record(args) -> None:
     script = booth.read_script(project, args.script)
     windowed = booth.available() and not args.no_window
 
+    # Narrating photographs: the window shows them one at a time, each
+    # with its own paragraph, and SPACE moves on. Which picture, and in
+    # which order, is scaffold's rule -- the same one `init` builds the
+    # film by -- so the words said over picture 2 land under picture 2.
+    shown: list[str] = []
+    steps: list = []
+    if args.voice:
+        from . import voice as voice_mod
+        pairs = scaffold.narration_steps(scaffold.pictures_in_order(project),
+                                         voice_mod.script_paragraphs(script))
+        shown = [rel for rel, _text in pairs]
+        steps = [(project / rel, text) for rel, text in pairs]
+
     if args.voice:
         print("\nVoice only -- no camera. Reads over your photographs, "
               "not to a lens.")
@@ -823,6 +836,17 @@ def cmd_record(args) -> None:
         length, warnings = rec.verify_take(out, mode, bool(audio), take.heard)
         takes.append(out)
         print(f"  Take {len(takes)}: {_secs(length)}")
+        # Where Next was pressed, beside the take. Not written when it
+        # never was: then `init` guesses from the pauses, which beats
+        # putting the whole narration under the first picture.
+        if shown and take.presses:
+            cues, pictures = rec.settle_cues(
+                rec.press_times(take.presses, take.stopped_wall, length),
+                length, shown)
+            if cues:
+                rec.write_cues(out, cues, pictures)
+                print(f"    {len(pictures)} pictures, changed at "
+                      + ", ".join(f"{c:.1f}s" for c in cues))
         for w in warnings:
             print(f"    Careful: {w}")
         total = sum(rec.verify_take(t, None, False)[0] for t in takes)
@@ -846,19 +870,26 @@ def cmd_record(args) -> None:
         if not takes:
             return
         gone = takes.pop()
-        try:
-            kept = ingest_mod.quarantine(gone, project / "media",
-                                         where=kinds.DISCARDED_DIRNAME)
-            print(f"  dropped {gone.name} -> {kept.parent.name}\\")
-        except OSError as e:
-            print(f"  could not put {gone.name} aside: {e}")
+        # Its cues go with it. Left behind, they would describe a take
+        # that is no longer there -- and the next take's cues are written
+        # under the next take's own name anyway.
+        for f in (gone, rec.cues_path(gone)):
+            if not f.exists():
+                continue
+            try:
+                kept = ingest_mod.quarantine(f, project / "media",
+                                             where=kinds.DISCARDED_DIRNAME)
+                print(f"  dropped {f.name} -> {kept.parent.name}\\")
+            except OSError as e:
+                print(f"  could not put {f.name} aside: {e}")
 
     if windowed:
         print("\nThe window is open. Everything happens in it.")
         booth.session(script=script, script_path=project / "script.txt",
                       wpm=args.wpm, title=project.name,
                       start=new_take, finish=took, seconds=args.seconds,
-                      discard=drop_last, voice_only=args.voice)
+                      discard=drop_last, voice_only=args.voice,
+                      steps=steps)
     else:
         print("\nJust talk." if args.voice else
               "\nLook at the camera, not at the screen.")
