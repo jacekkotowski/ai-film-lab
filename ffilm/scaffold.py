@@ -263,18 +263,26 @@ def tc(seconds: float) -> str:
     return f'"{int(m):02d}:{s:05.2f}"'
 
 
+def narration_of(project: Path) -> Path | None:
+    """The film's narration: the newest in media/, never one from
+    _discarded/ or _unreadable/ -- a take set aside is not the film's
+    soundtrack. The same choice the captions make; see
+    kinds.pick_narration."""
+    media_dir = project / "media"
+    if not media_dir.is_dir():
+        return None
+    return kinds.pick_narration(
+        p for p in media_dir.rglob("*")
+        if p.is_file() and not kinds.is_aside(p, media_dir))
+
+
 def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     mpath = project / "analysis" / "manifest.json"
     if not mpath.exists():
         raise SystemExit("Run `uv run film ingest` first.")
     manifest = json.loads(mpath.read_text(encoding="utf-8"))
 
-    # A narration track lying in media/. Never one from _discarded/ or
-    # _unreadable/ -- a take set aside is not the film's soundtrack.
-    media_dir = project / "media"
-    audio = next((p for p in sorted(media_dir.rglob("*"))
-                  if p.suffix.lower() in AUDIO_EXT
-                  and not kinds.is_aside(p, media_dir)), None)
+    audio = narration_of(project)
 
     # Read the filename hint for every still up front -- this decides
     # ORDER (explicit numbers first, else alphabetical) and ROLE
@@ -387,6 +395,14 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
             L.append("audio_offset: 0.0")
     else:
         L.append("# audio: media/voiceover.mp3   # optional separate narration")
+    if audio:
+        older = sum(1 for p in (project / "media").rglob("*")
+                    if p.is_file() and p.suffix.lower() in AUDIO_EXT
+                    and not kinds.is_aside(p, project / "media")) - 1
+        if older > 0:
+            L.append(f"# The newest of {older + 1} recordings in media/. The "
+                     f"older one(s) are not used;")
+            L.append("# move them to media/_discarded/ to tidy up.")
     L.append("# title: the words on the thumbnail. Left out, the film is")
     L.append("#        called what its folder is called.")
     L.append("# music: found on its own -- this project's music/ folder if it")

@@ -164,30 +164,27 @@ def voice_sources(project: Path, film=None) -> list[VoiceSource]:
     # A prefix, not "voiceover." exactly -- `film record --voice` names a
     # dated take `voiceover_20260917-104512.wav` (record.take_name), and
     # that still has to win outright, the same as a plain `voiceover.mp3`.
-    # Audio only. `voiceover_....cues.json`, written beside a take by the
-    # recording window, sorts before the take itself and was handed to
-    # the speech model as if it were the narration.
-    named = [p for p in here if p.name.lower().startswith("voiceover")
-             and p.suffix.lower() in AUDIO_EXT]
-    if named:
-        return [VoiceSource(named[0], named[0].name,
-                            slides_using(film, named[0]))]
+    # The same choice `init` makes, by the same function: the newest
+    # narration, `voiceover*` first, audio only. See kinds.pick_narration
+    # for the day the oldest take was used instead.
+    pick = kinds.pick_narration(here)
+    if pick is not None and pick.name.lower().startswith("voiceover"):
+        return [VoiceSource(pick, pick.name, slides_using(film, pick))]
 
     clips = [p for p in here if p.suffix.lower() in VIDEO_EXT]
     standalone = [p for p in here if p.suffix.lower() in AUDIO_EXT]
-    if standalone:
+    if pick is not None:
         if len(standalone) > 1:
             print(f"  {len(standalone)} audio files in media\\ -- listening to "
-                  f"{standalone[0].name} (first alphabetically).")
+                  f"{pick.name} (the newest).")
         if clips:
-            print(f"  Listening to {standalone[0].name}, NOT to the sound in "
+            print(f"  Listening to {pick.name}, NOT to the sound in "
                   f"your {len(clips)} clip(s).")
             print("  A standalone audio file in media\\ is taken as the "
                   "narration. If that")
             print("  file is music, move it to the music\\ folder next door "
                   "and run this again.")
-        return [VoiceSource(standalone[0], standalone[0].name,
-                            slides_using(film, standalone[0]))]
+        return [VoiceSource(pick, pick.name, slides_using(film, pick))]
 
     sources = []
     for p in clips:

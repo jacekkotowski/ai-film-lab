@@ -89,6 +89,32 @@ def is_recording(stem: str) -> bool:
 VOICEOVER_PREFIX = "voiceover_"
 
 
+def pick_narration(paths, when=None) -> Path | None:
+    """Which of these files is the film's narration. Pure, given `when`.
+
+    Audio only -- the recording window writes `voiceover_....cues.json`
+    beside a take, and it is not a narration. A file named `voiceover`
+    beats any other audio: somebody who names a file that means it. And
+    among those, the one written MOST RECENTLY wins, because recording
+    again is how anybody says "not that one, this one".
+
+    It used to be the first in alphabetical order, in two places. On
+    2026-09-18 that built test_story from the previous day's take while
+    the one just recorded, and every press of Next in it, sat unused.
+
+    `when(path)` is the file's time; the file's own modified time unless
+    a caller (a test) says otherwise. Ties go to the later name, which
+    for dated takes is the later take.
+    """
+    when = when or (lambda p: Path(p).stat().st_mtime)
+    audio = [Path(p) for p in paths if Path(p).suffix.lower() in AUDIO]
+    if not audio:
+        return None
+    named = [p for p in audio if p.name.lower().startswith("voiceover")]
+    pool = named or audio
+    return max(pool, key=lambda p: (when(p), p.name))
+
+
 def is_video(path: str | Path) -> bool:
     return Path(path).suffix.lower() in VIDEO
 
