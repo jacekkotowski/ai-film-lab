@@ -154,10 +154,7 @@ def voice_sources(project: Path, film=None) -> list[VoiceSource]:
     A take you fluffed and asked to redo used to be transcribed anyway,
     and its words captioned onto the take you kept.
     """
-    from . import ingest as ingest_mod
-
     media = project / "media"
-    cache = project / "analysis" / "audio"
     here = [p for p in sorted(media.rglob("*"))
             if p.is_file() and not kinds.is_aside(p, media)]
 
@@ -168,10 +165,21 @@ def voice_sources(project: Path, film=None) -> list[VoiceSource]:
     # narration, `voiceover*` first, audio only. See kinds.pick_narration
     # for the day the oldest take was used instead.
     pick = kinds.pick_narration(here)
-    if pick is not None and pick.name.lower().startswith("voiceover"):
-        return [VoiceSource(pick, pick.name, slides_using(film, pick))]
-
     clips = [p for p in here if p.suffix.lower() in VIDEO_EXT]
+    if pick is not None and pick.name.lower().startswith("voiceover"):
+        quoted = slides_using(film, pick)
+        narration = [VoiceSource(pick, pick.name, quoted)]
+        if not quoted:
+            return narration
+        # The narration is cut across the pictures, and every clip keeps
+        # its own sound -- so the clips are listened to as well. Only the
+        # ones the film uses: listening takes minutes, and a clip no shot
+        # uses has nothing to be captioned onto.
+        in_film = {s.src for s in film.shots if s.kind == "video"}
+        return narration + _clip_sources(
+            project, [p for p in clips
+                      if p.relative_to(project).as_posix() in in_film])
+
     standalone = [p for p in here if p.suffix.lower() in AUDIO_EXT]
     if pick is not None:
         if len(standalone) > 1:
@@ -186,6 +194,15 @@ def voice_sources(project: Path, film=None) -> list[VoiceSource]:
                   "and run this again.")
         return [VoiceSource(pick, pick.name, slides_using(film, pick))]
 
+    return _clip_sources(project, clips)
+
+
+def _clip_sources(project: Path, clips: list[Path]) -> list[VoiceSource]:
+    """Each clip with a sound track, as its own source, matched to the
+    shots that use it."""
+    from . import ingest as ingest_mod
+
+    cache = project / "analysis" / "audio"
     sources = []
     for p in clips:
         if not has_audio_track(p):

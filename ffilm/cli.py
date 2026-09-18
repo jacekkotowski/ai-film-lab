@@ -383,7 +383,10 @@ def cmd_caption(args) -> None:
         paragraphs = voice.script_paragraphs(script or "")
         # Unless the cuts were made by pressing Next -- then they are
         # somebody's decision, and the captions are simply placed on them.
+        # And only for the narration -- in a film that also has talking
+        # clips, a clip's own words are not paragraphs of the script.
         if (paragraphs and any(s.voice for s in film.shots)
+                and any(s.voice in src.shot_srcs for s in film.shots)
                 and not scaffold.cut_by_hand(film)):
             windows = voice.paragraph_windows(
                 lines, paragraphs, breath=scaffold.BREATH)
