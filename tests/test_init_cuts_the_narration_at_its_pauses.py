@@ -195,12 +195,13 @@ def test_the_film_it_writes_loads_and_holds_every_word(tmp_path,
         assert b.tin >= a.tout
 
 
-def test_a_narration_with_clips_in_the_film_is_left_as_a_flat_track(
+def test_a_clip_in_the_film_does_not_stop_the_pictures_being_slides(
         tmp_path, monkeypatch):
-    """Slides are for photographs. A film that also has footage keeps
-    the old behaviour -- a clip carries its own sound, and cutting a
-    separate narration across pictures and clips alike is a bigger
-    decision than this makes."""
+    """Reversed on 2026-09-18. This used to pin the opposite -- a film
+    with any footage kept one flat narration track -- and measured on a
+    real clip that put two voices on top of each other for 5.8 s. The
+    narration is now cut across the pictures only, and the clip keeps
+    its own sound. See test_talking_clips_and_narrated_pictures_share_a_film.py."""
     p = story(tmp_path)
     manifest = json.loads((p / "analysis" / "manifest.json")
                           .read_text(encoding="utf-8"))
@@ -213,5 +214,5 @@ def test_a_narration_with_clips_in_the_film_is_left_as_a_flat_track(
     monkeypatch.setattr(scaffold, "narration_pauses", lambda path: STORY)
     monkeypatch.setattr(scaffold, "narration_seconds", lambda path: 59.5)
     text = scaffold.build(p)
-    assert "audio: media/voiceover_20260917-105656.wav" in text
-    assert "voice:" not in text
+    assert "\naudio:" not in text
+    assert text.count("voice: media/voiceover_20260917-105656.wav") == 3

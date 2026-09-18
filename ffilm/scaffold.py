@@ -263,6 +263,36 @@ def tc(seconds: float) -> str:
     return f'"{int(m):02d}:{s:05.2f}"'
 
 
+def merge_back(shots: list, meta: list, still_at: list[int],
+               stills: list, stills_meta: list) -> tuple[list, list]:
+    """Put the pictures back among the clips. Pure.
+
+    `still_at` is where the pictures were; the new pictures fill those
+    places in their new order -- which may differ, when the recording
+    window showed them in another order. Any extra picture (one shown
+    twice) goes right after the last picture's place, not at the end of
+    the film after every clip.
+    """
+    slots = set(still_at)
+    last = still_at[-1] if still_at else -1
+    out_s, out_m = [], []
+    k = 0
+    for i, (s, m) in enumerate(zip(shots, meta)):
+        if i not in slots:
+            out_s.append(s)
+            out_m.append(m)
+            continue
+        if i == last:
+            out_s.extend(stills[k:])
+            out_m.extend(stills_meta[k:])
+            k = len(stills)
+        elif k < len(stills):
+            out_s.append(stills[k])
+            out_m.append(stills_meta[k])
+            k += 1
+    return out_s, out_m
+
+
 def narration_of(project: Path) -> Path | None:
     """The film's narration: the newest in media/, never one from
     _discarded/ or _unreadable/ -- a take set aside is not the film's
@@ -330,9 +360,24 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     # `audio:` track: a clip carries its own sound, and cutting one
     # narration across pictures and clips alike is a bigger decision
     # than `init` should be making on its own.
+    #
+    # Clips are left exactly where they are, with their own sound: the
+    # narration is cut across the PICTURES only. This used to require
+    # every shot to be a photograph, so one talking clip put the whole
+    # narration back under the film as a flat track -- and the clip's
+    # own speech then played over it. Measured 2026-09-18: both voices
+    # at once from 53.2 s to 59.0 s.
     slide_notes: list[str] = []
-    if audio and all(s.kind == "still" for s in shots):
-        slide_notes = cut_into_slides(shots, meta, project, audio)
+    still_at = [i for i, s in enumerate(shots) if s.kind == "still"]
+    if audio and still_at:
+        stills = [shots[i] for i in still_at]
+        stills_meta = [meta[i] for i in still_at]
+        slide_notes = cut_into_slides(stills, stills_meta, project, audio)
+        if slide_notes:
+            shots[:], meta[:] = merge_back(shots, meta, still_at,
+                                           stills, stills_meta)
+            for i, s in enumerate(shots, 1):
+                s.id = f"s{i:02d}"
     slides = bool(slide_notes)
 
     target_notes: list[str] = []
@@ -917,7 +962,10 @@ def fit_to_target(shots: list[Shot], meta: list[dict],
     alone is longer than the target, the target loses.
     """
     notes: list[str] = []
-    talking = {i for i, m in enumerate(meta) if m.get("talking")}
+    # A slide's length is its words, the same as a talking clip's: cut it
+    # to hit a number and the next shot's picture lands over them.
+    talking = {i for i, m in enumerate(meta)
+               if m.get("talking") or m.get("slide")}
     spoken = sum(shots[i].duration for i in talking)
     flex = [i for i in range(len(shots)) if i not in talking]
 
