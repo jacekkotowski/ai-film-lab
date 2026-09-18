@@ -288,22 +288,28 @@ def _get_material(project: Path, unreadable: int = 0) -> list[Step]:
 
 
 def wants_voiceover(entries: list[dict], film_has_audio: bool) -> bool:
-    """Photographs with nobody talking over them, and no narration set
-    yet -- exactly the film that `record --voice` finishes. Pure, off
-    entries the shape ingest's manifest already writes them in.
-
-    A talking clip already IS a narration of sorts, so offering to
-    record a second one over the top would compete with it rather than
-    help -- same reasoning as voice.voice_sources rule 1 outranking a
-    clip's own speech.
-    """
+    """Photographs, and no narration yet -- the film `record --voice`
+    finishes. Pure, off entries the shape ingest's manifest writes.
+    Talking clips alongside the photographs do not change the answer:
+    see the note below."""
     if film_has_audio:
         return False
-    from . import scaffold
-    has_still = any(e.get("kind") == "still" for e in entries)
-    has_talking = any(e.get("kind") == "video" and scaffold.is_talking(e)
-                      for e in entries)
-    return has_still and not has_talking
+    # Talking clips used to rule it out: a narration laid flat under the
+    # whole film would have talked over them. Since 2026-09-18 it is cut
+    # across the pictures only and each clip keeps its own sound, so a
+    # film with both is exactly what this is for.
+    return any(e.get("kind") == "still" for e in entries)
+
+
+def has_narration(d: dict) -> bool:
+    """Is there a narration in this film already? Pure, off the parsed
+    film.yaml. A flat `audio:` track, or any slide carrying `voice:` --
+    the second is what `init` writes now, and checking only the first
+    kept offering a narration to a film made of one."""
+    if d.get("audio"):
+        return True
+    return any(isinstance(s, dict) and s.get("voice")
+               for s in d.get("shots") or [])
 
 
 def _manifest_media(manifest: Path) -> list[dict]:
@@ -391,13 +397,13 @@ def next_steps(project: Path) -> list[Step]:
         from .spec import headers
         if (sys.platform == "win32"
                 and wants_voiceover(_manifest_media(manifest),
-                                    bool(headers(yml).get("audio")))):
+                                    has_narration(headers(yml)))):
             steps.append(Step(
                 "...or say the words over these pictures",
                 ["record", "--voice"] + p,
-                why="Same window as talking to the camera, minus the "
-                    "camera. `init` picks it up as the narration and "
-                    "stretches the photographs to cover it."))
+                why="Your pictures one at a time, SPACE for the next. "
+                    "Each picture gets the words you said over it; your "
+                    "clips keep their own sound."))
         return steps
 
     if not draft_ok:

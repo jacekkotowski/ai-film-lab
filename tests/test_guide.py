@@ -330,13 +330,14 @@ def test_wants_voiceover_is_false_once_a_narration_is_set():
     assert not guide.wants_voiceover(entries, film_has_audio=True)
 
 
-def test_wants_voiceover_is_false_with_a_talking_clip_in_the_mix():
-    """A clip somebody already talked over is its own narration -- offering
-    to record a second one over the top would compete with it."""
+def test_wants_voiceover_is_true_with_a_talking_clip_in_the_mix():
+    """Reversed 2026-09-18: this was false, because a narration laid flat
+    under the film would have talked over the clip. The narration is now
+    cut across the pictures and the clip keeps its own sound."""
     entries = [{"path": "media/a.jpg", "kind": "still"},
               {"path": "media/b.mp4", "kind": "video",
                "sound": {"has": True, "ratio": 0.5}}]
-    assert not guide.wants_voiceover(entries, film_has_audio=False)
+    assert guide.wants_voiceover(entries, film_has_audio=False)
 
 
 def test_wants_voiceover_is_false_with_no_photographs_at_all():
@@ -350,12 +351,23 @@ def test_a_photo_only_film_is_offered_the_voiceover_alternative(tmp_path):
     assert "say the words over these pictures" in titles(root)
 
 
-def test_a_talking_clip_does_not_get_the_voiceover_offer(tmp_path):
+def test_a_film_already_made_of_narrated_slides_is_not_offered_another():
+    assert guide.has_narration({"shots": [{"src": "a.png",
+                                           "voice": "media/vo.wav"}]})
+    assert guide.has_narration({"audio": "media/vo.wav"})
+    assert not guide.has_narration({"shots": [{"src": "a.png"}]})
+
+
+def test_a_talking_clip_still_gets_the_voiceover_offer(tmp_path):
+    """Reversed 2026-09-18. It used to be withheld, because a narration
+    laid flat under the film would have talked over the clip. Now the
+    narration is cut across the pictures and the clip keeps its own
+    sound, so the two never compete."""
     root = project(tmp_path, media=100, manifest=200, yml=300)
     manifest_of(root, '{"path": "media/a.jpg", "kind": "still"}, '
                       '{"path": "media/b.mp4", "kind": "video", '
                       '"sound": {"has": true, "ratio": 0.5}}')
-    assert "say the words over these pictures" not in titles(root)
+    assert "say the words over these pictures" in titles(root)
 
 
 def test_a_film_with_narration_already_set_does_not_repeat_the_offer(tmp_path):
