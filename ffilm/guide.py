@@ -334,7 +334,7 @@ def next_steps(project: Path) -> list[Step]:
         return _get_material(project, unreadable)
 
     if _mtime(manifest) < newest_media:
-        return [
+        steps = [
             Step("Build the whole film in one go", ["go"] + p,
                  why="Looks at your material, writes the edit, adds captions "
                      "from your talking, and renders a draft you can watch.",
@@ -343,6 +343,19 @@ def next_steps(project: Path) -> list[Step]:
                  ["ingest"] + p,
                  why="Finds the faces and the interesting part of each picture."),
         ]
+        # Straight out of the booth there is one camera take and nothing
+        # else, and "build the whole film" read as the only way on. Whoever
+        # meant to talk over some photos too was never told that the photos
+        # go in first -- the narration is offered over pictures, so with
+        # none there is nothing to offer it over.
+        if (_newest(media, kinds.VIDEO)
+                and not _newest(media, kinds.STILL | kinds.HEIC)):
+            steps.append(Step(
+                "...or add photos to talk over first",
+                why="Drag them into media\\. Then this offers to record "
+                    "your words over them, one picture at a time.",
+                folders=[media]))
+        return steps
 
     # Ingested, and there was nothing in it. Never offer `init` here:
     # it refuses with "No usable media found", which is correct of it
@@ -377,6 +390,25 @@ def next_steps(project: Path) -> list[Step]:
                          "the words on screen, and renders a draft. What "
                          "you had is kept as film.yaml.bak.")]
 
+    # Photos nobody has said anything over yet. This used to be asked only
+    # before the first render -- and `go`, the guide's own first advice,
+    # renders a draft, so taking that advice made the offer vanish and the
+    # next screen said "Ship it" over silent slides (found 2026-09-18).
+    # Now it stays until the pictures carry a narration: first while
+    # nothing is rendered, right after the main step once something is,
+    # so a slideshow meant to run under music still ships with ENTER.
+    from .spec import headers
+    narrate = None
+    if (sys.platform == "win32"
+            and wants_voiceover(_manifest_media(manifest),
+                                has_narration(headers(yml)))):
+        narrate = Step(
+            "...or say the words over these pictures",
+            ["record", "--voice"] + p,
+            why="Your pictures one at a time, SPACE for the next. "
+                "Each picture gets the words you said over it; your "
+                "clips keep their own sound.")
+
     out = project / "out"
     # A render answers every question a rougher one would have: `go`
     # makes a draft, and a draft settles the order too; `final` settles
@@ -394,29 +426,30 @@ def next_steps(project: Path) -> list[Step]:
                  ["edit"] + p,
                  why="Click a photo to say what the camera should look at."),
         ]
-        from .spec import headers
-        if (sys.platform == "win32"
-                and wants_voiceover(_manifest_media(manifest),
-                                    has_narration(headers(yml)))):
-            steps.append(Step(
-                "...or say the words over these pictures",
-                ["record", "--voice"] + p,
-                why="Your pictures one at a time, SPACE for the next. "
-                    "Each picture gets the words you said over it; your "
-                    "clips keep their own sound."))
+        if narrate:
+            # Nothing rendered yet, so this is the moment: watching the
+            # silent version first only to come back here is a detour.
+            narrate.title = "Say the words over these pictures"
+            steps[0].title = "...or watch it first -- is the ORDER right?"
+            steps.insert(0, narrate)
         return steps
 
     if not draft_ok:
-        return [
+        steps = [
             Step("Watch it properly -- does the MOTION feel right?",
                  ["draft"] + p,
                  why="Under a minute. This is the one you judge the camera on."),
             Step("...or fix a shot first", ["edit"] + p,
                  why="Focus points and durations, by clicking and dragging."),
         ]
+        if narrate:
+            steps.insert(1, narrate)
+        return steps
 
     steps = [Step("Ship it", ["final"] + p,
                   why="Full quality, a few minutes. This is the upload.")]
+    if narrate:
+        steps.append(narrate)
 
     # Only once there is a film to put one beside, and only while there
     # is not one already -- `film final` builds it, so most of the time

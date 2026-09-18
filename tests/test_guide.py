@@ -348,7 +348,7 @@ def test_wants_voiceover_is_false_with_no_photographs_at_all():
 def test_a_photo_only_film_is_offered_the_voiceover_alternative(tmp_path):
     root = project(tmp_path, media=100, manifest=200, yml=300)
     manifest_of(root, '{"path": "media/a.jpg", "kind": "still"}')
-    assert "say the words over these pictures" in titles(root)
+    assert "say the words over these pictures" in titles(root).lower()
 
 
 def test_a_film_already_made_of_narrated_slides_is_not_offered_another():
@@ -367,7 +367,7 @@ def test_a_talking_clip_still_gets_the_voiceover_offer(tmp_path):
     manifest_of(root, '{"path": "media/a.jpg", "kind": "still"}, '
                       '{"path": "media/b.mp4", "kind": "video", '
                       '"sound": {"has": true, "ratio": 0.5}}')
-    assert "say the words over these pictures" in titles(root)
+    assert "say the words over these pictures" in titles(root).lower()
 
 
 def test_a_film_with_narration_already_set_does_not_repeat_the_offer(tmp_path):
@@ -376,7 +376,7 @@ def test_a_film_with_narration_already_set_does_not_repeat_the_offer(tmp_path):
     (root / "film.yaml").write_text("audio: media/voiceover.wav\n",
                                     encoding="utf-8")
     os.utime(root / "film.yaml", (300, 300))
-    assert "say the words over these pictures" not in titles(root)
+    assert "say the words over these pictures" not in titles(root).lower()
 
 
 def test_a_narration_recorded_after_the_edit_offers_to_fold_it_in(tmp_path):
