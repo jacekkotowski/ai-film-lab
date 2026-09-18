@@ -285,28 +285,14 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
         role, num, clean = _hint(stem)
         tagged.append({"entry": e, "role": role, "num": num, "clean": clean})
 
-    numbered = sorted((t for t in tagged if t["num"] is not None),
-                      key=lambda t: t["num"])
-    unnumbered = [t for t in tagged if t["num"] is None]
     # Openers first, closers last, everything else keeps its order --
     # this is what lets you drop files in any which way and still get
     # "title card, talking, quote, title card again" for free. A numbered
     # file's position is exactly what you typed, full stop -- the number
     # is a stronger signal than the role, so numbered opens/closes are
-    # NOT re-sorted, only unnumbered ones are.
-    openers = [t for t in unnumbered if t["role"] in ("open", "open_close")]
-    closers = [t for t in unnumbered if t["role"] == "close"]
-    middle = [t for t in unnumbered if t["role"] not in
-             ("open", "close", "open_close")]
-    ordered = numbered + openers + middle + closers
-    # open_close: the SAME file also plays at the very end -- true
-    # whether it got there by role (unnumbered) or by an explicit number.
-    for t in unnumbered:
-        if t["role"] == "open_close":
-            ordered.append(t)
-    for t in numbered:
-        if t["role"] == "open_close":
-            ordered.append(t)
+    # NOT re-sorted, only unnumbered ones are. One function, shared with
+    # the recording window: see pictures_in_order.
+    ordered, numbered, middle = _in_film_order(tagged, repeat_open_close=True)
 
     # `quote_` has no natural position relative to other unnumbered
     # content -- unlike open/close, "before or after the talking?" isn't
@@ -991,6 +977,110 @@ class SlideCut:
     note: str = ""
 
 
+def picture_for(i: int, para, pictures: list[str]) -> str:
+    """Which picture paragraph number `i` belongs to. Pure.
+
+    The ONE rule, used by the recording window to decide what to show
+    while a paragraph is read, and by `slide_cuts` to decide what to put
+    under it afterwards. Two copies of this would sooner or later
+    disagree, and the words said over picture 2 would land under
+    picture 3 with nothing to say why.
+
+    A paragraph that names a picture on its first line gets it: `[3]`
+    matches a file numbered 3, `[3_name.png]` or `[3_name]` matches the
+    file. Otherwise pictures go in order, and the last one is used again
+    when the paragraphs outnumber them.
+    """
+    tag = getattr(para, "picture", None) if para is not None else None
+    if tag:
+        for src in pictures:
+            name = Path(src).name
+            if name == tag or Path(name).stem == tag:
+                return src
+            num = _hint(Path(name).stem)[1]
+            if tag.isdigit() and num is not None and num == int(tag):
+                return src
+    return pictures[i] if i < len(pictures) else pictures[-1]
+
+
+def narration_steps(pictures: list[str], paragraphs) -> list[tuple[str, str]]:
+    """What the recording window shows, one step at a time: a picture,
+    and the words to say over it. Pure.
+
+    One step per picture or per paragraph, whichever there are more of.
+    A picture with no paragraph of its own is shown with no words -- you
+    can still talk about it, and pressing Next still marks where. No
+    pictures at all is no steps, and the window behaves as it always
+    did.
+    """
+    if not pictures:
+        return []
+    steps = []
+    for i in range(max(len(pictures), len(paragraphs))):
+        para = paragraphs[i] if i < len(paragraphs) else None
+        text = " ".join(para.units) if para is not None else ""
+        steps.append((picture_for(i, para, pictures), text))
+    return steps
+
+
+def pictures_in_order(project: Path) -> list[str]:
+    """The photographs in media/, in the order `init` will put them in
+    the film. As paths relative to the project, the way film.yaml
+    writes them.
+
+    ingest's manifest order first where there is one -- it sorts by when
+    the shutter fired, and `init` builds from it -- then anything that
+    arrived since, alphabetically. Then the filename hints, by the same
+    function `build` uses, so a numbered file is where its number says.
+    """
+    media = project / "media"
+    if not media.is_dir():
+        return []
+    here = [p.relative_to(project).as_posix()
+            for p in sorted(media.rglob("*"))
+            if p.is_file() and p.suffix.lower() in kinds.STILL
+            and not kinds.is_aside(p, media)]
+    seen: list[str] = []
+    try:
+        manifest = json.loads((project / "analysis" / "manifest.json")
+                              .read_text(encoding="utf-8"))
+        seen = [e["path"] for e in manifest.get("media", [])
+                if e.get("path") in here]
+    except (OSError, ValueError, KeyError, TypeError):
+        seen = []
+    seq = seen + [r for r in here if r not in seen]
+    tagged = []
+    for rel in seq:
+        role, num, clean = _hint(Path(rel).stem)
+        tagged.append({"entry": {"path": rel}, "role": role, "num": num,
+                       "clean": clean})
+    return [t["entry"]["path"] for t in _in_film_order(tagged)[0]]
+
+
+def _in_film_order(tagged: list[dict], repeat_open_close: bool = False):
+    """Numbered first by number, then openers, the rest, closers.
+
+    Returns (ordered, numbered, middle): `build` needs the last two to
+    decide whether a quote card's place was a guess.
+    """
+    numbered = sorted((t for t in tagged if t["num"] is not None),
+                      key=lambda t: t["num"])
+    unnumbered = [t for t in tagged if t["num"] is None]
+    openers = [t for t in unnumbered if t["role"] in ("open", "open_close")]
+    closers = [t for t in unnumbered if t["role"] == "close"]
+    middle = [t for t in unnumbered if t["role"] not in
+              ("open", "close", "open_close")]
+    ordered = numbered + openers + middle + closers
+    if repeat_open_close:
+        # open_close: the SAME file also plays at the very end -- true
+        # whether it got there by role (unnumbered) or by an explicit
+        # number.
+        for t in unnumbered + numbered:
+            if t["role"] == "open_close":
+                ordered.append(t)
+    return ordered, numbered, middle
+
+
 def slide_cuts(film, paragraphs, windows) -> list["SlideCut"]:
     """Match the paragraphs somebody wrote to the pictures they have.
 
@@ -1021,22 +1111,9 @@ def slide_cuts(film, paragraphs, windows) -> list["SlideCut"]:
     if not spoken:
         return []
 
-    def named(tag: str) -> str | None:
-        for src in pictures:
-            name = Path(src).name
-            if name == tag or Path(name).stem == tag:
-                return src
-            if _hint(Path(name).stem)[1] is not None and tag.isdigit():
-                if _hint(Path(name).stem)[1] == int(tag):
-                    return src
-        return None
-
     cuts: list[SlideCut] = []
-    free = list(pictures)
     for i, (para, (a, b)) in enumerate(spoken):
-        pick = named(para.picture) if para.picture else None
-        if pick is None:
-            pick = free[i] if i < len(free) else free[-1]
+        pick = picture_for(i, para, pictures)
         cuts.append(SlideCut(
             sid=sids[i] if i < len(sids) else "",
             src=pick, voice=voice_src, tin=a, tout=b,
