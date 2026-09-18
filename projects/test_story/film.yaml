@@ -14,7 +14,9 @@
 fps: 24
 resolution: [1080, 1920]   # vertical, for YouTube Shorts
 # Each picture carries its own piece of
-# media/voiceover_20260917-105656.wav -- see `voice:` below.
+# media/voiceover_20260918-103350.wav -- see `voice:` below.
+# The newest of 2 recordings in media/. The older one(s) are not used;
+# move them to media/_discarded/ to tidy up.
 # title: the words on the thumbnail. Left out, the film is
 #        called what its folder is called.
 # music: found on its own -- this project's music/ folder if it
@@ -54,92 +56,92 @@ shots:
 
   - id: s01
     src: media/1declaration_of_love.png
-    voice: media/voiceover_20260917-105656.wav
-    in: "00:01.54"
-    out: "00:18.43"
+    voice: media/voiceover_20260918-103350.wav
+    in: "00:01.45"
+    out: "00:14.75"
     move: tilt_up
     focus: [0.649, 0.539]
-    note: "paragraph 1 of 3 -- 'I remember I was stressed and...'"
+    note: "picture 1 of 3 -- holds while these words are said"
     captions:
       - text: "I remember I was stressed and I just said,"
-        at: 0.30
-        dur: 4.50
+        at: 0.00
+        dur: 4.46
         pos: lower_third
-        words: [0.00, 0.78, 1.22, 1.52, 1.72, 2.26, 3.88]
+        words: [0.00, 0.72, 1.30, 1.62, 1.84, 2.36, 3.24, 3.58, 3.90]
       - text: "what I just said,"
-        at: 6.14
-        dur: 4.50
+        at: 5.29
+        dur: 2.27
         pos: lower_third
-        words: [0.00, 2.14]
+        words: [0.00, 1.36, 1.52, 1.74]
       - text: "I'm stressed right now as much as I was then."
-        at: 11.75
-        dur: 4.50
+        at: 8.51
+        dur: 4.26
         pos: lower_third
-        words: [0.00, 1.86, 2.22, 2.72, 3.12, 3.42, 3.70, 3.88, 4.06, 4.36]
+        words: [0.00, 1.02, 1.40, 1.70, 2.04, 2.60, 3.02, 3.26, 3.46, 3.76]
 
   - id: s02
     src: media/2declaration of love.png
-    voice: media/voiceover_20260917-105656.wav
-    in: "00:19.41"
-    out: "00:39.78"
+    voice: media/voiceover_20260918-103350.wav
+    in: "00:18.60"
+    out: "00:37.25"
     move: push_in
     focus: [0.668, 0.565]
-    note: "paragraph 2 of 3 -- 'I said I wanted only to...'"
+    note: "picture 2 of 3 -- holds while these words are said"
     captions:
       - text: "I said I wanted only to say and I had a hidden rose behind me."
-        at: 0.30
+        at: 2.97
         dur: 4.50
         pos: lower_third
-        words: [0.00, 0.78, 2.24, 3.38, 3.88, 4.22, 4.42]
+        words: [0.00, 0.36, 0.86, 1.16, 1.38, 3.79, 4.19, 4.41]
       - text: "I wanted only to say and she answered,"
-        at: 10.76
-        dur: 4.01
+        at: 10.02
+        dur: 4.34
         pos: lower_third
-        words: [0.00, 0.62, 0.98, 1.28, 1.48, 1.88, 2.96, 3.48]
+        words: [0.00, 0.24, 0.58, 0.92, 1.14, 1.88, 3.58, 3.84]
       - text: "I know what you want to say."
-        at: 17.77
-        dur: 2.29
+        at: 16.00
+        dur: 2.33
         pos: lower_third
-        words: [0.00, 0.48, 0.86, 1.46, 1.62, 1.78, 1.94]
+        words: [0.00, 0.76, 1.04, 1.40, 1.62, 1.80, 1.98]
 
   - id: s03
     src: media/3_declaration_of_love.png
-    voice: media/voiceover_20260917-105656.wav
-    in: "00:40.64"
-    out: "00:57.55"
+    voice: media/voiceover_20260918-103350.wav
+    in: "00:40.00"
+    out: "00:59.15"
     move: pull_out
     focus: [0.767, 0.045]
-    note: "paragraph 3 of 3 -- 'It's better that you never come...'"
+    note: "picture 3 of 3 -- holds while these words are said"
     captions:
       - text: "It's better that you never come back."
-        at: 0.30
-        dur: 3.53
+        at: 0.12
+        dur: 3.35
         pos: lower_third
-        words: [0.00, 0.52, 0.84, 2.04, 2.34, 2.92, 3.24]
+        words: [0.00, 0.40, 0.70, 2.30, 2.52, 2.76, 3.08]
       - text: "It would be easier for us if you forget me,"
-        at: 5.24
-        dur: 4.50
+        at: 4.28
+        dur: 2.69
         pos: lower_third
-        words: [0.00, 0.66, 0.84, 1.06, 1.38, 1.62, 1.98, 2.38, 2.92, 4.22]
+        words: [0.00, 0.12, 0.26, 0.46, 0.84, 1.12, 1.50, 1.86, 2.00, 2.34]
       - text: "but I didn't."
-        at: 11.21
-        dur: 1.83
+        at: 7.88
+        dur: 1.17
         pos: lower_third
-        words: [0.00, 1.00, 1.16]
+        words: [0.00, 0.46, 0.62]
       - text: "I refused to forget."
-        at: 14.05
-        dur: 2.56
+        at: 13.48
+        dur: 1.60
         pos: lower_third
-        words: [0.00, 1.20, 1.80, 2.18]
+        words: [0.00, 0.36, 0.86, 1.18]
 
-# 3 shots, about 54 seconds.
+# 3 shots, about 52 seconds.
 #
 # 3 slide(s), one per picture, each holding its own piece of
-# the 60s narration. Each `in:`/`out:` is that picture's words, on
+# the 61s narration. Each `in:`/`out:` is that picture's words, on
 # the narration's own clock. Move a shot and its words move with it;
 # swap `src:` to put a different picture under the same words; hold
 # one longer with `duration:` and the words stay where they were said.
 #
-# Cut by the paragraphs of script.txt -- one paragraph, one picture.
-# Change the paragraphs there and run `uv run film caption --apply`
-# again, or move these `in:`/`out:` numbers by hand.
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
