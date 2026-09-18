@@ -230,11 +230,15 @@ Put your photographs in `media\`, then record the narration:
 uv run film record --voice -p my_movie
 ```
 
-The same window as talking to camera, minus the camera. **One paragraph
-per picture** — leave a blank line between them, and each paragraph
-becomes one slide, holding the words you say over it. Or leave the box
-empty and just talk: the pictures then change at your longest pauses,
-which is a guess, and `film.yaml` says so.
+The window shows your pictures **one at a time**, large, in the order
+the film will use. Talk about the one on screen, then press **SPACE**
+for the next. On the last picture the button says Finish. Where you
+pressed SPACE is where the film changes picture — each cut moved into
+the nearest pause, so no word is split.
+
+If you paste words first, leave a blank line between paragraphs: each
+paragraph is shown beside its own picture. Start a paragraph with `[3]`
+to show it with picture 3.
 
 When you're done:
 
@@ -257,8 +261,11 @@ picture under the same words. Delete the shot and its words go too. Add
 a `duration:` to hold the picture longer — the words stay where you said
 them.
 
-Changed your mind about where the paragraphs break? Edit `script.txt`
-and run `uv run film caption --apply -p my_movie` again.
+To move a cut, change that shot's `in:` or `out:`. Recorded without
+pressing SPACE at all? Then the cuts are guessed from your pauses, and
+a `script.txt` with one paragraph per picture plus
+`uv run film caption --apply -p my_movie` puts them where the
+paragraphs break.
 
 ## Making it a particular length
 

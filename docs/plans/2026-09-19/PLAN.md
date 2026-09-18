@@ -4,6 +4,47 @@ Written by Claude (Opus 5) on 2026-09-18, after Jacek asked: "I should
 see the picture I am describing, press a button, go to the next
 picture, describe it. Maybe text separated per picture?"
 
+## Status, 2026-09-18: built the same day. Items 1 and 7 wait for Jacek
+
+| item | commit | measured |
+|---|---|---|
+| 1. measure the clock | -- | **superseded**, see below. Only "does the booth open with no camera" is left |
+| 2. one rule pairs pictures with paragraphs | `b40987a` | `pictures_in_order`, `picture_for`, `narration_steps` |
+| 3 + 4. the booth shows the picture, Next marks it | `a1b47cf` | driven for real, see below |
+| 5 + 6. `init` cuts at the cues, `caption` keeps them | `34bde2d` | scratch copy of test_story, see below |
+| found on the way | `54ddc40` | the transcriber took the cues file for the narration |
+| 7. acceptance by Jacek | -- | waiting |
+
+**The clock question from item 1 is answered without a recording.** The
+booth's microphone meter is `ebur128` on the same input stream the wav
+is written from, and each line starts `t:`, the stream's own time.
+Measured on test_story's narration: 595 lines for 59.5 s, one every
+0.1 s, the last reading 59.5. A press of Next is stamped with that, so
+the mechanism below ("anchored on the END") became only the fallback
+for a press before any meter line has arrived.
+
+**The window, driven once** with the narration wav fed through
+`ffmpeg -re` in place of a microphone: three pictures, each paragraph
+beside its picture, the button read "Next picture" and then "Finish",
+two presses stamped at 5.0 and 10.0 s on the audio clock.
+
+**The cuts, on a scratch copy of test_story** (outside the repo; media/
+not touched) with presses simulated a little late at 20.0 and 41.5 s:
+both moved back into their pauses; slides 1.75-18.50, 19.80-39.85,
+40.95-58.80; all 10 captions on their own slide, none cut short. At
+both cuts the audio is room tone, about -61 dB, for the whole 0.3 s
+before the voice starts at 20.10 and 41.25. No word clipped.
+
+**For Jacek, item 7:**
+
+    uv run film record --voice -p test_story
+    uv run film go --rewrite -p test_story
+
+The first command also answers the last open part of item 1: whether
+the booth opens cleanly with no camera attached.
+
+---
+
 Rules as before: `change-the-machine`, test first, whole suite green,
 one item per commit, measure before claiming. Never `film final`. The
 acceptance is Jacek narrating `test_story` for real, nothing else.
