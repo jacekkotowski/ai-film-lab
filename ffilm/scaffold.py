@@ -15,7 +15,7 @@ from pathlib import Path
 
 from . import kinds, segment
 from .moves import choose_moves
-from .record import REC_SPEED, is_recording
+from .record import REC_SPEED, is_recording, read_cues
 from .spec import VOICE_TAIL, Caption, Shot, pretty_name
 
 
@@ -687,11 +687,20 @@ def cut_into_slides(shots: list[Shot], meta: list[dict], project: Path,
     start, end, quiet = narration_pauses(audio)
     if end - start < MIN_SHOT:
         return []
+    rel = audio.relative_to(project).as_posix()
+
+    # Pressed Next while recording: that is where the pictures change,
+    # and nothing else gets a say. See slides_from_cues.
+    cued = read_cues(audio)
+    if cued and cued["cues"]:
+        silent = slides_from_cues(shots, meta, rel, cued, start, end, quiet)
+        n = sum(1 for s in shots if s.voice)
+        return _slide_footer(n, narration_seconds(audio), silent,
+                             SLIDES_CUED)
+
     pieces = cut_at_pauses(start, end, quiet, len(shots))
     if not pieces:
         return []
-
-    rel = audio.relative_to(project).as_posix()
     for i, (s, (a, b)) in enumerate(zip(shots, pieces)):
         s.voice = rel
         s.tin, s.tout = a, b
@@ -703,21 +712,157 @@ def cut_into_slides(shots: list[Shot], meta: list[dict], project: Path,
     # would sit there in silence. Left as plain photographs, at the end.
     for s in shots[len(pieces):]:
         s.voice = None
+    return _slide_footer(len(pieces), narration_seconds(audio),
+                         len(shots) - len(pieces), SLIDES_GUESSED)
 
-    total = narration_seconds(audio)
+
+def _slide_footer(n: int, total: float, silent: int, how) -> list[str]:
     L = ["#",
-         f"# {len(pieces)} slide(s), one per picture, each holding its own "
-         f"piece of",
+         f"# {n} slide(s), one per picture, each holding its own piece of",
          f"# the {total:.0f}s narration. Each `in:`/`out:` is that picture's "
          f"words, on",
          "# the narration's own clock. Move a shot and its words move with it;",
          "# swap `src:` to put a different picture under the same words; hold",
          "# one longer with `duration:` and the words stay where they were said."]
-    if len(pieces) < len(shots):
-        L.append(f"# {len(shots) - len(pieces)} picture(s) came after the "
-                 f"last words and are held silent.")
-    L += ["#"] + list(SLIDES_GUESSED)
-    return L
+    if silent > 0:
+        L.append(f"# {silent} picture(s) had nothing said over them and are "
+                 f"held silent.")
+    return L + ["#"] + list(how)
+
+
+# How far a press of Next may be moved to land in a pause. People press a
+# little after the sentence ends, or reach for the key just before it
+# does; either way the cut belongs in the silence, not through a word.
+# Reasoned, not measured -- the acceptance run on test_story measures it.
+CUE_SNAP = 1.5
+
+
+def cut_at_cues(cues: list[float], start: float, end: float,
+                quiet: list) -> list[tuple[float, float] | None]:
+    """The narration cut where Next was pressed. Pure.
+
+    One piece per picture shown: len(cues) + 1. Each cue moves to the
+    nearest pause within CUE_SNAP and is cut there the way every other
+    cut in this file is -- a BREATH either side, the silence between
+    dropped. With no pause that close, it is cut where it was pressed.
+
+    None for a picture nothing was said over: Next pressed before the
+    first word, or twice on one pause. It was on screen, but giving it
+    a slice of silence would put a picture in the film that says nothing
+    and is there for less than a second.
+    """
+    a0 = max(0.0, start - BREATH)
+    b0 = end + BREATH
+    ends: list[float] = []
+    starts: list[float] = []
+    for c in cues:
+        best = None
+        for s, e in quiet:
+            d = 0.0 if s <= c <= e else min(abs(c - s), abs(c - e))
+            if d <= CUE_SNAP and (best is None or d < best[0]):
+                best = (d, s, e)
+        if best is None:
+            ends.append(c)
+            starts.append(c)
+        else:
+            _d, s, e = best
+            if e - s > 2 * BREATH:
+                ends.append(s + BREATH)
+                starts.append(e - BREATH)
+            else:
+                mid = (s + e) / 2.0
+                ends.append(mid)
+                starts.append(mid)
+
+    out: list[tuple[float, float] | None] = []
+    lo = a0
+    for i in range(len(cues) + 1):
+        a = max(a0, starts[i - 1]) if i > 0 else a0
+        a = max(a, lo)
+        b = min(b0, ends[i]) if i < len(cues) else b0
+        if b - a < MIN_PIECE:
+            out.append(None)
+        else:
+            out.append((round(a, 2), round(b, 2)))
+            lo = b
+    return out
+
+
+def slides_from_cues(shots: list[Shot], meta: list[dict], rel: str,
+                     cued: dict, start: float, end: float,
+                     quiet: list) -> int:
+    """Make the slides the recording window described. Returns how many
+    pictures are in the film with nothing said over them.
+
+    Follows what was ON SCREEN, which is `cued["pictures"]`, not the
+    filename order: a paragraph that named `[3]` showed picture 3 first,
+    and the words said over it belong under it. A picture shown twice is
+    in the film twice. A picture never shown stays in the film, after
+    the words, as a plain photograph -- it is still in media/, and
+    dropping it without a word is the one thing this toolkit never does.
+
+    If the pictures the file names are not the pictures there are -- one
+    renamed or deleted since -- the cues are applied in film order.
+    """
+    pieces = cut_at_cues(cued["cues"], start, end, quiet)
+    first: dict[str, tuple[Shot, dict]] = {}
+    for s, m in zip(shots, meta):
+        first.setdefault(s.src, (s, m))
+    shown = list(cued.get("pictures") or [])
+    if len(shown) != len(pieces) or any(src not in first for src in shown):
+        order = [s.src for s in shots]
+        shown = [order[min(i, len(order) - 1)] for i in range(len(pieces))]
+
+    new_s: list[Shot] = []
+    new_m: list[dict] = []
+    used: set[str] = set()
+    for i, (src, piece) in enumerate(zip(shown, pieces)):
+        s0, m0 = first[src]
+        if src in used:
+            s, m = replace(s0, captions=list(s0.captions)), dict(m0)
+        else:
+            s, m = s0, m0
+            used.add(src)
+        if piece is None:
+            s.voice = None
+            m.pop("slide", None)
+        else:
+            a, b = piece
+            s.voice = rel
+            s.tin, s.tout = a, b
+            s.duration = (b - a) + VOICE_TAIL
+            m["slide"] = True
+            m["part"] = i + 1
+            m["parts"] = len(pieces)
+        new_s.append(s)
+        new_m.append(m)
+    silent = sum(1 for s in new_s if not s.voice)
+    for s, m in zip(shots, meta):
+        if s.src not in used:
+            s.voice = None
+            new_s.append(s)
+            new_m.append(m)
+            silent += 1
+    shots[:] = new_s
+    meta[:] = new_m
+    for i, s in enumerate(shots, 1):
+        s.id = f"s{i:02d}"
+    return silent
+
+
+def cut_by_hand(film) -> bool:
+    """Were this film's slides cut where somebody pressed Next?
+
+    Then `film caption --apply` places the captions and leaves the cuts
+    alone. A script's paragraphs have to be FOUND in the audio; a press
+    of Next is somebody saying outright where the picture changes.
+    """
+    for s in film.shots:
+        if s.voice:
+            cued = read_cues(film.resolve(s.voice))
+            if cued and cued["cues"]:
+                return True
+    return False
 
 
 # Where the cuts came from, written into the file so that the answer to
@@ -729,6 +874,11 @@ SLIDES_GUESSED = (
     "# Where the cuts go was GUESSED, from where you paused. To say it",
     "# exactly, put your words in script.txt, one paragraph per picture,",
     "# and run `uv run film caption --apply`.",
+)
+SLIDES_CUED = (
+    "# Cut where you pressed Next while recording, each cut moved to the",
+    "# nearest pause so no word is split. To change one, move these",
+    "# `in:`/`out:` numbers, or record the narration again.",
 )
 SLIDES_BY_SCRIPT = (
     "# Cut by the paragraphs of script.txt -- one paragraph, one picture.",

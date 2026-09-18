@@ -381,7 +381,10 @@ def cmd_caption(args) -> None:
         # below shows the film being asked for and not the one being
         # replaced.
         paragraphs = voice.script_paragraphs(script or "")
-        if paragraphs and any(s.voice for s in film.shots):
+        # Unless the cuts were made by pressing Next -- then they are
+        # somebody's decision, and the captions are simply placed on them.
+        if (paragraphs and any(s.voice for s in film.shots)
+                and not scaffold.cut_by_hand(film)):
             windows = voice.paragraph_windows(
                 lines, paragraphs, breath=scaffold.BREATH)
             cuts = scaffold.slide_cuts(film, paragraphs, windows)
