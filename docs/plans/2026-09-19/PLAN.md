@@ -13,7 +13,22 @@ picture, describe it. Maybe text separated per picture?"
 | 3 + 4. the booth shows the picture, Next marks it | `a1b47cf` | driven for real, see below |
 | 5 + 6. `init` cuts at the cues, `caption` keeps them | `34bde2d` | scratch copy of test_story, see below |
 | found on the way | `54ddc40` | the transcriber took the cues file for the narration |
-| 7. acceptance by Jacek | -- | waiting |
+| 7. acceptance by Jacek | -- | **done** by Jacek, via the guide's dialogs. Rendered, "looks good". Voice "a bit choppy", cause unknown (not loudness: -24.7 LUFS, voice 30.7 dB over the room) |
+
+**Found in Jacek's run, fixed the same day:**
+
+| what | commit | measured |
+|---|---|---|
+| the OLDEST narration in media/ was used | `c1f011b` | `kinds.pick_narration`: newest by file time wins |
+| `audio_offset` cut the start off the narration instead of delaying it | `a337ed1` | offset 2.0: narration 0.0-59.0 s before, 2.0-63.0 s after |
+
+**Mixing talking clips with narrated pictures** (Jacek's question):
+
+| what | commit | measured |
+|---|---|---|
+| `init` cuts the narration across the pictures only; clips keep their sound | `a58f303` | scratch project, 3 pictures + 1 talking clip: narration 2.0-53.9 s, clip 54.3-66.0 s, no speech over speech |
+| `caption` listens to the narration AND the clips | `a266166` | same project: 10 captions on the 3 pictures, 10 on the 3 clip shots |
+| the guide offers a narration beside talking clips; stops offering once slides carry one | `9d694c8` | tests |
 
 **The clock question from item 1 is answered without a recording.** The
 booth's microphone meter is `ebur128` on the same input stream the wav

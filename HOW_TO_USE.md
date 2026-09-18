@@ -267,6 +267,15 @@ a `script.txt` with one paragraph per picture plus
 `uv run film caption --apply -p my_movie` puts them where the
 paragraphs break.
 
+**Clips you talked in, too?** Mix them freely. The narration goes only
+over the photographs; each clip keeps its own sound, and nothing plays
+on top of it. `caption` listens to both: your narration for the
+pictures, each clip for its own shots.
+
+Recorded more than once? The newest `voiceover_*.wav` is the one used.
+`audio_offset: 2.0` at the top of film.yaml makes the narration start
+2 seconds in; nothing you said is cut off.
+
 ## Making it a particular length
 
 ```powershell
