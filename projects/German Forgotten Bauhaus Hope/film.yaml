@@ -89,7 +89,7 @@ shots:
         words: [0.00, 0.40, 0.65, 1.12, 1.53, 2.00, 2.20, 2.45]
       - text: "Bauhaus."
         at: 24.28
-        dur: 0.46
+        dur: 1.50
         pos: lower_third
         words: [0.00]
       - text: "At the 1923 Weimar exhibition,"
@@ -232,10 +232,12 @@ shots:
     note: "picture 3 of 10 -- holds while these words are said"
     captions:
       - text: "Hannes Meyer's Laubenganghäuser, 1930"
-        at: 4.16
-        dur: 0.78
+        # German not heard by the transcriber: placed on the speech
+        # measured in the audio (45.35-50.66 s)
+        at: 0.30
+        dur: 5.30
         pos: lower_third
-        words: [0.00]
+        words: [3.86]
       - text: "The idea becomes even more explicit:"
         at: 6.36
         dur: 2.38
@@ -307,10 +309,12 @@ shots:
     note: "picture 5 of 10 -- holds while these words are said"
     captions:
       - text: "Haus am Horn, interior"
-        at: 3.72
-        dur: 0.42
+        # German not heard by the transcriber: placed on the speech
+        # measured in the audio (95.99-99.84 s)
+        at: 0.29
+        dur: 3.85
         pos: lower_third
-        words: [0.00]
+        words: [3.43]
       - text: "Light,"
         at: 4.14
         dur: 0.51
@@ -402,10 +406,12 @@ shots:
     note: "picture 8 of 10 -- holds while these words are said"
     captions:
       - text: "Laubenganghaus kitchen/interior"
-        at: 1.81
-        dur: 1.14
+        # German not heard by the transcriber: placed on the speech
+        # measured in the audio (162.65-165.30 s)
+        at: 0.30
+        dur: 2.95
         pos: lower_third
-        words: [0.00, 0.74]
+        words: [1.51, 2.25]
       - text: "Compact, durable and remarkably contemporary:"
         at: 3.37
         dur: 3.59
@@ -463,48 +469,48 @@ shots:
     src: media/rec_20260919-151406.mp4
     in: "00:03.10"
     out: "00:21.15"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    speed: 1.0              # 1.0 is the speed you actually spoke at
     move: drift_right
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.383]
-    note: "part 1 of 5 -- one take with the long pauses cut out. Every word is kept"
+    note: "speed 1.0, not 1.2: this take was already spoken at 122 wpm, the narration at 119 (measured 2026-09-19). Captions rescaled x1.2 to match. part 1 of 5 -- one take with the long pauses cut out. Every word is kept"
     captions:
       - text: "It may have looked austere, even cheap,"
         at: 0.00
-        dur: 2.11
+        dur: 2.53
         pos: lower_third
-        words: [0.00, 0.43, 0.57, 0.73, 0.93, 1.65, 1.80]
+        words: [0.00, 0.52, 0.68, 0.88, 1.12, 1.98, 2.16]
       - text: "but it was planned to be durable and"
-        at: 2.26
-        dur: 1.66
+        at: 2.71
+        dur: 1.99
         pos: lower_third
-        words: [0.00, 0.15, 0.27, 0.40, 0.70, 0.93, 1.05, 1.35]
+        words: [0.00, 0.18, 0.32, 0.48, 0.84, 1.12, 1.26, 1.62]
       - text: "designed around real life."
-        at: 3.92
-        dur: 1.36
+        at: 4.70
+        dur: 1.63
         pos: lower_third
-        words: [0.00, 0.35, 0.62, 0.90]
+        words: [0.00, 0.42, 0.74, 1.08]
       - text: "Simple, warm colors could work with light,"
-        at: 5.83
-        dur: 3.18
+        at: 7.00
+        dur: 3.82
         pos: lower_third
-        words: [0.00, 0.93, 1.17, 2.20, 2.42, 2.65, 2.92]
+        words: [0.00, 1.12, 1.40, 2.64, 2.90, 3.18, 3.50]
       - text: "space, and air,"
-        at: 9.34
-        dur: 0.96
+        at: 11.21
+        dur: 1.15
         pos: lower_third
-        words: [0.00, 0.30, 0.60]
+        words: [0.00, 0.36, 0.72]
       - text: "making modest homes feel alive rather than deprived."
-        at: 10.93
-        dur: 3.73
+        at: 13.12
+        dur: 4.48
         pos: lower_third
-        words: [0.00, 0.30, 0.58, 0.93, 1.42, 2.65, 3.02, 3.28]
+        words: [0.00, 0.36, 0.70, 1.12, 1.70, 3.18, 3.62, 3.94]
 
   - id: s15
     src: media/rec_20260919-151406.mp4
     in: "00:23.05"
     out: "00:36.95"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    speed: 1.0              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.383]
@@ -512,26 +518,26 @@ shots:
     note: "part 2 of 5 -- one take with the long pauses cut out. Every word is kept"
     captions:
       - text: "We still need places and tools that bring people together"
-        at: 0.16
-        dur: 3.53
+        at: 0.19
+        dur: 4.24
         pos: lower_third
-        words: [0.00, 0.18, 0.45, 0.75, 1.22, 1.58, 2.02, 2.37, 2.62, 2.95]
+        words: [0.00, 0.22, 0.54, 0.90, 1.46, 1.90, 2.42, 2.84, 3.14, 3.54]
       - text: "instead of isolating us,"
-        at: 3.69
-        dur: 1.95
+        at: 4.43
+        dur: 2.34
         pos: lower_third
-        words: [0.00, 0.73, 1.08, 1.57]
+        words: [0.00, 0.88, 1.30, 1.88]
       - text: "and things made to last instead of disposable consumption."
-        at: 5.64
-        dur: 4.50
+        at: 6.77
+        dur: 5.40
         pos: lower_third
-        words: [0.00, 1.05, 1.72, 2.13, 2.37, 3.28, 3.73, 4.17]
+        words: [0.00, 1.26, 2.06, 2.56, 2.84, 3.94, 4.48, 5.00]
 
   - id: s16
     src: media/rec_20260919-151406.mp4
     in: "00:38.50"
     out: "00:41.80"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    speed: 1.0              # 1.0 is the speed you actually spoke at
     move: drift_left
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.383]
@@ -539,16 +545,16 @@ shots:
     note: "part 3 of 5 -- one take with the long pauses cut out. Every word is kept"
     captions:
       - text: "That was the deeper alternative"
-        at: 0.18
-        dur: 2.06
+        at: 0.22
+        dur: 2.47
         pos: lower_third
-        words: [0.00, 0.23, 0.45, 0.98, 1.37]
+        words: [0.00, 0.28, 0.54, 1.18, 1.64]
 
   - id: s17
     src: media/rec_20260919-151406.mp4
     in: "00:42.80"
     out: "00:58.30"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    speed: 1.0              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.383]
@@ -557,30 +563,30 @@ shots:
     captions:
       - text: "Bauhaus offered to the politics of despair:"
         at: 0.00
-        dur: 3.43
+        dur: 4.12
         pos: lower_third
-        words: [0.00, 0.90, 1.45, 2.05, 2.52, 2.87, 3.07]
+        words: [0.00, 1.08, 1.74, 2.46, 3.02, 3.44, 3.68]
       - text: "solve poverty rather than eliminate the poor."
-        at: 3.88
-        dur: 2.81
+        at: 4.66
+        dur: 3.37
         pos: lower_third
-        words: [0.00, 0.27, 0.80, 1.18, 1.63, 2.18, 2.48]
+        words: [0.00, 0.32, 0.96, 1.42, 1.96, 2.62, 2.98]
       - text: "Give people a home, dignity, usefulness,"
-        at: 7.39
-        dur: 2.80
+        at: 8.87
+        dur: 3.36
         pos: lower_third
-        words: [0.00, 0.28, 0.62, 0.83, 1.42, 2.27]
+        words: [0.00, 0.34, 0.74, 1.00, 1.70, 2.72]
       - text: "and a place in the community."
-        at: 10.19
-        dur: 2.26
+        at: 12.23
+        dur: 2.71
         pos: lower_third
-        words: [0.00, 0.70, 0.83, 1.15, 1.65, 1.80]
+        words: [0.00, 0.84, 1.00, 1.38, 1.98, 2.16]
 
   - id: s18
     src: media/rec_20260919-151406.mp4
     in: "01:00.20"
     out: "01:01.10"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    speed: 1.0              # 1.0 is the speed you actually spoke at
     move: drift_right
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.383]
