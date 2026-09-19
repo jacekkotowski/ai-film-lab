@@ -44,6 +44,7 @@ before you become the developer.
 | `new-film`      | media is in `media/` and there is no good `film.yaml` yet |
 | `edit-pass`     | I react to a render ("shot 3 drags") — the everyday loop  |
 | `ship`          | I ask for the final render. Only then                     |
+| `fit-to-length` | "make it a Short", "under 3 minutes" — cut what is said twice |
 | `investigate`   | something sounds, looks or runs wrong and the cause is unknown |
 | `change-the-machine` | I have asked for a change to `ffilm/` itself         |
 
