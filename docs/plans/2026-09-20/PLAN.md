@@ -34,6 +34,60 @@ The film itself: 19 shots, 281.8 s. Edit pass on `film.yaml`:
 
 `film final` itself warns: "282s long, and a Short stops at 180s". See item 2.
 
+## Late evening 2026-09-19: done after the plan was written
+
+| what | commit |
+|---|---|
+| Cut to a Short: 281.8 s → 171.6 s, 8 cuts proposed and approved ("go") | `bfa7424` |
+| `fit-to-length` skill, the precedent for new skills (`docs/decisions/0009`) | `dad6277`, `9a42922` |
+| Look D on the talking shots: `fill: blur`, `fill_aspect: 0.8`, `glow 0.25 → 0.40`. Chosen by Jacek from `out/look_compare.jpg` | `474743c` |
+| Skills `write-to-fit`, `status`, `fix-captions`, each done once on Bauhaus | `b0fb495` |
+| Rehearsal script: 414 → 216 words, all 10 pictures, about 147 s estimated. `projects/German Forgotten Bauhaus Hope/write-to-fit_2026-09-19.txt` | not committed: the project's text files are untracked, see item 6 |
+
+**Final render of the Short** (ran at the end of 2026-09-19, exit 0). It replaced the 4:42 final.
+
+| what | value |
+|---|---|
+| length | 171.7 s, measured with ffprobe: a Short |
+| size | 393 MB |
+| render time | 803.7 s, about 13.4 min (the 4:42 version took 1091.6 s) |
+| loudness | -13.2 LUFS integrated, ffmpeg `ebur128` |
+| `upload.txt` and `cover.jpg` | rewritten at 18:12. The chapters now follow the Short |
+
+Checked on three frames grabbed from the final:
+- intro at 12.0 s and closing at 164.1 s: head and shoulders on blur, as chosen (look D);
+- picture 3 at 73.8 s: the title "Hannes Meyer's Laubenganghäuser, 1930" is on screen.
+
+On the talking shots, the lower caption line sits partly on the blurred
+band under the picture. It is readable in the frames. Jacek to judge
+whether it should move up.
+
+## Needs Jacek: what could not be tested tonight
+
+Jacek could not record again tonight. Everything below needs his voice,
+his eyes, or a decision.
+
+1. **Watch the new final**: `out/final.mp4`, the Short with look D.
+   - Does head-and-shoulders read better than the close-up?
+   - Is glow 0.40 on the photographs too bright? The glow is film-wide,
+     and I measured it only on the face.
+2. **The recording window, never seen since today's fixes**, all
+   checked on the next recording:
+   - pasted text appears beside each picture when you press Start
+     (`4c31d85`);
+   - `-` and `[5]` in a real paste;
+   - closing the window mid-narration shows "Stopped at picture N of
+     10" and puts the take in `media\_discarded\` (`0ddb038`; the rule
+     worked on a real take at 14:34, the review screen wasn't seen);
+   - the "So far" line on the guide screen (`0ddb038`).
+3. **The rehearsal script**: re-record Bauhaus with it (about 10 min of
+   recording), or keep it as the template for the next film. If
+   re-recorded, measure the real length: that is the second data point
+   for the 1.47 words/s rate in `write-to-fit`.
+4. **"Light,"** on picture 5 is on screen for 0.51 s. Left alone on
+   purpose (one word between two pauses). Say if it bothers you.
+5. **Item 4 below**, speed per take: the rule is still your decision.
+
 ## Items for 2026-09-20, in order
 
 ### 1. P: look at the final. 10 minutes
