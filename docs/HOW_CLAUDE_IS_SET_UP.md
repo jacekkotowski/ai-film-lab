@@ -67,6 +67,9 @@ it describes.
 | `change-the-machine` | test first, then code, then commit | Claude or `/change-the-machine` |
 | `ship` | the slow final render | **only** `/ship` (`disable-model-invocation: true`) |
 | `fit-to-length` | cut a film to a length (a Short: 3:00) by dropping what is said twice | Claude or `/fit-to-length` |
+| `write-to-fit` | notes + photos → intro, one paragraph per picture, closing, inside a word budget | Claude or `/write-to-fit` |
+| `status` | one screen: recorded, edit, current vs stale renders, next step. Read only | Claude or `/status` |
+| `fix-captions` | captions the transcriber could not time, placed on the measured speech | Claude or `/fix-captions` |
 
 ### Growing a new skill
 

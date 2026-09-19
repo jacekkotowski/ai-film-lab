@@ -45,6 +45,9 @@ before you become the developer.
 | `edit-pass`     | I react to a render ("shot 3 drags") — the everyday loop  |
 | `ship`          | I ask for the final render. Only then                     |
 | `fit-to-length` | "make it a Short", "under 3 minutes" — cut what is said twice |
+| `write-to-fit`  | before recording: notes + photos → texts inside a word budget |
+| `status`        | "where am I", "is it ready", "can I upload it" — read only |
+| `fix-captions`  | "the caption disappeared", "the German words don't show"  |
 | `investigate`   | something sounds, looks or runs wrong and the cause is unknown |
 | `change-the-machine` | I have asked for a change to `ffilm/` itself         |
 
