@@ -26,14 +26,14 @@ music_duck: 0.5        # how far the music drops while you talk
 
 look:
   preset: old_film      # clean | warm | old_film | projector
-  glow: 0.25            # lifts shadows -- better lighting
+  glow: 0.40            # lifts shadows -- better lighting. 0.25 -> 0.40 on 2026-09-19: darkest tenth of the face 75 -> 85 (look_compare.jpg, D)
 
 # Uncomment if a wide clip is losing too much to a tall frame.
 # `blur` keeps the picture whole on a blurred copy of itself
 # instead of cropping it. fill_aspect is the shape of the sharp
 # part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
 # fill: blur
-# fill_aspect: 1.0
+fill_aspect: 0.8        # used only by shots with `fill: blur` -- your talking shots, see below
 
 # The room behind you softly blurred, you sharp -- on your own
 # recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
@@ -54,6 +54,7 @@ shots:
 
   - id: s01
     src: media/rec_20260919-122456.mp4
+    fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
     in: "00:00.95"
     out: "00:31.20"
     speed: 1.2              # 1.0 is the speed you actually spoke at
@@ -95,6 +96,7 @@ shots:
 
   - id: s03
     src: media/rec_20260919-122456.mp4
+    fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
     in: "01:11.20"
     out: "01:19.63"
     speed: 1.2              # 1.0 is the speed you actually spoke at
@@ -308,6 +310,7 @@ shots:
 
   - id: s15
     src: media/rec_20260919-151406.mp4
+    fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
     in: "00:23.05"
     out: "00:36.95"
     speed: 1.0              # 1.0 is the speed you actually spoke at
@@ -334,6 +337,7 @@ shots:
 
   - id: s16
     src: media/rec_20260919-151406.mp4
+    fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
     in: "00:38.50"
     out: "00:41.80"
     speed: 1.0              # 1.0 is the speed you actually spoke at
@@ -351,6 +355,7 @@ shots:
 
   - id: s17
     src: media/rec_20260919-151406.mp4
+    fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
     in: "00:42.80"
     out: "00:58.30"
     speed: 1.0              # 1.0 is the speed you actually spoke at
