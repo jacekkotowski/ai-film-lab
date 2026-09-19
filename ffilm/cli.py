@@ -366,7 +366,12 @@ def cmd_caption(args) -> None:
         # The words you wrote, if you wrote any. They decide where a
         # caption ends; the transcript only decides when.
         from . import booth
-        script = booth.read_script(project, None)
+        # The narration's words are in narration.txt since 2026-09-19;
+        # a film narrated before then still has them in script.txt.
+        narrated = Path(src.label).suffix.lower() in kinds.AUDIO
+        script = booth.read_script(
+            project, None,
+            voice=narrated and booth.script_path(project, True).exists())
         lines = voice.transcribe(src.audio_path, model_size=args.model,
                                  language=args.lang, script=script)
         all_lines_for_transcript.append((src.label, lines))
@@ -781,7 +786,7 @@ def cmd_record(args) -> None:
         raise SystemExit("I found no camera and no microphone to record with.")
 
     mode = rec.best_mode(rec.camera_modes(video)) if video else None
-    script = booth.read_script(project, args.script)
+    script = booth.read_script(project, args.script, voice=args.voice)
     windowed = booth.available() and not args.no_window
 
     # Narrating photographs: the window shows them one at a time, each
@@ -840,6 +845,23 @@ def cmd_record(args) -> None:
                 ["Something else may have grabbed the camera."]) + [
                 "Nothing you had already recorded is lost -- try again.", ""]
         length, warnings = rec.verify_take(out, mode, bool(audio), take.heard)
+        # Stopped before the last picture: not the narration. Kept, just
+        # out of the way -- see rec.narration_finished.
+        if shown and not rec.narration_finished(len(take.presses),
+                                                len(shown)):
+            reached = min(len(take.presses) + 1, len(shown))
+            try:
+                ingest_mod.quarantine(out, project / "media",
+                                      where=kinds.DISCARDED_DIRNAME)
+            except OSError as e:
+                print(f"  could not put {out.name} aside: {e}")
+            print(f"  Stopped at picture {reached} of {len(shown)} -- "
+                  f"put aside in media\\{kinds.DISCARDED_DIRNAME}\\, "
+                  f"not used.")
+            return [f"Stopped at picture {reached} of {len(shown)}.",
+                    "A narration counts only when it reaches the last "
+                    "picture, so this one was put aside, not used.",
+                    f"{len(takes)} finished so far."]
         takes.append(out)
         print(f"  Take {len(takes)}: {_secs(length)}")
         # Where Next was pressed, beside the take. Not written when it
@@ -891,7 +913,8 @@ def cmd_record(args) -> None:
 
     if windowed:
         print("\nThe window is open. Everything happens in it.")
-        booth.session(script=script, script_path=project / "script.txt",
+        booth.session(script=script,
+                      script_path=booth.script_path(project, args.voice),
                       wpm=args.wpm, title=project.name,
                       start=new_take, finish=took, seconds=args.seconds,
                       discard=drop_last, voice_only=args.voice,

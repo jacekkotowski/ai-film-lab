@@ -201,10 +201,23 @@ def reflow(text: str) -> str:
     return "\n\n".join(out)
 
 
-def read_script(project: Path, given: str | None) -> str:
+# The words for the pictures are not the words said to the camera. Both
+# windows used to keep them in script.txt, so on 2026-09-19 the narration
+# window opened on the intro just recorded, laid out paragraph by
+# paragraph over the photographs.
+NARRATION_FILE = "narration.txt"
+
+
+def script_path(project: Path, voice: bool = False) -> Path:
+    """Where a window keeps its words: narration.txt for the words over
+    the pictures, script.txt for the words said to the camera."""
+    return project / (NARRATION_FILE if voice else "script.txt")
+
+
+def read_script(project: Path, given: str | None, voice: bool = False) -> str:
     """Whatever was left here last time, ready to be changed. An explicit
-    --script wins; otherwise the project's own script.txt, which is where
-    the window saves what you paste."""
+    --script wins; otherwise the project's own file -- see script_path --
+    which is where the window saves what you paste."""
     if given:
         p = Path(given)
         if not p.is_absolute():
@@ -212,7 +225,7 @@ def read_script(project: Path, given: str | None) -> str:
         if not p.exists():
             raise SystemExit(f"No script file at {p}")
         return reflow(p.read_text(encoding="utf-8"))
-    default = project / "script.txt"
+    default = script_path(project, voice)
     if default.exists():
         return reflow(default.read_text(encoding="utf-8"))
     return ""

@@ -182,6 +182,18 @@ def settle_cues(times: list[float], take_seconds: float,
     return cues, pictures
 
 
+def narration_finished(presses: int, pictures: int) -> bool:
+    """Did this narration get as far as the last picture? Pure.
+
+    Only the last picture's SPACE (Finish) ends a take without a press
+    being counted, so anything short of pictures - 1 presses was stopped
+    early -- by Escape, or by closing the window. On 2026-09-19 such a
+    take, two pictures of ten, became the film's narration and the guide
+    moved on as if the talking over the pictures were done.
+    """
+    return presses >= pictures - 1
+
+
 def clean_cues(presses: list[float], take_seconds: float) -> list[float]:
     """Just the times -- see settle_cues."""
     return settle_cues(presses, take_seconds, [])[0]

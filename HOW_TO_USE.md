@@ -236,7 +236,9 @@ for the next. On the last picture the button says Finish. Where you
 pressed SPACE is where the film changes picture — each cut moved into
 the nearest pause, so no word is split.
 
-If you paste words first, leave a blank line between paragraphs: each
+The words you paste here are kept in `narration.txt`, apart from what
+you said to the camera (`script.txt`). If you paste words first, leave
+a blank line between paragraphs: each
 paragraph is shown beside its own picture. Start a paragraph with `[3]`
 to show it with picture 3.
 
@@ -261,9 +263,11 @@ picture under the same words. Delete the shot and its words go too. Add
 a `duration:` to hold the picture longer — the words stay where you said
 them.
 
-To move a cut, change that shot's `in:` or `out:`. Recorded without
-pressing SPACE at all? Then the cuts are guessed from your pauses, and
-a `script.txt` with one paragraph per picture plus
+To move a cut, change that shot's `in:` or `out:`. Stopped before the
+last picture, or closed the window? That take is put in
+`media\_discarded\` and not used; record it again. A narration
+recorded somewhere else and dropped in is cut at your pauses, and
+a `narration.txt` with one paragraph per picture plus
 `uv run film caption --apply -p my_movie` puts them where the
 paragraphs break.
 
@@ -276,7 +280,10 @@ pictures, each clip for its own shots.
 recording the narration opens the film; one you say *after* it closes
 the film. The pictures sit between them. So: talk to the camera, drag the
 photos in, `uv run film` → ENTER to narrate, and it then offers
-"say a few closing words to the camera".
+"say a few closing words to the camera". The top of every screen says
+what is already recorded:
+
+    So far:  10 photos  |  opening talk (12:24)  |  narration (13:50)
 
 Recorded more than once? The newest `voiceover_*.wav` is the one used.
 `audio_offset: 2.0` at the top of film.yaml makes the narration start

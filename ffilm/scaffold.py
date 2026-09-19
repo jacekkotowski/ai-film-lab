@@ -934,7 +934,7 @@ def cut_by_hand(film) -> bool:
 # are, a file still claiming the cuts were guessed is simply wrong.
 SLIDES_GUESSED = (
     "# Where the cuts go was GUESSED, from where you paused. To say it",
-    "# exactly, put your words in script.txt, one paragraph per picture,",
+    "# exactly, put your words in narration.txt, one paragraph per picture,",
     "# and run `uv run film caption --apply`.",
 )
 SLIDES_CUED = (
@@ -943,7 +943,7 @@ SLIDES_CUED = (
     "# `in:`/`out:` numbers, or record the narration again.",
 )
 SLIDES_BY_SCRIPT = (
-    "# Cut by the paragraphs of script.txt -- one paragraph, one picture.",
+    "# Cut by the paragraphs of narration.txt -- one paragraph, one picture.",
     "# Change the paragraphs there and run `uv run film caption --apply`",
     "# again, or move these `in:`/`out:` numbers by hand.",
 )

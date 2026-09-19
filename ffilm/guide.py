@@ -740,6 +740,43 @@ def other_choices(n_steps: int) -> str:
     return f", 2-{n_steps} for another"
 
 
+def _clock(name: str) -> str:
+    """`rec_20260919-122456.mp4` -> `12:24`. Names only, like so_far."""
+    import re
+    m = re.search(r"\d{8}-(\d\d)(\d\d)", name)
+    return f"{m.group(1)}:{m.group(2)}" if m else ""
+
+
+def so_far(names: list[str]) -> str:
+    """What is already in media/, in one line. Pure, off file names.
+
+    Found 2026-09-19: the guide said what to do next and never what was
+    already done, so after reopening it there was no telling whether the
+    intro had been kept, or whether the narration had been recorded.
+    Opening and closing are the places scaffold.place_takes gives the
+    takes: before the narration, or after it.
+    """
+    stills = [n for n in names if Path(n).suffix.lower()
+              in kinds.STILL | kinds.HEIC]
+    voices = sorted(n for n in names
+                    if Path(n).stem.lower().startswith(kinds.VOICEOVER_PREFIX)
+                    and Path(n).suffix.lower() in kinds.AUDIO)
+    takes = sorted(n for n in names if kinds.is_recording(Path(n).stem)
+                   and Path(n).suffix.lower() in kinds.VIDEO)
+    narration = voices[-1] if voices else None
+    parts = [f"{len(stills)} photo{'' if len(stills) == 1 else 's'}"]
+    for t in takes:
+        if narration is None:
+            parts.append(f"talk to the camera ({_clock(t)})")
+        elif t < narration.replace(kinds.VOICEOVER_PREFIX, kinds.REC_PREFIX):
+            parts.append(f"opening talk ({_clock(t)})")
+        else:
+            parts.append(f"closing talk ({_clock(t)})")
+    parts.append(f"narration ({_clock(narration)})" if narration
+                 else "no narration yet")
+    return "So far:  " + "  |  ".join(parts)
+
+
 def walk(project: Path | None = None) -> None:
     """Ask, act, ask again. The whole app for someone in a hurry."""
     interactive = sys.stdin.isatty()
@@ -785,6 +822,10 @@ def walk(project: Path | None = None) -> None:
             print("=" * 62)
             print(f"  {project.name}")
             print("=" * 62)
+            media = project / "media"
+            if media.is_dir():
+                print("  " + so_far([f.name for f in media.iterdir()
+                                     if f.is_file()]))
             print(f"\n  {s.title}")
             for line in s.why.splitlines():
                 print(f"  {line}")

@@ -172,7 +172,7 @@ def test_it_says_what_it_did_and_how_to_do_better(tmp_path, monkeypatch):
     assert "3 slide(s), one per picture" in text
     assert "the 60s narration" in text
     assert "GUESSED" in text
-    assert "script.txt" in text
+    assert "narration.txt" in text
 
 
 def test_the_film_it_writes_loads_and_holds_every_word(tmp_path,
