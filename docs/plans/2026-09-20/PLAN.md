@@ -62,6 +62,49 @@ On the talking shots, the lower caption line sits partly on the blurred
 band under the picture. It is readable in the frames. Jacek to judge
 whether it should move up.
 
+## FIRST, 2026-09-20: lips out of sync in the second spoken part
+
+Jacek, after watching the Short's final: "the second spoken part is out
+of sync... I am still moving lips, it stays behind the soundtrack which
+is faster. This 1.22 speed, is it not a problem?"
+
+Use the `investigate` skill: measure first, no fix before the cause is
+named.
+
+**Known (from the file, not measured on the render):**
+- The final has 5 talking shots. The intro (s01, s03) plays at speed 1.2.
+  The closing (s15, s16, s17) was changed from 1.2 to 1.0 this evening,
+  with its captions rescaled ×1.2.
+- Also changed this evening on the same shots: `fill: blur`, and the
+  dissolve into s15 removed.
+- "The second part" most likely means the closing, s15–s17. Confirm
+  with Jacek if the measurement doesn't settle it.
+
+**Hypotheses, none checked:**
+1. At `speed: 1.0` the picture and the sound take different paths.
+   `audio.voiced_chain` applies `atempo` only when speed ≠ 1.0. Check
+   that the picture side agrees exactly.
+2. The sound was shaped once per take ("3 take(s) shaped once, 10
+   piece(s) cut from them" in the render log), and a piece is cut at the
+   wrong place when the speed changes within a take. Both takes had
+   pieces at 1.2 in the earlier render.
+3. At 1.2, the audio `atempo` and the picture step drift apart over a
+   long shot (s01 is 25 s).
+
+**Measure:** for one talking shot at each speed:
+- pick a hard sound onset in the source, a plosive after a pause, found
+  with `silencedetect`;
+- find the same instant in the final: the audio onset, and the frame
+  where the mouth opens;
+- the offset in ms is the answer. Over about 80 ms is visible; the
+  complaint suggests hundreds.
+
+Do it for s01 (1.2) and s15 (1.0), early and late in each shot. That
+separates the hypotheses.
+
+Sound code is a standing request (`docs/decisions/0003`). Read it before
+touching `audio.py`, and ask Jacek before changing anything there.
+
 ## Needs Jacek: what could not be tested tonight
 
 Jacek could not record again tonight. Everything below needs his voice,
