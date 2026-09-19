@@ -239,8 +239,17 @@ the nearest pause, so no word is split.
 The words you paste here are kept in `narration.txt`, apart from what
 you said to the camera (`script.txt`). If you paste words first, leave
 a blank line between paragraphs: each
-paragraph is shown beside its own picture. Start a paragraph with `[3]`
-to show it with picture 3.
+paragraph is shown beside its own picture. Fewer paragraphs than
+pictures? A paragraph that is only `-` is a picture with no words, and
+a paragraph starting `[5]` goes with picture 5, the next one with 6:
+
+    Words for picture 1.
+
+    -
+
+    [5] Words for picture 5.
+
+    Words for picture 6.
 
 When you're done:
 

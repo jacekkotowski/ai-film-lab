@@ -1192,50 +1192,82 @@ class SlideCut:
     note: str = ""
 
 
-def picture_for(i: int, para, pictures: list[str]) -> str:
-    """Which picture paragraph number `i` belongs to. Pure.
+# A paragraph that is only this is a picture you say nothing over.
+NO_WORDS = "-"
+
+
+def _named(tag: str, pictures: list[str]) -> int | None:
+    """The picture a `[3]` or `[3_name.png]` tag names, by position."""
+    for j, src in enumerate(pictures):
+        name = Path(src).name
+        if name == tag or Path(name).stem == tag:
+            return j
+        num = _hint(Path(name).stem)[1]
+        if tag.isdigit() and num is not None and num == int(tag):
+            return j
+    return None
+
+
+def _slots(paragraphs, pictures: list[str]) -> list[int]:
+    """Which picture each paragraph goes with, as a position -- one past
+    the end and beyond when the paragraphs outnumber the pictures. Pure.
+
+    In order, one each. `[5]` jumps to picture 5 and the next paragraph
+    carries on from 6: it used to go back to its own position, so after
+    one jump the rest were shown over the wrong pictures. `-` on its own
+    takes its picture and says nothing over it -- found 2026-09-19,
+    eight paragraphs for ten pictures and no way to say which two.
+    """
+    out, pos = [], 0
+    for para in paragraphs:
+        tag = getattr(para, "picture", None) if para is not None else None
+        j = _named(tag, pictures) if tag else None
+        if j is not None:
+            pos = j
+        out.append(pos)
+        pos += 1
+    return out
+
+
+def paragraph_pictures(paragraphs, pictures: list[str]) -> list[str]:
+    """The picture for each paragraph. Pure.
 
     The ONE rule, used by the recording window to decide what to show
     while a paragraph is read, and by `slide_cuts` to decide what to put
     under it afterwards. Two copies of this would sooner or later
     disagree, and the words said over picture 2 would land under
-    picture 3 with nothing to say why.
-
-    A paragraph that names a picture on its first line gets it: `[3]`
-    matches a file numbered 3, `[3_name.png]` or `[3_name]` matches the
-    file. Otherwise pictures go in order, and the last one is used again
+    picture 3 with nothing to say why. The last picture is used again
     when the paragraphs outnumber them.
     """
-    tag = getattr(para, "picture", None) if para is not None else None
-    if tag:
-        for src in pictures:
-            name = Path(src).name
-            if name == tag or Path(name).stem == tag:
-                return src
-            num = _hint(Path(name).stem)[1]
-            if tag.isdigit() and num is not None and num == int(tag):
-                return src
-    return pictures[i] if i < len(pictures) else pictures[-1]
+    return [pictures[min(k, len(pictures) - 1)]
+            for k in _slots(paragraphs, pictures)]
+
+
+def _words(para) -> str:
+    text = " ".join(para.units)
+    return "" if text.strip() == NO_WORDS else text
 
 
 def narration_steps(pictures: list[str], paragraphs) -> list[tuple[str, str]]:
     """What the recording window shows, one step at a time: a picture,
     and the words to say over it. Pure.
 
-    One step per picture or per paragraph, whichever there are more of.
-    A picture with no paragraph of its own is shown with no words -- you
-    can still talk about it, and pressing Next still marks where. No
-    pictures at all is no steps, and the window behaves as it always
-    did.
+    Every picture once, in the film's order, with the paragraph(s) that
+    go with it (see _slots). A picture with no paragraph of its own is
+    shown with no words -- you can still talk about it, and pressing
+    Next still marks where. Paragraphs past the last picture are shown
+    over it again, one step each. No pictures at all is no steps, and
+    the window behaves as it always did.
     """
     if not pictures:
         return []
-    steps = []
-    for i in range(max(len(pictures), len(paragraphs))):
-        para = paragraphs[i] if i < len(paragraphs) else None
-        text = " ".join(para.units) if para is not None else ""
-        steps.append((picture_for(i, para, pictures), text))
-    return steps
+    texts: list[list[str]] = [[] for _ in pictures]
+    extra: list[str] = []
+    for para, k in zip(paragraphs, _slots(paragraphs, pictures)):
+        (texts[k] if k < len(pictures) else extra).append(_words(para))
+    return ([(pic, "\n\n".join(t for t in texts[i] if t))
+             for i, pic in enumerate(pictures)]
+            + [(pictures[-1], t) for t in extra])
 
 
 def pictures_in_order(project: Path) -> list[str]:
@@ -1370,13 +1402,15 @@ def slide_cuts(film, paragraphs, windows) -> list["SlideCut"]:
     pictures = [s.src for s in slides]
     sids = [s.id for s in slides]
 
-    spoken = [(p, w) for p, w in zip(paragraphs, windows) if w is not None]
+    spoken = [(p, w, pic) for p, w, pic in
+              zip(paragraphs, windows, paragraph_pictures(paragraphs,
+                                                          pictures))
+              if w is not None]
     if not spoken:
         return []
 
     cuts: list[SlideCut] = []
-    for i, (para, (a, b)) in enumerate(spoken):
-        pick = picture_for(i, para, pictures)
+    for i, (para, (a, b), pick) in enumerate(spoken):
         cuts.append(SlideCut(
             sid=sids[i] if i < len(sids) else "",
             src=pick, voice=voice_src, tin=a, tout=b,

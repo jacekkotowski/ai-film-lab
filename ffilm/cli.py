@@ -795,12 +795,20 @@ def cmd_record(args) -> None:
     # film by -- so the words said over picture 2 land under picture 2.
     shown: list[str] = []
     steps: list = []
+    pair = None
     if args.voice:
         from . import voice as voice_mod
-        pairs = scaffold.narration_steps(scaffold.pictures_in_order(project),
-                                         voice_mod.script_paragraphs(script))
-        shown = [rel for rel, _text in pairs]
-        steps = [(project / rel, text) for rel, text in pairs]
+        pictures = scaffold.pictures_in_order(project)
+
+        def pair(words: str) -> list:
+            """Again on Start, from what was typed in the window. `shown`
+            is changed in place: the cues are written against it."""
+            pairs = scaffold.narration_steps(
+                pictures, voice_mod.script_paragraphs(words))
+            shown[:] = [rel for rel, _text in pairs]
+            return [(project / rel, text) for rel, text in pairs]
+
+        steps = pair(script)
 
     if args.voice:
         print("\nVoice only -- no camera. Reads over your photographs, "
@@ -918,7 +926,7 @@ def cmd_record(args) -> None:
                       wpm=args.wpm, title=project.name,
                       start=new_take, finish=took, seconds=args.seconds,
                       discard=drop_last, voice_only=args.voice,
-                      steps=steps)
+                      steps=steps, pair=pair)
     else:
         print("\nJust talk." if args.voice else
               "\nLook at the camera, not at the screen.")

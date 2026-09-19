@@ -246,7 +246,9 @@ def compose_hint(voice_only: bool) -> str:
         return ("You will see your pictures one at a time. Talk about "
                 "each one, then press SPACE for the next. If you paste "
                 "words here, leave a blank line between paragraphs: one "
-                "paragraph is shown with each picture.")
+                "paragraph is shown with each picture. A paragraph that "
+                "is only - is a picture with no words; [5] at the start "
+                "puts a paragraph on picture 5, and the next goes on 6.")
     return ("Paste it here and it will scroll while you talk. "
             "Or leave it empty and just speak.")
 
@@ -440,12 +442,15 @@ class Take:
 def session(script: str, script_path: Path, wpm: int, title: str,
             start, finish, seconds: float | None = None,
             discard=None, voice_only: bool = False,
-            steps: list | None = None) -> None:
+            steps: list | None = None, pair=None) -> None:
     """Open the window and stay in it until the person is finished.
 
     `start()`         begins one recording and returns the running Take.
     `finish(take)`    is called when that take ends; it returns the lines
                       to show on the review screen.
+    `pair(words)`     turns what was typed into the steps: one (picture,
+                      words) each. Called on Start, so what was pasted
+                      is what is shown.
 
     Control is inverted -- the window owns the loop, not the caller --
     because the alternative is a window that closes and reopens between
@@ -754,6 +759,12 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     def begin(_=None):
         S["script"] = reflow(editor.get("1.0", "end"))
         save_script(script_path, S["script"])
+        # The pictures were paired with the words once, before the window
+        # opened -- so on 2026-09-19 eight pasted paragraphs showed as ten
+        # pictures and no words at all. Paired again here, from what is
+        # in the box now.
+        if pair is not None:
+            steps[:] = pair(S["script"])
         lay_out_words()
         S["count"] = COUNT_FROM
         show("count")

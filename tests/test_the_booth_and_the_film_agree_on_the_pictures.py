@@ -102,7 +102,9 @@ def test_with_no_script_every_picture_is_still_a_step():
 def test_a_paragraph_that_names_its_picture_shows_that_one():
     steps = scaffold.narration_steps(PICS, script_paragraphs(
         "[3] Start at the end.\n\nThen this."))
-    assert steps[0] == ("media/3c.png", "Start at the end.")
+    # Shown when picture 3 comes up, not first: since 2026-09-19 the
+    # pictures keep the film's order and a tag places the words.
+    assert steps[2] == ("media/3c.png", "Start at the end.")
 
 
 def test_more_paragraphs_than_pictures_shows_the_last_picture_again():
@@ -126,7 +128,8 @@ def test_no_pictures_means_no_steps():
 def test_the_film_picks_pictures_by_the_same_rule():
     """slide_cuts, which re-cuts a film by paragraph, and the booth must
     never disagree about which picture a paragraph belongs to."""
-    paras = script_paragraphs("[3] End.\n\nMiddle.\n\nStart.")
-    for i, para in enumerate(paras):
-        assert scaffold.picture_for(i, para, PICS) == \
-            scaffold.narration_steps(PICS, paras)[i][0]
+    paras = script_paragraphs("Start.\n\n[3] End.\n\nAfter.")
+    steps = scaffold.narration_steps(PICS, paras)
+    for para, pic in zip(paras, scaffold.paragraph_pictures(paras, PICS)):
+        words = " ".join(para.units)
+        assert any(p == pic and words in t for p, t in steps)
