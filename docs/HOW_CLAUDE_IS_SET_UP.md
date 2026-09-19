@@ -66,6 +66,23 @@ it describes.
 | `investigate` | measure a fault before explaining it | Claude or `/investigate` |
 | `change-the-machine` | test first, then code, then commit | Claude or `/change-the-machine` |
 | `ship` | the slow final render | **only** `/ship` (`disable-model-invocation: true`) |
+| `fit-to-length` | cut a film to a length (a Short: 3:00) by dropping what is said twice | Claude or `/fit-to-length` |
+
+### Growing a new skill
+
+Skills will multiply as the project grows. **`fit-to-length` is the
+model to copy**, and `docs/decisions/0009-how-a-skill-is-born.md` says
+why. In short:
+
+1. Do the job once, for real, in a session.
+2. Write the skill the same day, with that case's numbers in it.
+3. Give it the same parts:
+   - a `description` holding the user's own trigger words;
+   - "why the machine alone can't";
+   - "done first on…";
+   - numbered steps: machine first → measure → propose → wait for "go" → edit → check → peek;
+   - a `## Never` list;
+   - one row in root `CLAUDE.md`.
 
 ### Why two rulebooks
 

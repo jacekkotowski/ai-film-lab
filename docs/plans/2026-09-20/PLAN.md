@@ -43,7 +43,18 @@ The film itself: 19 shots, 281.8 s. Edit pass on `film.yaml`:
 - pictures 9 and 10, which are silent for 4.5 s each. Is that intended?
 - s18, a 0.9 s last piece of the closing take with no words: a stray breath? Delete it if so.
 
-### 2. P decides: a Short or a regular video? 281.8 s is 4:42
+### 2. DONE 2026-09-19 evening: cut to a Short, 171.6 s
+Jacek said "go" to 8 cuts proposed by Claude (whole sentences and shots
+said twice, none split). 11 shots, 171.6 s; peek rendered (`bfa7424`).
+The 4:42 version is `0b24b8c` (`film undo`). **Left for P:** watch the
+peek, then ask for `film final` (about 11 min at this length, reasoned
+from 18 min for 281.8 s -- not measured). The method is now the
+`fit-to-length` skill (`dad6277`), and the precedent for new skills
+(`docs/decisions/0009`).
+
+The original item, kept for the record:
+
+### 2 (was). P decides: a Short or a regular video? 281.8 s is 4:42
 YouTube Shorts go up to 3:00. As it stands, this uploads as an ordinary
 vertical video. Two ways:
 - (a) upload as it is;
@@ -95,6 +106,23 @@ screen on a scratch project: new → intro → photos → narrate → close the
 window midway → reopen → narrate → closing words → go. Check what each
 screen says and what each step leaves on disk. See the memory note
 "walk the path as the user".
+
+### 7. D: a word budget in the recording window. Code. Jacek said yes
+**Why:** the only way to hit 3:00 without AI is to write to fit, before
+recording. **Measured on one film:** German Forgotten Bauhaus Hope had
+414 spoken words (intro 103 + narration 220 + closing 91) in 281.8 s,
+which is 1.47 words per second of finished film. At that rate, 3:00 is
+about 265 words for the whole film.
+
+**Build:**
+- the compose screen of both windows shows the words pasted, and what
+  they come to next to the film's other takes: "310 words ≈ 3:31, a
+  Short is ≤ 265";
+- a pure function `booth.budget(words_here, words_in_other_takes)`,
+  tested first;
+- the rate is a named constant with this measurement in its comment.
+
+Re-measure it on the next two films before trusting it.
 
 ### 6. P: tidy the working tree. 5 minutes
 Not touched by Claude and left as found:
