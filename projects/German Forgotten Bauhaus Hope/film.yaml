@@ -55,12 +55,12 @@ shots:
   - id: s01
     src: media/rec_20260919-122456.mp4
     in: "00:00.95"
-    out: "00:49.35"
+    out: "00:31.20"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.559, 0.388]
-    note: "part 1 of 3 -- one take with the long pauses cut out. Every word is kept"
+    note: "ends at the pause after Bauhaus (30.9-32.2 s): the Weimar/Haus am Horn sentence was cut for the Short, picture 5 shows it. part 1 of 3 -- one take with the long pauses cut out. Every word is kept"
     captions:
       - text: "In 1919 Europe emerged from industrialized war with over 20 million dead,"
         at: 0.00
@@ -89,56 +89,9 @@ shots:
         words: [0.00, 0.40, 0.65, 1.12, 1.53, 2.00, 2.20, 2.45]
       - text: "Bauhaus."
         at: 24.28
-        dur: 1.50
+        dur: 0.93
         pos: lower_third
         words: [0.00]
-      - text: "At the 1923 Weimar exhibition,"
-        at: 25.88
-        dur: 2.98
-        pos: lower_third
-        words: [0.00, 0.33, 0.62, 1.63, 2.35]
-      - text: "the Haus am Horn demonstrated a modular affordable home designed for mass production using modern technology"
-        at: 29.75
-        dur: 4.50
-        pos: lower_third
-        words: [0.00, 0.10, 0.40, 0.70, 1.07, 2.02, 2.53, 2.95, 3.57, 4.18]
-      - text: "to improve ordinary people's lives."
-        at: 37.48
-        dur: 2.43
-        pos: lower_third
-        words: [0.00, 0.47, 0.97, 1.45, 2.15]
-
-  - id: s02
-    src: media/rec_20260919-122456.mp4
-    in: "00:50.30"
-    out: "01:10.10"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.559, 0.388]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 2 of 3 -- one take with the long pauses cut out. Every word is kept"
-    captions:
-      - text: "The same principles remain relevant,"
-        at: 0.00
-        dur: 2.55
-        pos: lower_third
-        words: [0.00, 0.43, 0.63, 1.15, 1.82]
-      - text: "rapidly built affordable housing,"
-        at: 2.94
-        dur: 1.76
-        pos: lower_third
-        words: [0.00, 0.38, 0.75, 1.27]
-      - text: "shared spaces to reduce isolation,"
-        at: 5.31
-        dur: 1.79
-        pos: lower_third
-        words: [0.00, 0.18, 0.67, 0.90, 1.17]
-      - text: "durable multifunctional products and community workshops for building and maintaining local infrastructure."
-        at: 8.08
-        dur: 4.50
-        pos: lower_third
-        words: [0.00, 0.37, 1.60, 2.03, 2.77, 3.48, 4.05]
 
   - id: s03
     src: media/rec_20260919-122456.mp4
@@ -264,41 +217,6 @@ shots:
         pos: lower_third
         words: [0.00, 0.62, 1.78, 2.58]
 
-  - id: s07
-    src: media/4_.jpg
-    voice: media/voiceover_20260919-150352.wav
-    in: "01:13.05"
-    out: "01:31.70"
-    move: drift_right
-    focus: [0.318, 0.512]
-    note: "picture 4 of 10 -- holds while these words are said"
-    captions:
-      - text: "Interior of a Laubenganghaus apartment"
-        at: 0.20
-        dur: 4.20
-        pos: lower_third
-        words: [0.00, 0.52, 1.32, 2.68, 3.44]
-      - text: "A small but complete home,"
-        at: 6.06
-        dur: 1.73
-        pos: lower_third
-        words: [0.00, 0.28, 0.66, 0.90, 1.30]
-      - text: "designed around what a family actually needs: kitchen,"
-        at: 7.80
-        dur: 3.94
-        pos: lower_third
-        words: [0.00, 0.42, 0.92, 1.28, 1.44, 1.80, 2.20, 3.44]
-      - text: "bathroom, WC, hot water and heating,"
-        at: 12.30
-        dur: 2.94
-        pos: lower_third
-        words: [0.00, 1.30, 1.58, 1.96, 2.58]
-      - text: "rather than decorative excess."
-        at: 15.24
-        dur: 2.79
-        pos: lower_third
-        words: [0.00, 0.66, 1.44, 1.94, 2.24]
-
   - id: s08
     src: media/5_.jpg
     voice: media/voiceover_20260919-150352.wav
@@ -330,71 +248,6 @@ shots:
         dur: 4.06
         pos: lower_third
         words: [0.00, 0.38, 1.00, 1.74, 2.22, 2.80, 3.24]
-
-  - id: s09
-    src: media/6_.jpg
-    voice: media/voiceover_20260919-150352.wav
-    in: "02:00.30"
-    out: "02:12.15"
-    move: drift_left
-    focus: [0.398, 0.650]
-    note: "picture 6 of 10 -- holds while these words are said"
-    captions:
-      - text: "Haus Anton, garden and terrace"
-        at: 0.83
-        dur: 1.57
-        pos: lower_third
-        words: [0.00, 0.68, 0.96, 1.26]
-      - text: "A small home opening onto greenery, where useful space,"
-        at: 2.87
-        dur: 3.87
-        pos: lower_third
-        words: [0.00, 0.12, 0.32, 0.90, 1.28, 1.70, 2.92, 3.12, 3.46]
-      - text: "sunlight and a garden become part of"
-        at: 7.23
-        dur: 2.53
-        pos: lower_third
-        words: [0.00, 0.34, 0.82, 1.00, 1.38, 1.88, 2.28]
-      - text: "an ordinary family's life."
-        at: 9.77
-        dur: 1.81
-        pos: lower_third
-        words: [0.00, 0.18, 0.70, 1.18]
-
-  - id: s10
-    src: media/7_.jpg
-    voice: media/voiceover_20260919-150352.wav
-    in: "02:17.70"
-    out: "02:36.60"
-    move: tilt_up
-    focus: [0.426, 0.392]
-    note: "picture 7 of 10 -- holds while these words are said"
-    captions:
-      - text: "Laubenganghäuser, the shared walkway"
-        at: 3.62
-        dur: 1.65
-        pos: lower_third
-        words: [0.00, 0.56, 1.02]
-      - text: "Architecture designed not only to save money,"
-        at: 5.28
-        dur: 2.98
-        pos: lower_third
-        words: [0.00, 0.60, 1.18, 1.46, 1.92, 2.18, 2.52]
-      - text: "but to bring people into contact,"
-        at: 8.50
-        dur: 1.78
-        pos: lower_third
-        words: [0.00, 0.12, 0.42, 0.64, 0.98, 1.24]
-      - text: "with living rooms deliberately oriented"
-        at: 10.28
-        dur: 3.00
-        pos: lower_third
-        words: [0.00, 0.68, 1.10, 1.50, 2.02]
-      - text: "toward the southern sun."
-        at: 13.72
-        dur: 1.21
-        pos: lower_third
-        words: [0.00, 0.36, 0.72]
 
   - id: s11
     src: media/8_.jpg
@@ -453,59 +306,6 @@ shots:
         pos: lower_third
         words: [0.00, 0.50, 1.06]
 
-  - id: s12
-    src: media/9_.jpg
-    duration: 4.5
-    move: tilt_up
-    focus: [0.607, 0.360]
-
-  - id: s13
-    src: media/10_.jpg
-    duration: 4.5
-    move: pan_right
-    focus: [0.610, 0.443]
-
-  - id: s14
-    src: media/rec_20260919-151406.mp4
-    in: "00:03.10"
-    out: "00:21.15"
-    speed: 1.0              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.544, 0.383]
-    note: "speed 1.0, not 1.2: this take was already spoken at 122 wpm, the narration at 119 (measured 2026-09-19). Captions rescaled x1.2 to match. part 1 of 5 -- one take with the long pauses cut out. Every word is kept"
-    captions:
-      - text: "It may have looked austere, even cheap,"
-        at: 0.00
-        dur: 2.53
-        pos: lower_third
-        words: [0.00, 0.52, 0.68, 0.88, 1.12, 1.98, 2.16]
-      - text: "but it was planned to be durable and"
-        at: 2.71
-        dur: 1.99
-        pos: lower_third
-        words: [0.00, 0.18, 0.32, 0.48, 0.84, 1.12, 1.26, 1.62]
-      - text: "designed around real life."
-        at: 4.70
-        dur: 1.63
-        pos: lower_third
-        words: [0.00, 0.42, 0.74, 1.08]
-      - text: "Simple, warm colors could work with light,"
-        at: 7.00
-        dur: 3.82
-        pos: lower_third
-        words: [0.00, 1.12, 1.40, 2.64, 2.90, 3.18, 3.50]
-      - text: "space, and air,"
-        at: 11.21
-        dur: 1.15
-        pos: lower_third
-        words: [0.00, 0.36, 0.72]
-      - text: "making modest homes feel alive rather than deprived."
-        at: 13.12
-        dur: 4.48
-        pos: lower_third
-        words: [0.00, 0.36, 0.70, 1.12, 1.70, 3.18, 3.62, 3.94]
-
   - id: s15
     src: media/rec_20260919-151406.mp4
     in: "00:23.05"
@@ -514,8 +314,7 @@ shots:
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.383]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 2 of 5 -- one take with the long pauses cut out. Every word is kept"
+    note: "hard cut in from picture 8: s14 (austere, even cheap) was cut for the Short. part 2 of 5 -- one take with the long pauses cut out. Every word is kept"
     captions:
       - text: "We still need places and tools that bring people together"
         at: 0.19
@@ -582,18 +381,7 @@ shots:
         pos: lower_third
         words: [0.00, 0.84, 1.00, 1.38, 1.98, 2.16]
 
-  - id: s18
-    src: media/rec_20260919-151406.mp4
-    in: "01:00.20"
-    out: "01:01.10"
-    speed: 1.0              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.544, 0.383]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 5 of 5 -- one take with the long pauses cut out. Every word is kept"
-
-# 18 shots, about 271 seconds.
+# Cut to a Short on 2026-09-19 (was 18 shots, 281.8 s): see git log.
 #
 # 8 slide(s), one per picture, each holding its own piece of
 # the 206s narration. Each `in:`/`out:` is that picture's words, on
