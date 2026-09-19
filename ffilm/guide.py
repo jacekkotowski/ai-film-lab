@@ -355,6 +355,38 @@ def next_steps(project: Path) -> list[Step]:
                 why="Drag them into media\\. Then this offers to record "
                     "your words over them, one picture at a time.",
                 folders=[media]))
+        # Photos in, no narration yet: talking over them is the next thing,
+        # not a silent draft. Found 2026-09-19 -- an intro said to the
+        # camera, the photos dragged in after it, and this screen offered
+        # only "build the whole film", so the narration was reachable
+        # only by rendering a film without it first.
+        narration = _newest(media, AUDIO_EXT)
+        if sys.platform == "win32":
+            if (not narration
+                    and _newest(media, kinds.STILL | kinds.HEIC)):
+                narrate = Step(
+                    "Say the words over these pictures",
+                    ["record", "--voice"] + p,
+                    why="Your pictures one at a time, SPACE for the next. "
+                        "A talk you recorded before this opens the film; "
+                        "one you record after it closes the film.")
+                # First only before there is an edit. Photos added to a
+                # film already made -- a slideshow under music, say --
+                # still go straight in with ENTER.
+                if (project / "film.yaml").exists():
+                    steps.insert(1, narrate)
+                else:
+                    steps[0].title = "...or build the whole film in one go"
+                    steps.insert(0, narrate)
+            elif narration and _newest(media, kinds.VIDEO) < narration:
+                # Intro, pictures, and now the last word. A take recorded
+                # after the narration plays after the pictures (see
+                # scaffold.place_takes), so this is all it takes.
+                steps.append(Step(
+                    "...or say a few closing words to the camera",
+                    ["record"] + p,
+                    why="Recorded after your narration, so it plays after "
+                        "the pictures and ends the film."))
         return steps
 
     # Ingested, and there was nothing in it. Never offer `init` here:

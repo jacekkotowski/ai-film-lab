@@ -331,6 +331,7 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     # NOT re-sorted, only unnumbered ones are. One function, shared with
     # the recording window: see pictures_in_order.
     ordered, numbered, middle = _in_film_order(tagged, repeat_open_close=True)
+    ordered = place_takes(ordered, audio.name if audio else None)
 
     # `quote_` has no natural position relative to other unnumbered
     # content -- unlike open/close, "before or after the talking?" isn't
@@ -1269,6 +1270,54 @@ def pictures_in_order(project: Path) -> list[str]:
         tagged.append({"entry": {"path": rel}, "role": role, "num": num,
                        "clean": clean})
     return [t["entry"]["path"] for t in _in_film_order(tagged)[0]]
+
+
+_TAKEN_AT = re.compile(r"(\d{8})-(\d{4,6})")
+
+
+def _taken_at(name: str) -> str | None:
+    """The time in a take's name, as text that sorts: `rec_20260919-1224`
+    and `voiceover_20260919-130000` both carry one (record.take_name).
+    The name, not the file's time -- copying a file can change that."""
+    m = _TAKEN_AT.search(name)
+    return m and m.group(1) + m.group(2).ljust(6, "0")
+
+
+def place_takes(ordered: list[dict], narration: str | None) -> list[dict]:
+    """A take said to the camera before the narration goes just before
+    the pictures; one said after it, just after them. Pure.
+
+    Found 2026-09-19: an intro recorded first, then photos numbered 1_ to
+    10_ talked over -- and the numbers put every photo ahead of the
+    unnumbered intro, so the film opened on the slides and ended on
+    "hello". The order you recorded in is the order you meant. A take
+    you numbered yourself stays where you numbered it.
+    """
+    when = narration and _taken_at(narration)
+    if not when:
+        return ordered
+
+    def stem(t):
+        return Path(t["entry"]["path"]).stem
+
+    takes = [t for t in ordered if t["num"] is None
+             and kinds.is_recording(stem(t)) and _taken_at(stem(t))]
+    if not takes:
+        return ordered
+    rest = [t for t in ordered if not any(t is k for k in takes)]
+    # First appearances only: an open_close card plays again at the very
+    # end, and a closing word belongs before it, not after the film's
+    # last frame.
+    pics = [i for i, t in enumerate(rest)
+            if Path(t["entry"]["path"]).suffix.lower()
+            in kinds.STILL | kinds.HEIC
+            and not any(t is u for u in rest[:i])]
+    if not pics:
+        return ordered
+    lo, hi = pics[0], pics[-1] + 1
+    before = [t for t in takes if _taken_at(stem(t)) < when]
+    after = [t for t in takes if _taken_at(stem(t)) >= when]
+    return rest[:lo] + before + rest[lo:hi] + after + rest[hi:]
 
 
 def _in_film_order(tagged: list[dict], repeat_open_close: bool = False):

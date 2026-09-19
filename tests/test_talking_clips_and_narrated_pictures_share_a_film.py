@@ -82,7 +82,12 @@ def test_the_clip_keeps_its_own_place_and_its_own_sound(tmp_path,
     film = built(mixed(tmp_path), monkeypatch)
     clips = [s for s in film.shots if s.kind == "video"]
     assert clips and all(s.voice is None for s in clips)
-    assert Path(film.shots[-1].src).name == CLIP       # after the pictures
+    # Recorded 2026-09-05, before the 2026-09-18 narration, so it opens
+    # the film -- it used to follow the numbered pictures. See
+    # test_takes_play_where_you_recorded_them.
+    assert Path(clips[0].src).name == CLIP
+    assert film.shots.index(clips[0]) < min(
+        film.shots.index(s) for s in film.shots if s.voice)
 
 
 def test_a_clip_that_comes_first_stays_first(tmp_path, monkeypatch):

@@ -272,6 +272,12 @@ over the photographs; each clip keeps its own sound, and nothing plays
 on top of it. `caption` listens to both: your narration for the
 pictures, each clip for its own shots.
 
+**An intro and a closing word.** A take you say to the camera *before*
+recording the narration opens the film; one you say *after* it closes
+the film. The pictures sit between them. So: talk to the camera, drag the
+photos in, `uv run film` → ENTER to narrate, and it then offers
+"say a few closing words to the camera".
+
 Recorded more than once? The newest `voiceover_*.wav` is the one used.
 `audio_offset: 2.0` at the top of film.yaml makes the narration start
 2 seconds in; nothing you said is cut off.

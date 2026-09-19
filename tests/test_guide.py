@@ -211,12 +211,23 @@ def test_an_empty_shelf_says_how_to_fill_it(tmp_path, shelf):
 
 
 def test_footage_with_no_analysis_offers_the_one_command(tmp_path):
-    assert "go" in first(project(tmp_path, media=100))
+    # Not necessarily first: photos with no narration are offered that
+    # first (2026-09-19, see the end of this file).
+    assert any(s.args[:1] == ["go"]
+               for s in next_steps(project(tmp_path, media=100)))
 
 
 def test_new_footage_since_the_last_look_starts_again(tmp_path):
     """Files added after the analysis must not be silently left out."""
-    assert "go" in first(project(tmp_path, manifest=100, media=200))
+    assert any(s.args[:1] == ["go"] for s in
+               next_steps(project(tmp_path, manifest=100, media=200)))
+
+
+def test_photos_added_to_an_edit_already_made_still_go_in_with_enter(
+        tmp_path):
+    root = project(tmp_path, manifest=100, yml=150, media=200)
+    assert first(root).startswith("go")
+    assert "say the words over these pictures" in titles(root).lower()
 
 
 def test_an_analysed_project_with_no_edit_writes_one(tmp_path):
@@ -410,3 +421,52 @@ def test_one_alternative_is_offered_as_one_number_not_a_range():
     assert guide.other_choices(1) == ""
     assert guide.other_choices(2) == ", 2 for another"
     assert guide.other_choices(4) == ", 2-4 for another"
+
+
+# --------------------------------------------------------------------------
+# Talk first, then the pictures (found 2026-09-19, German Forgotten Bauhaus
+# Hope): an intro said to the camera, photos dragged in after it, and the
+# next screen offered only "build the whole film" -- no way to the
+# narration without rendering a silent draft first.
+# --------------------------------------------------------------------------
+
+def _take(root: Path, name: str, t: float) -> None:
+    p = root / "media" / name
+    p.write_bytes(b"x")
+    os.utime(p, (t, t))
+
+
+def test_photos_after_an_intro_are_offered_the_narration_first(tmp_path):
+    root = project(tmp_path)
+    _take(root, "rec_20260919-122456.mp4", 100)
+    _take(root, "1_.jpg", 200)
+    assert next_steps(root)[0].args[:2] == ["record", "--voice"]
+    assert "build the whole film" in titles(root).lower()
+
+
+def test_new_photos_with_a_narration_already_recorded_go_straight_on(tmp_path):
+    root = project(tmp_path)
+    _take(root, "1_.jpg", 100)
+    _take(root, "voiceover_20260919-130000.wav", 200)
+    assert first(root).startswith("go")
+    assert "say the words" not in titles(root).lower()
+
+
+def test_after_the_narration_a_closing_word_to_the_camera_is_offered(
+        tmp_path):
+    root = project(tmp_path)
+    _take(root, "rec_20260919-122456.mp4", 100)
+    _take(root, "1_.jpg", 200)
+    _take(root, "voiceover_20260919-130000.wav", 300)
+    steps = next_steps(root)
+    assert steps[0].args[0] == "go"
+    assert any(s.args == ["record", "-p", root.name] for s in steps)
+
+
+def test_a_closing_word_already_said_is_not_offered_again(tmp_path):
+    root = project(tmp_path)
+    _take(root, "1_.jpg", 100)
+    _take(root, "voiceover_20260919-130000.wav", 200)
+    _take(root, "rec_20260919-131000.mp4", 300)
+    assert not any(s.args == ["record", "-p", root.name]
+                   for s in next_steps(root))
