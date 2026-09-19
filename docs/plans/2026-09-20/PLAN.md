@@ -1,0 +1,112 @@
+# Plan, 2026-09-20: finish German Forgotten Bauhaus Hope, then make it repeatable
+
+Written by Claude (Opus 5) on the evening of 2026-09-19, after Jacek's
+first real film made with the intro → narrated photos → closing words
+path. Same rules as before: `change-the-machine` for code (a test named
+as a sentence first, one item per commit), `edit-pass` for the film,
+measure before claiming. **P** is the producer, **D** the developer.
+
+## What happened on 2026-09-19
+
+Jacek walked the guide as a busy producer would. Every stop was a fault
+in the machine, fixed and committed the same day:
+
+| what Jacek hit | commit |
+|---|---|
+| photos after an intro: the guide never offered the narration; the numbered photos would have played before the intro | `206f892` |
+| no idea what was already recorded; the narration window opened on the intro's words; closing the window kept a 2-of-10 narration as the real one | `0ddb038` |
+| pasted words never reached the pictures; no way to leave a picture without words | `4c31d85` |
+
+The film itself: 19 shots, 281.8 s. Edit pass on `film.yaml`:
+- the German titles were on screen for under a second, now on the measured speech;
+- the closing clips go from speed 1.2 to 1.0, because they were already spoken at 122 wpm, against 119 wpm for the narration.
+
+**Final render** (ran at the end of 2026-09-19, exit 0):
+
+| what | value |
+|---|---|
+| file | `projects/German Forgotten Bauhaus Hope/out/final.mp4` |
+| length | 281.8 s |
+| size | 666 MB |
+| render time | 1091.6 s, about 18 min |
+| loudness | -13.5 LUFS integrated, measured with ffmpeg `ebur128` on the file |
+| cover and upload text | `out/cover.jpg`, `out/upload.txt` |
+
+`film final` itself warns: "282s long, and a Short stops at 180s". See item 2.
+
+## Items for 2026-09-20, in order
+
+### 1. P: look at the final. 10 minutes
+`projects/German Forgotten Bauhaus Hope/out/final.mp4`. Look for:
+- the titles on pictures 3, 5 and 8;
+- whether the closing words now sound like the narration;
+- pictures 9 and 10, which are silent for 4.5 s each. Is that intended?
+- s18, a 0.9 s last piece of the closing take with no words: a stray breath? Delete it if so.
+
+### 2. P decides: a Short or a regular video? 281.8 s is 4:42
+YouTube Shorts go up to 3:00. As it stands, this uploads as an ordinary
+vertical video. Two ways:
+- (a) upload as it is;
+- (b) `uv run film go -p "German Forgotten Bauhaus Hope" --target 180`.
+  **But** `--target` never shortens anything spoken, and the speech alone
+  is well over 3 minutes (measured: 63.6 + 111.3 + 44.9 s of talking,
+  pauses excluded). So (b) can't reach 3:00 without cutting words. That
+  is a script decision, not a machine one.
+
+### 3. D: captions for words the transcriber does not know. Code
+**Measured today:** the four German titles got captions of 0.42–1.14 s,
+because the English transcriber heard only one or two words of each.
+When I placed them by hand on the pauses measured with ffmpeg
+`silencedetect`, they came out at 3.85–5.30 s.
+
+Rule to build: when a script line is only partly heard, the caption spans
+the speech between the neighbouring heard lines (the pauses measured in
+the audio), not just the part that was heard. The test uses today's
+numbers: s06 must come out near 45.35–50.66 s of the narration.
+
+Worth measuring first, before building the rule: faster-whisper's
+`initial_prompt`/`hotwords`, fed the script's own words. If it hears
+"Laubenganghäuser" with that, the rule may be unnecessary.
+
+### 4. D, P decides the rule: speed per take, from the measured pace
+**Measured today:**
+
+| take | pace |
+|---|---|
+| intro | 97 wpm |
+| narration | 119 wpm |
+| closing | 122 wpm |
+
+A fixed 1.2 suited the first and rushed the last (146 wpm as played).
+Proposal: `init` sets each take's speed to bring it near the
+narration's pace, clamped to 1.0–1.2, and writes the measurement into
+`note:`. P decides whether that is the rule, or whether 1.2 stays and is
+changed by hand.
+
+### 5. D: walk the whole path as the user, on a scratch copy
+Three things in the recording window were built today and never *seen*.
+I can't drive the microphone:
+- the text appearing on Start;
+- the "Stopped at picture N of 10" review screen;
+- `-` and `[5]` in a real paste.
+
+Jacek's next recording checks them. Before that, D walks every guide
+screen on a scratch project: new → intro → photos → narrate → close the
+window midway → reopen → narrate → closing words → go. Check what each
+screen says and what each step leaves on disk. See the memory note
+"walk the path as the user".
+
+### 6. P: tidy the working tree. 5 minutes
+Not touched by Claude and left as found:
+- `projects/test_story/script.txt` is modified;
+- a dozen project folders and `script.txt` files are untracked;
+- so is `.claude/settings.local.json.bak`.
+
+Say which films should be in git.
+
+## Not doing, unless asked
+
+- The 20% caption rule: this film has captions over 73% of its runtime.
+  That is right for a Short watched muted, so there is nothing to fix
+  unless P says otherwise.
+- The sound chain: a standing request, `docs/decisions/0003`.
