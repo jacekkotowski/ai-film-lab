@@ -833,16 +833,37 @@ def so_far(names: list[str]) -> str:
     takes = sorted(n for n in names if kinds.is_recording(Path(n).stem)
                    and Path(n).suffix.lower() in kinds.VIDEO)
     narration = voices[-1] if voices else None
-    parts = [f"{len(stills)} photo{'' if len(stills) == 1 else 's'}"]
+    # `voiceover_` -> `rec_`, so a take and the narration sort against
+    # each other on the time in their names. That comparison already
+    # decided which takes are opening and which are closing; it now also
+    # decides the order they are PRINTED in.
+    #
+    # Found 2026-09-20: the narration was appended last whatever time it
+    # carried, so an evening that went intro 19:53, narration 19:58,
+    # closing 20:00 came out as "opening talk (19:53) | closing talk
+    # (20:00) | narration (19:58)" -- which reads as a narration recorded
+    # after the closing words. Every label was right. Only the order was
+    # wrong, and nothing downstream could notice, because nothing
+    # downstream reads this line: a person does.
+    def when(name: str) -> str:
+        return name.replace(kinds.VOICEOVER_PREFIX, kinds.REC_PREFIX)
+
+    dated: list[tuple[str, str]] = []
     for t in takes:
         if narration is None:
-            parts.append(f"talk to the camera ({_clock(t)})")
-        elif t < narration.replace(kinds.VOICEOVER_PREFIX, kinds.REC_PREFIX):
-            parts.append(f"opening talk ({_clock(t)})")
+            label = f"talk to the camera ({_clock(t)})"
+        elif t < when(narration):
+            label = f"opening talk ({_clock(t)})"
         else:
-            parts.append(f"closing talk ({_clock(t)})")
-    parts.append(f"narration ({_clock(narration)})" if narration
-                 else "no narration yet")
+            label = f"closing talk ({_clock(t)})"
+        dated.append((when(t), label))
+    if narration:
+        dated.append((when(narration), f"narration ({_clock(narration)})"))
+
+    parts = [f"{len(stills)} photo{'' if len(stills) == 1 else 's'}"]
+    parts += [label for _, label in sorted(dated)]
+    if narration is None:
+        parts.append("no narration yet")
     return "So far:  " + "  |  ".join(parts)
 
 
