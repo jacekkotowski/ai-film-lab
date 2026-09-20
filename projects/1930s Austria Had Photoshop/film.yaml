@@ -56,7 +56,15 @@ shots:
     src: media/rec_20260920-195315.mp4
     in: "00:01.35"
     out: "00:27.60"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    speed: 1.1              # measured 2026-09-20: you read the narration
+                            # at 110 wpm and this take at 102 wpm. At 1.2
+                            # this played 122 wpm against the pictures'
+                            # 110 -- the mismatch Jacek heard. 1.1 puts
+                            # it at 112. The pictures cannot be sped up
+                            # instead: a slide's duration ignores `speed`
+                            # (spec.py, "there is no lens here") while
+                            # the sound does not, so 1.2 there drifts
+                            # 4.6s on the first picture alone.
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.535, 0.353]
@@ -64,30 +72,37 @@ shots:
     captions:
       - text: "When you click on sharp mask in photoshop,"
         at: 0.00
-        dur: 3.13
+        dur: 3.41
         pos: lower_third
-        words: [0.00, 0.42, 0.55, 0.90, 1.48, 1.75, 2.17, 2.55]
+        words: [0.00, 0.45, 0.60, 0.98, 1.62, 1.91, 2.36, 2.78]
       - text: "you might think it was created to make blurry portraits crisp."
-        at: 3.56
+        at: 3.88
         dur: 4.50
         pos: lower_third
-        words: [0.00, 0.47, 0.63, 0.90, 1.07, 1.20, 1.58, 2.18, 2.55, 3.07, 3.75]
+        words: [0.00, 0.51, 0.69, 0.98, 1.16, 1.31, 1.73, 2.38, 2.78, 3.35, 4.09]
       - text: "But it was invented in 1930s Vienna by a medical physicist and a technician."
-        at: 9.32
+        at: 10.17
         dur: 4.50
         pos: lower_third
-        words: [0.00, 0.42, 0.83, 0.97, 1.37, 1.67, 2.98, 3.40, 4.03, 4.45]
+        words: [0.00, 0.45, 0.91, 1.05, 1.49, 1.82, 3.25, 3.71, 4.40]
       - text: "Not to add detail, but to solve a life or death diagnostic problem."
-        at: 16.57
+        at: 18.08
         dur: 4.50
         pos: lower_third
-        words: [0.00, 0.45, 0.65, 0.88, 1.47, 1.60, 1.82, 2.17, 2.45, 2.72, 3.05, 3.55, 4.23]
-
+        words: [0.00, 0.49, 0.71, 0.96, 1.60, 1.75, 1.98, 2.36, 2.67, 2.96, 3.33, 3.87]
   - id: s02
     src: media/rec_20260920-195315.mp4
     in: "00:29.20"
     out: "00:30.10"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    speed: 1.1              # measured 2026-09-20: you read the narration
+                            # at 110 wpm and this take at 102 wpm. At 1.2
+                            # this played 122 wpm against the pictures'
+                            # 110 -- the mismatch Jacek heard. 1.1 puts
+                            # it at 112. The pictures cannot be sped up
+                            # instead: a slide's duration ignores `speed`
+                            # (spec.py, "there is no lens here") while
+                            # the sound does not, so 1.2 there drifts
+                            # 4.6s on the first picture alone.
     move: drift_right
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.535, 0.353]
@@ -143,7 +158,6 @@ shots:
         dur: 2.68
         pos: lower_third
         words: [0.00, 0.24, 0.44, 0.80, 1.18, 1.36, 1.78, 2.22]
-
   - id: s04
     src: media/2_roentgen.png
     voice: media/voiceover_20260920-195800.wav
@@ -193,7 +207,6 @@ shots:
         dur: 1.66
         pos: lower_third
         words: [0.00, 0.62, 0.88, 1.24]
-
   - id: s05
     src: media/3_portrait_process.png
     voice: media/voiceover_20260920-195800.wav
@@ -238,7 +251,6 @@ shots:
         dur: 3.69
         pos: lower_third
         words: [0.00, 0.64, 0.94, 1.56, 1.72, 2.04, 2.30, 2.56, 2.84, 3.24]
-
   - id: s06
     src: media/4_eye.png
     voice: media/voiceover_20260920-195800.wav
@@ -288,15 +300,23 @@ shots:
         dur: 2.90
         pos: lower_third
         words: [0.00, 0.64, 1.08, 1.66, 2.12]
-
   - id: s07
     src: media/5_example.jpg
     voice: media/voiceover_20260920-195800.wav
     in: "01:46.95"
     out: "02:04.10"
-    move: drift_right
-    focus: [0.812, 0.259]
-    note: "picture 5 of 5 -- holds while these words are said"
+    from: {cx: 0.14, cy: 0.5, scale: 1.0}
+    to:   {cx: 0.86, cy: 0.5, scale: 1.0}
+    ease: linear
+    note: "picture 5 of 5 -- holds while these words are said.
+      A full left-to-right sweep, set by hand. This picture is 600x260,
+      4.1x wider than the 1080x1920 frame, so the crop window at scale
+      1.0 is only 0.24 of its width -- and `drift_right` travels DRIFT
+      (0.045) of the FRAME's width, which on this picture is nothing.
+      cx 0.14 -> 0.86 travels 0.72 of the source, about three window
+      widths: left panel, middle, right, which is the order the words
+      name them in. `linear`, not the default ease, because a sweep
+      that slows at both ends reads as a drift again."
     captions:
       - text: "Left: Natural contrast and detail on the camera negative."
         at: 0.22
@@ -323,12 +343,19 @@ shots:
         dur: 3.82
         pos: lower_third
         words: [0.00, 0.62, 1.08, 1.60, 2.30, 2.78, 3.18]
-
   - id: s08
     src: media/rec_20260920-200039.mp4
     in: "00:00.35"
     out: "00:22.60"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
+    speed: 1.1              # measured 2026-09-20: you read the narration
+                            # at 110 wpm and this take at 102 wpm. At 1.2
+                            # this played 122 wpm against the pictures'
+                            # 110 -- the mismatch Jacek heard. 1.1 puts
+                            # it at 112. The pictures cannot be sped up
+                            # instead: a slide's duration ignores `speed`
+                            # (spec.py, "there is no lens here") while
+                            # the sound does not, so 1.2 there drifts
+                            # 4.6s on the first picture alone.
     move: drift_left
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.377]
@@ -336,35 +363,34 @@ shots:
     captions:
       - text: "Spiegler and Juris called their process harmonization,"
         at: 0.00
-        dur: 3.73
+        dur: 4.07
         pos: lower_third
-        words: [0.00, 0.78, 1.05, 1.60, 1.87, 2.20, 2.68]
+        words: [0.00, 0.85, 1.15, 1.75, 2.04, 2.40, 2.93]
       - text: "designed to compress extreme dynamic range in medical imaging."
-        at: 4.08
-        dur: 3.34
+        at: 4.45
+        dur: 3.65
         pos: lower_third
-        words: [0.00, 0.37, 0.70, 1.03, 1.43, 1.90, 2.33, 2.53, 2.85]
+        words: [0.00, 0.40, 0.76, 1.13, 1.56, 2.07, 2.55, 2.76, 3.11]
       - text: "Decades later,"
-        at: 8.30
-        dur: 0.81
+        at: 9.05
+        dur: 0.89
         pos: lower_third
-        words: [0.00, 0.42]
+        words: [0.00, 0.45]
       - text: "those darkroom variables became digital code."
-        at: 9.27
-        dur: 2.41
+        at: 10.11
+        dur: 2.63
         pos: lower_third
-        words: [0.00, 0.22, 0.78, 1.28, 1.67, 2.05]
+        words: [0.00, 0.24, 0.85, 1.40, 1.82, 2.24]
       - text: "A medical tool for preserving diagnostic information became"
-        at: 12.43
-        dur: 3.34
+        at: 13.56
+        dur: 3.65
         pos: lower_third
-        words: [0.00, 0.12, 0.38, 0.72, 1.00, 1.45, 1.97, 2.58]
+        words: [0.00, 0.13, 0.42, 0.78, 1.09, 1.58, 2.15, 2.82]
       - text: "Photoshop’s familiar Unsharp Mask."
-        at: 15.78
-        dur: 2.36
+        at: 17.22
+        dur: 2.58
         pos: lower_third
-        words: [0.00, 0.82, 1.27, 2.05]
-
+        words: [0.00, 0.89, 1.38, 2.24]
 # 8 shots, about 160 seconds.
 #
 # 5 slide(s), one per picture, each holding its own piece of
