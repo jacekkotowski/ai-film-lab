@@ -1,0 +1,378 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# Each picture carries its own piece of
+# media/voiceover_20260920-195800.wav -- see `voice:` below.
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 2.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20260920-195315.mp4
+    in: "00:01.35"
+    out: "00:27.60"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.535, 0.353]
+    note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "When you click on sharp mask in photoshop,"
+        at: 0.00
+        dur: 3.13
+        pos: lower_third
+        words: [0.00, 0.42, 0.55, 0.90, 1.48, 1.75, 2.17, 2.55]
+      - text: "you might think it was created to make blurry portraits crisp."
+        at: 3.56
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.47, 0.63, 0.90, 1.07, 1.20, 1.58, 2.18, 2.55, 3.07, 3.75]
+      - text: "But it was invented in 1930s Vienna by a medical physicist and a technician."
+        at: 9.32
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.42, 0.83, 0.97, 1.37, 1.67, 2.98, 3.40, 4.03, 4.45]
+      - text: "Not to add detail, but to solve a life or death diagnostic problem."
+        at: 16.57
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.45, 0.65, 0.88, 1.47, 1.60, 1.82, 2.17, 2.45, 2.72, 3.05, 3.55, 4.23]
+
+  - id: s02
+    src: media/rec_20260920-195315.mp4
+    in: "00:29.20"
+    out: "00:30.10"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.535, 0.353]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 2 of 2 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s03
+    src: media/1_xray.jpg
+    voice: media/voiceover_20260920-195800.wav
+    in: "00:00.00"
+    out: "00:25.25"
+    move: push_in
+    focus: [0.510, 0.804]
+    note: "picture 1 of 5 -- holds while these words are said"
+    captions:
+      - text: "In 1930,"
+        at: 0.50
+        dur: 1.94
+        pos: lower_third
+        words: [0.00, 0.62]
+      - text: "Gottfried Spiegler and Kalman Juris faced a"
+        at: 2.44
+        dur: 4.40
+        pos: lower_third
+        words: [0.00, 1.16, 2.14, 2.42, 2.86, 3.64, 4.08]
+      - text: "problem with X-ray plates."
+        at: 6.84
+        dur: 1.75
+        pos: lower_third
+        words: [0.00, 0.40, 0.74, 1.10, 1.20]
+      - text: "Medical radiographs had too much dynamic"
+        at: 9.22
+        dur: 2.84
+        pos: lower_third
+        words: [0.00, 0.50, 1.48, 1.68, 2.08, 2.40]
+      - text: "range for photographic paper:"
+        at: 12.06
+        dur: 1.84
+        pos: lower_third
+        words: [0.00, 0.48, 0.74, 1.46]
+      - text: "dense rib bones appeared solid white,"
+        at: 14.52
+        dur: 2.87
+        pos: lower_third
+        words: [0.00, 0.44, 0.78, 1.36, 1.68, 2.32]
+      - text: "while lung tissue turned pitch black."
+        at: 17.74
+        dur: 2.98
+        pos: lower_third
+        words: [0.00, 0.44, 1.04, 1.54, 2.20, 2.58]
+      - text: "Expose for the lungs, and the bones blew out."
+        at: 22.12
+        dur: 2.68
+        pos: lower_third
+        words: [0.00, 0.24, 0.44, 0.80, 1.18, 1.36, 1.78, 2.22]
+
+  - id: s04
+    src: media/2_roentgen.png
+    voice: media/voiceover_20260920-195800.wav
+    in: "00:26.85"
+    out: "00:52.60"
+    move: drift_right
+    focus: [0.710, 0.526]
+    note: "picture 2 of 5 -- holds while these words are said"
+    captions:
+      - text: "They created a physical fix."
+        at: 0.00
+        dur: 2.20
+        pos: lower_third
+        words: [0.00, 2.47, 2.93, 3.19, 3.49]
+      - text: "A positive copy of the X-ray was exposed through"
+        at: 2.20
+        dur: 3.49
+        pos: lower_third
+        words: [0.00, 0.14, 0.46, 0.88, 1.20, 1.36, 1.70, 1.86, 2.20, 2.88]
+      - text: "a thick glass spacer,"
+        at: 5.70
+        dur: 1.52
+        pos: lower_third
+        words: [0.00, 0.22, 0.44, 0.86]
+      - text: "intentionally blurring the light and creating an unsharp mask."
+        at: 7.96
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.80, 1.56, 1.74, 2.04, 2.80, 3.36, 3.86]
+      - text: "Placed against the original negative,"
+        at: 13.76
+        dur: 2.50
+        pos: lower_third
+        words: [0.00, 0.60, 1.16, 1.50, 1.82]
+      - text: "it acted like a mechanical dodge-and-burn tool,"
+        at: 16.56
+        dur: 2.80
+        pos: lower_third
+        words: [0.00, 0.12, 0.50, 0.76, 0.98, 1.38, 1.86, 2.06, 2.32]
+      - text: "flattening global contrast so diagnostic details"
+        at: 19.96
+        dur: 3.65
+        pos: lower_third
+        words: [0.00, 0.68, 1.00, 1.66, 2.28, 2.82]
+      - text: "could fit onto paper."
+        at: 23.62
+        dur: 1.66
+        pos: lower_third
+        words: [0.00, 0.62, 0.88, 1.24]
+
+  - id: s05
+    src: media/3_portrait_process.png
+    voice: media/voiceover_20260920-195800.wav
+    in: "00:54.40"
+    out: "01:20.25"
+    move: push_in
+    focus: [0.330, 0.832]
+    note: "picture 3 of 5 -- holds while these words are said"
+    captions:
+      - text: "Because the mask was blurred,"
+        at: 0.00
+        dur: 2.42
+        pos: lower_third
+        words: [0.00, 1.34, 1.96, 2.40, 2.60]
+      - text: "it could cancel broad areas but not fine details."
+        at: 2.42
+        dur: 4.21
+        pos: lower_third
+        words: [0.00, 0.52, 0.74, 1.26, 1.66, 2.38, 2.76, 3.08, 3.54]
+      - text: "At boundaries, this created light and dark halos."
+        at: 7.62
+        dur: 2.85
+        pos: lower_third
+        words: [0.00, 0.36, 0.86, 1.42, 1.90, 2.28, 2.56]
+      - text: "Spiegler and Juris created them as a side"
+        at: 12.10
+        dur: 2.78
+        pos: lower_third
+        words: [0.00, 0.58, 0.86, 1.32, 1.68, 2.10, 2.36, 2.48]
+      - text: "effect of contrast compression."
+        at: 14.88
+        dur: 2.17
+        pos: lower_third
+        words: [0.00, 0.40, 0.96, 1.46]
+      - text: "Photographers later applied the technique to portraits,"
+        at: 18.02
+        dur: 3.48
+        pos: lower_third
+        words: [0.00, 0.64, 1.10, 1.72, 2.10, 2.52, 2.92]
+      - text: "using the halos to create the illusion of sharper focus."
+        at: 21.50
+        dur: 3.69
+        pos: lower_third
+        words: [0.00, 0.64, 0.94, 1.56, 1.72, 2.04, 2.30, 2.56, 2.84, 3.24]
+
+  - id: s06
+    src: media/4_eye.png
+    voice: media/voiceover_20260920-195800.wav
+    in: "01:22.25"
+    out: "01:44.65"
+    move: pull_out
+    focus: [0.440, 0.478]
+    note: "picture 4 of 5 -- holds while these words are said"
+    captions:
+      - text: "In a portrait, the same principle applies."
+        at: 0.00
+        dur: 2.64
+        pos: lower_third
+        words: [0.00, 0.44, 0.60, 0.96, 1.40, 1.62, 2.10]
+      - text: "Blur the original,"
+        at: 3.23
+        dur: 0.87
+        pos: lower_third
+        words: [0.00, 0.22, 0.44]
+      - text: "subtract the blurred copy to isolate fine edges,"
+        at: 4.57
+        dur: 3.10
+        pos: lower_third
+        words: [0.00, 0.36, 0.80, 1.08, 1.48, 1.68, 2.12, 2.54]
+      - text: "then add those edges back."
+        at: 8.37
+        dur: 2.07
+        pos: lower_third
+        words: [0.00, 0.40, 0.98, 1.30, 1.70]
+      - text: "Eyelashes, iris,"
+        at: 11.35
+        dur: 1.70
+        pos: lower_third
+        words: [0.00, 1.16]
+      - text: "and skin contours become more defined."
+        at: 13.05
+        dur: 2.85
+        pos: lower_third
+        words: [0.00, 0.18, 0.52, 1.32, 1.84, 2.18]
+      - text: "No new detail is created;"
+        at: 16.79
+        dur: 1.67
+        pos: lower_third
+        words: [0.00, 0.26, 0.54, 0.92, 1.20]
+      - text: "existing detail gains local contrast."
+        at: 19.03
+        dur: 2.90
+        pos: lower_third
+        words: [0.00, 0.64, 1.08, 1.66, 2.12]
+
+  - id: s07
+    src: media/5_example.jpg
+    voice: media/voiceover_20260920-195800.wav
+    in: "01:46.95"
+    out: "02:04.10"
+    move: drift_right
+    focus: [0.812, 0.259]
+    note: "picture 5 of 5 -- holds while these words are said"
+    captions:
+      - text: "Left: Natural contrast and detail on the camera negative."
+        at: 0.22
+        dur: 3.98
+        pos: lower_third
+        words: [0.00, 0.90, 1.18, 1.76, 2.08, 2.46, 2.76, 2.94, 3.34]
+      - text: "Middle & Right:"
+        at: 4.20
+        dur: 2.09
+        pos: lower_third
+        words: [0.00, 1.38, 1.66]
+      - text: "Unsharp Mask increases local edge contrast,"
+        at: 6.98
+        dur: 2.64
+        pos: lower_third
+        words: [0.00, 0.60, 0.80, 1.30, 1.76, 2.16]
+      - text: "enhancing hair, facial lines,"
+        at: 10.24
+        dur: 2.64
+        pos: lower_third
+        words: [0.00, 0.76, 1.68, 2.12]
+      - text: "and fabric folds without changing image resolution."
+        at: 12.88
+        dur: 3.82
+        pos: lower_third
+        words: [0.00, 0.62, 1.08, 1.60, 2.30, 2.78, 3.18]
+
+  - id: s08
+    src: media/rec_20260920-200039.mp4
+    in: "00:00.35"
+    out: "00:22.60"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.544, 0.377]
+    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
+    captions:
+      - text: "Spiegler and Juris called their process harmonization,"
+        at: 0.00
+        dur: 3.73
+        pos: lower_third
+        words: [0.00, 0.78, 1.05, 1.60, 1.87, 2.20, 2.68]
+      - text: "designed to compress extreme dynamic range in medical imaging."
+        at: 4.08
+        dur: 3.34
+        pos: lower_third
+        words: [0.00, 0.37, 0.70, 1.03, 1.43, 1.90, 2.33, 2.53, 2.85]
+      - text: "Decades later,"
+        at: 8.30
+        dur: 0.81
+        pos: lower_third
+        words: [0.00, 0.42]
+      - text: "those darkroom variables became digital code."
+        at: 9.27
+        dur: 2.41
+        pos: lower_third
+        words: [0.00, 0.22, 0.78, 1.28, 1.67, 2.05]
+      - text: "A medical tool for preserving diagnostic information became"
+        at: 12.43
+        dur: 3.34
+        pos: lower_third
+        words: [0.00, 0.12, 0.38, 0.72, 1.00, 1.45, 1.97, 2.58]
+      - text: "Photoshop’s familiar Unsharp Mask."
+        at: 15.78
+        dur: 2.36
+        pos: lower_third
+        words: [0.00, 0.82, 1.27, 2.05]
+
+# 8 shots, about 160 seconds.
+#
+# 5 slide(s), one per picture, each holding its own piece of
+# the 124s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
