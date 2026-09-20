@@ -437,8 +437,9 @@ def cmd_caption(args) -> None:
         print()
         for w in all_warnings:
             print(f"  note: {w}")
-        print("  (that shot may be too short for what is said over it --"
-              " consider lengthening it)")
+        print("  (normal where you spoke two lines close together. Only "
+              "worth a look\n   if one of them is gone before you can "
+              "read it)")
 
     # Said once, and said again on a later shot: usually an outtake that
     # stayed in. Named here; which reading to keep is yours to decide.

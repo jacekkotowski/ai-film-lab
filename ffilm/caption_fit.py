@@ -97,9 +97,15 @@ def stop_overlap(caps: list[Caption], sid: str,
                 # numbers written into film.yaml may never add up to more
                 # than the room they were given.
                 cut = int(max(0.0, nxt.at - cap.at) * 100) / 100.0
+                # Name the caption that was shortened. It used to read
+                # "shortened to 2.20s, the next caption starts: X" with X
+                # being the shortened one, not the next one -- so on
+                # 2026-09-20 an ordinary two-second gap between two
+                # spoken lines read as a fault in the shot, and the
+                # advice printed under it agreed.
                 warnings.append(
-                    f'[{sid}] shortened to {cut:.2f}s, the next caption '
-                    f'starts: "{cap.text}"')
+                    f'[{sid}] "{cap.text}" ends at {cut:.2f}s, where the '
+                    f'next caption begins')
                 cap = replace(cap, dur=cut)
             out.append(cap)
         if same:

@@ -189,7 +189,11 @@ def test_a_caption_stops_where_the_next_one_starts():
     out = stop_overlap(caps, "s12", w)
     assert out[0].dur == approx(2.86)
     assert out[0].at + out[0].dur <= out[1].at + 1e-9
-    assert w and "shortened" in w[0]
+    # The note names the caption it trimmed. It used to say "shortened
+    # to 2.86s, the next caption starts: first", where `first` is the
+    # trimmed one -- see test_a_shortened_caption_says_which_one_it_
+    # shortened.py, and 2026-09-20.
+    assert w and "first" in w[0] and "2.86" in w[0]
 
 
 def test_nothing_is_dropped_only_shortened():
