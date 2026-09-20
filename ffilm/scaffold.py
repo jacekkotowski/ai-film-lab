@@ -16,7 +16,7 @@ from pathlib import Path
 from . import kinds, segment
 from .moves import choose_moves
 from .record import REC_SPEED, is_recording, read_cues
-from .spec import VOICE_TAIL, Caption, Shot, pretty_name
+from .spec import VOICE_TAIL, Caption, Shot, Window, pretty_name
 
 
 # A person talking to a lens is not a photograph. There is nowhere to
@@ -116,6 +116,49 @@ QUOTE_SECONDS = 5.0          # a quote needs to be READ, not glanced at
 # numbered for `_hint` and un-numbered for `is_recording` at the
 # same time. See kinds.NUM_PREFIX.
 _NUM_PREFIX = kinds.NUM_PREFIX
+
+
+# How much of a picture's width the frame has to be able to show before
+# we stop bothering to travel across it. Above this, a sweep is a wobble;
+# below it, there is material nobody would otherwise see.
+SWEEP_BELOW = 0.80
+
+# Kept off the very edge of the picture. Scanned pictures have dirty
+# edges and the crop at scale 1.0 has no room to hide them.
+SWEEP_MARGIN = 0.02
+
+
+def sweep_across(src_w: int, src_h: int, frame_w: int, frame_h: int,
+                 focus_x: float) -> tuple[float, float] | None:
+    """Where a lateral move should start and end, across a wide picture.
+
+    Returns two `cx` values -- the centre of the crop window, 0..1 across
+    the SOURCE -- or None when the picture is near enough the frame's
+    shape that there is nothing to travel.
+
+    At scale 1.0 the crop window has the FRAME's aspect and is as large
+    as fits inside the picture. On a picture wider than the frame it is
+    height-limited, so it shows `frame_aspect / src_aspect` of the width
+    and no more. On 1930s Austria Had Photoshop that was 0.24 for a
+    600x260 triptych in a 1080x1920 film: three quarters of the picture
+    never on screen, while `drift_right` moved the window by 0.045.
+
+    The direction is the one that ENDS on the focus point, so the move
+    still arrives at the face or the contrast that ingest found. That is
+    the existing rule -- move towards what matters -- applied to a
+    picture that also has to be shown.
+    """
+    if src_w <= 0 or src_h <= 0 or frame_h <= 0:
+        return None
+    window = (frame_w / frame_h) / (src_w / src_h)
+    if window >= SWEEP_BELOW:
+        return None
+    half = window / 2
+    lo = half + SWEEP_MARGIN
+    hi = 1.0 - half - SWEEP_MARGIN
+    if hi - lo <= 1e-6:
+        return None
+    return (lo, hi) if focus_x >= 0.5 else (hi, lo)
 
 
 def _hint(stem: str) -> tuple[str | None, int | None, str]:
@@ -422,6 +465,25 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     else:
         L.append("resolution: [1920, 1080]")
 
+    # A picture too wide for the frame is travelled rather than cropped.
+    # Written as an explicit from/to on the shot, so it is visible in the
+    # file and can be argued with like every other number here. Only
+    # where a named move would leave most of the picture unseen -- see
+    # sweep_across.
+    frame = (1080, 1920) if vertical else (1920, 1080)
+    for s, m in zip(shots, meta):
+        if s.kind != "still" or s.frm is not None or s.to is not None:
+            continue
+        e = m.get("entry") or {}
+        w, h = e.get("width") or 0, e.get("height") or 0
+        got = sweep_across(w, h, frame[0], frame[1],
+                           s.focus[0] if s.focus else 0.5)
+        if got is None:
+            continue
+        s.frm = Window(cx=got[0], cy=0.5, scale=1.0)
+        s.to = Window(cx=got[1], cy=0.5, scale=1.0)
+        s.ease = "linear"        # a sweep that slows at both ends is a drift
+
     # Built here, before `audio_offset` is decided, rather than where it
     # is written into `shots:` below -- the narration needs to know
     # whether there IS a card, and how long it holds, before it can know
@@ -581,6 +643,23 @@ def shot_block(s: Shot, m: dict) -> list[str]:
     else:
         L.append(f"    duration: {s.duration:.1f}")
     L.append(f"    move: {s.move}")
+    # A hand-set pair of windows beats the named move (moves.windows_for
+    # returns them untouched), so `move:` above is only what this would
+    # have been. Written by `sweep_across` for a picture too wide to show
+    # in one frame -- change the two cx values, or delete both lines to
+    # go back to the named move.
+    if s.frm is not None and s.to is not None:
+        w, h = e.get("width") or 0, e.get("height") or 0
+        L.append(f"    from: {{cx: {s.frm.cx:.3f}, cy: {s.frm.cy:.3f}, "
+                 f"scale: {s.frm.scale:.2f}}}")
+        L.append(f"    to:   {{cx: {s.to.cx:.3f}, cy: {s.to.cy:.3f}, "
+                 f"scale: {s.to.scale:.2f}}}")
+        L.append(f"    ease: {s.ease}")
+        swept = (f" This picture is {w}x{h}; the frame shows about "
+                 f"{1 - abs(s.to.cx - s.frm.cx):.2f} of its width at a "
+                 f"time, so it is swept across instead of cropped.")
+    else:
+        swept = ""
     if abs(s.amount - 1.0) > 1e-3:
         L.append(f"    amount: {s.amount}            # how much of the move "
                  f"to use. 0 = none")
@@ -588,15 +667,20 @@ def shot_block(s: Shot, m: dict) -> list[str]:
     if s.dissolve:
         L.append(f"    dissolve: {s.dissolve}      # blends in from the "
                  f"shot before. 0 = a hard cut")
+    # One note, built then written. It used to be written from each
+    # branch, which meant a shot that needed two things said about it
+    # could only have the first -- and a swept picture needs its own
+    # sentence on top of whatever else it is.
+    note = ""
     if role in ("open", "open_close"):
-        L.append('    note: "opener -- held still, deliberately brief"')
+        note = "opener -- held still, deliberately brief"
     elif role == "close":
-        L.append('    note: "closer"')
+        note = "closer"
     elif role == "quote":
-        L.append('    note: "quote card -- title from filename"')
+        note = "quote card -- title from filename"
     elif m.get("slide"):
-        L.append(f'    note: "picture {m['part']} of {m['parts']} -- holds '
-                 f'while these words are said"')
+        note = (f"picture {m['part']} of {m['parts']} -- holds while "
+                f"these words are said")
     elif m.get("talking"):
         if m["parts"] > 1:
             note = (f"part {m['part']} of {m['parts']} -- one take with "
@@ -604,11 +688,13 @@ def shot_block(s: Shot, m: dict) -> list[str]:
         else:
             note = ("kept whole -- there is sound on this one, so none "
                     "of what you said is cut. Trim in:/out: if it drags")
-        L.append(f"    note: {quoted(note)}")
     elif e.get("focus_from") == "face":
-        L.append("    note: \"face detected -- given longer screen time\"")
+        note = "face detected -- given longer screen time"
     elif e.get("from"):
-        L.append(f"    note: {quoted('converted from ' + Path(e['from']).name)}")
+        note = "converted from " + Path(e["from"]).name
+    if note or swept:
+        both = f"{note}." + swept if note and swept else note + swept
+        L.append(f"    note: {quoted(both.strip())}")
     if s.captions:
         L.append("    captions:")
         for c in s.captions:
