@@ -18,6 +18,10 @@ __pycache__/
 media/
 music/
 film.yaml.bak
+# Any editor's or tool's backup. `.claude/settings.local.json.bak`
+# sat in `git status` from 2026-09-11 to 2026-09-20 doing nothing
+# but making the list longer.
+*.bak
 .lastfilm
 caption_wrap_after.png
 .Rproj.user
