@@ -63,7 +63,7 @@ shots:
     focus: [0.535, 0.353]
     note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "When you click on sharp mask in photoshop,"
+      - text: "When you click on Unsharp Mask in Photoshop,"
         at: 0.00
         dur: 3.13
         pos: lower_third
