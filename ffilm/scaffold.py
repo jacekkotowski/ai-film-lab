@@ -111,7 +111,11 @@ QUOTE_SECONDS = 5.0          # a quote needs to be READ, not glanced at
 # `(?!\d)` is what keeps a date or a camera counter out of this:
 # `20260917.jpg` and `IMG_0042.jpg` are not somebody asking for position
 # 202 or 42.
-_NUM_PREFIX = re.compile(r"^(\d{1,3})(?!\d)[_.\-\s]*")
+# The same one `kinds.is_recording` strips, and deliberately the
+# same object: two copies of this rule is how a take could be
+# numbered for `_hint` and un-numbered for `is_recording` at the
+# same time. See kinds.NUM_PREFIX.
+_NUM_PREFIX = kinds.NUM_PREFIX
 
 
 def _hint(stem: str) -> tuple[str | None, int | None, str]:

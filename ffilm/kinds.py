@@ -12,6 +12,7 @@ Adding a format is now one line in this file.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 STILL = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp", ".bmp"}
@@ -76,9 +77,26 @@ POSTER = STILL | {".gif"}
 REC_PREFIX = "rec_"
 
 
+# A number in front of a filename means "play it here" -- see
+# scaffold._hint, which strips one before reading the rest of the name.
+# It lives here, at the bottom, because `is_recording` has to strip the
+# same one: see there.
+#
+# `(?!\d)` keeps a date or a camera counter out of it: `20260917.jpg`
+# and `IMG_0042.jpg` are not somebody asking for position 202 or 42.
+NUM_PREFIX = re.compile(r"^(\d{1,3})(?!\d)[_.\-\s]*")
+
+
 def is_recording(stem: str) -> bool:
-    """Was this file made by `film record`?"""
-    return stem.lower().startswith(REC_PREFIX)
+    """Was this file made by `film record`?
+
+    A number you put in front is stripped first. Numbering a take is the
+    one way of saying where it should play, and on 2026-09-20 doing it
+    stopped the file being a take at all: the 1.2x speed, the sharpening
+    and the bokeh are all switched on by this one answer, so an intro
+    dragged to the front of a film quietly lost all three.
+    """
+    return NUM_PREFIX.sub("", stem.lower()).startswith(REC_PREFIX)
 
 
 # What a microphone-only take (`film record --voice`) is called. Its own
