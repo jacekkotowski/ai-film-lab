@@ -265,10 +265,20 @@ class Shot:
         if duration is None and kind == "video" and tout is not None:
             duration = (tout - tin) / float(d.get("speed", 1.0))
         # A slide is on screen for as long as its words take, plus one
-        # breath. Never sped up: `speed` is a correction for talking to a
-        # lens, and there is no lens here.
+        # breath -- at the speed those words are played.
+        #
+        # `speed` used to be ignored here, on the grounds that it is a
+        # correction for talking to a lens and there is no lens over a
+        # photograph. But `audio.speech_specs` passed a hard 1.0 for
+        # slides too, so the key was not ignored, it was DEAD: writing
+        # `speed: 1.2` over a photograph did nothing whatever, and said
+        # nothing about doing nothing. Found 2026-09-20, when Jacek
+        # wrote it to match the 1.2 on his talking takes.
+        #
+        # The breath is not sped up. It is silence, and silence at 1.2x
+        # is just less silence.
         if duration is None and voice and tout is not None:
-            duration = (tout - tin) + VOICE_TAIL
+            duration = (tout - tin) / float(d.get("speed", 1.0)) + VOICE_TAIL
         if duration is None:
             duration = 5.0
         # `out:` left off a slide means "for as long as the picture is

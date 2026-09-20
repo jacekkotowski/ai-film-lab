@@ -189,7 +189,11 @@ def test_the_film_it_writes_loads_and_holds_every_word(tmp_path,
     assert slides[0].tin == approx(1.84 - BREATH)
     assert slides[-1].tout == approx(57.25 + BREATH)
     for s in slides:
-        assert s.duration == approx((s.tout - s.tin) + VOICE_TAIL)
+        # Played seconds, not source seconds. Since 2026-09-20 the
+        # narration carries the same speed correction a talking take
+        # does, so the words take (out - in) / speed on screen and the
+        # breath after them is not sped up.
+        assert s.duration == approx((s.tout - s.tin) / s.speed + VOICE_TAIL)
     # No overlap, and in order.
     for a, b in zip(slides, slides[1:]):
         assert b.tin >= a.tout

@@ -1230,8 +1230,20 @@ def speech_specs(film: Film, fps: int, audio_for) -> list[tuple]:
         else:
             # A slide's words are where they were said, whatever the
             # picture does. Holding the photograph longer does not
-            # stretch them; that is the point of the two being separate.
-            start, end, speed = shot.tin, shot.tout, 1.0
+            # stretch them; that is the point of the two being separate,
+            # and `duration:` is still free to hold it as long as it
+            # likes without touching `start`/`end` below.
+            #
+            # `speed` is a different knob and used to be hard 1.0 here,
+            # which -- with spec.py ignoring it on the same shot -- made
+            # it a dead key over a photograph. Now it plays the words
+            # faster, and spec.py shortens the picture by exactly the
+            # same factor. The two must move together: this narration is
+            # one continuous recording cut into pieces, and a piece that
+            # plays short pushes every later piece out of step with its
+            # photograph. See
+            # test_speed_on_a_picture_moves_words_and_picture_together.
+            start, end, speed = shot.tin, shot.tout, shot.speed
         specs.append((src, start, end, int(round(at / fps * 1000)), speed))
         at += n
 

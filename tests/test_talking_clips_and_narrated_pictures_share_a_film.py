@@ -138,4 +138,7 @@ def test_a_length_target_never_shortens_a_slide_below_its_words(
     film = Film.load(p / "film.yaml")
     for s in film.shots:
         if s.voice:
-            assert s.duration >= (s.tout - s.tin) - 1e-6
+            # Played seconds, not source seconds: the narration now
+            # carries the same speed correction your takes do, so
+            # the words take (out - in) / speed on screen.
+            assert s.duration >= (s.tout - s.tin) / s.speed - 1e-6

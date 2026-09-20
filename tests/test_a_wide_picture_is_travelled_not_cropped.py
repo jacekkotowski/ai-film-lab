@@ -1,80 +1,102 @@
 """
-A picture wider than the frame is travelled, not cropped.
+Anything the vertical frame would crop is travelled, not lost.
 
-A vertical film is 1080x1920. Drop a 600x260 picture into it and the
-crop window at scale 1.0 is only 0.24 of the picture's width: three
-quarters of it is never on screen at all. `pan_*` travels PAN (0.13) of
-the width and `drift_*` travels DRIFT (0.045), both measured against the
-picture -- so on a picture four times too wide, the widest move in the
-set still shows about a third of it and the default shows a tenth.
+A vertical film is 1080x1920. The crop window at scale 1.0 has the
+frame's shape and is as large as fits inside the picture, so on any
+picture relatively wider than the frame it is height-limited and shows
+`frame_aspect / src_aspect` of the width. Whatever is left is off
+screen for the whole shot.
 
-Found 2026-09-20 on 1930s Austria Had Photoshop, picture 5: three
-versions of the same photograph side by side, and the narration names
-them "on the left... in the middle and on the right". The move was
-`drift_right`. Jacek: "they do some panning but it is insufficient".
+Two sizes from 1930s Austria Had Photoshop, 2026-09-20:
 
-So: when the window cannot show most of the picture, the shot gets an
-explicit sweep across it, and the direction is the one that ENDS on the
-focus point ingest found -- which keeps the existing rule that a move
-travels towards the thing worth looking at.
+    600x260   triptych   window 0.24 of the width  -- 76% never seen
+    1024x1536 diagram    window 0.84 of the width  -- 16% never seen
+
+The first was obvious: three photographs side by side, narrated "on the
+left... in the middle and on the right", with `move: drift_right`, which
+travels DRIFT (0.045) of the width. Jacek: "they do some panning but it
+is insufficient".
+
+The second is the one that matters more, and the first version of this
+rule missed it by setting the threshold at 0.80. Those diagrams carry a
+column of labels down the right-hand edge -- "Glass plate (top)",
+"Positive mask", "Original negative" -- and 16% of the width is exactly
+that column. Jacek: "in the case of visuals you cut the captions on the
+right of the images". So the threshold is now "anything at all".
+
+Direction is always left to right. It used to be the side the focus
+point sat on, which is right on a photograph and wrong on a diagram:
+the cropped part is the labels on the right, and you want to arrive
+there, in reading order.
 
 Pure: numbers in, two cx values out. No files.
 """
 
-from ffilm.scaffold import SWEEP_BELOW, sweep_across
+from ffilm.scaffold import MIN_SWEEP, sweep_across
 
 VERTICAL = (1080, 1920)
+WIDE = (1920, 1080)
 
 
-def test_the_triptych_that_started_this_is_swept_end_to_end():
-    # 600x260, focus on the right-hand panel. Window is 0.244 of the
-    # width, so a full sweep runs 0.12..0.88 less the edge margin.
-    a, b = sweep_across(600, 260, *VERTICAL, focus_x=0.812)
-    assert a < b                                  # left to right
-    assert 0.10 < a < 0.18
-    assert 0.82 < b < 0.90
-    assert b - a > 0.6                            # most of the picture
+def test_the_triptych_is_swept_end_to_end():
+    a, b = sweep_across(600, 260, *VERTICAL)
+    assert a < b
+    assert b - a > 0.6                      # most of the picture
 
 
-def test_it_ends_on_the_side_the_focus_point_is():
-    left = sweep_across(600, 260, *VERTICAL, focus_x=0.15)
-    right = sweep_across(600, 260, *VERTICAL, focus_x=0.85)
-    assert left[0] > left[1]                      # right to left
-    assert right[0] < right[1]                    # left to right
-    assert sorted(left) == sorted(right)          # same ground covered
+def test_the_labelled_diagram_that_the_first_threshold_missed():
+    """1024x1536: only 16% is cropped, and all of it is the labels."""
+    got = sweep_across(1024, 1536, *VERTICAL)
+    assert got is not None
+    a, b = got
+    assert a < b
+    # It cannot reveal more than was hidden, and should reveal most of it.
+    hidden = 1 - (1080 / 1920) / (1024 / 1536)
+    assert 0.8 * hidden - 1e-9 <= b - a <= hidden + 1e-9
 
 
-def test_a_tall_picture_is_left_alone():
-    # 1024x1536 in a vertical frame: the window already shows 84% of the
-    # width. Nothing worth travelling, and a sweep would only wobble.
-    assert sweep_across(1024, 1536, *VERTICAL, focus_x=0.71) is None
+def test_it_always_goes_left_to_right():
+    for w, h in ((600, 260), (1024, 1536), (4000, 300)):
+        a, b = sweep_across(w, h, *VERTICAL)
+        assert a < b, (w, h)
 
 
 def test_a_picture_the_shape_of_the_frame_is_left_alone():
-    assert sweep_across(1080, 1920, *VERTICAL, focus_x=0.5) is None
+    assert sweep_across(1080, 1920, *VERTICAL) is None
 
 
-def test_the_threshold_is_where_it_says_it_is():
-    # Just inside and just outside SWEEP_BELOW of the width.
-    frame = 1080 / 1920
-    narrow = frame / (SWEEP_BELOW - 0.05)       # window shows less -> sweep
-    wide = frame / (SWEEP_BELOW + 0.05)         # window shows more -> leave
-    assert sweep_across(1000, int(1000 / narrow), *VERTICAL, 0.9) is not None
-    assert sweep_across(1000, int(1000 / wide), *VERTICAL, 0.9) is None
+def test_a_picture_taller_than_the_frame_is_left_alone():
+    """Nothing is cropped off the sides, so there is nothing to travel."""
+    assert sweep_across(1080, 2400, *VERTICAL) is None
+
+
+def test_a_sliver_too_wide_is_not_worth_a_wobble():
+    # Cropped by well under MIN_SWEEP of the width.
+    assert sweep_across(1000, 1760, *VERTICAL) is None
 
 
 def test_a_sweep_never_leaves_the_picture():
-    for w, h in ((600, 260), (4000, 300), (1200, 900)):
-        got = sweep_across(w, h, *VERTICAL, focus_x=0.9)
+    for w, h in ((600, 260), (4000, 300), (1024, 1536), (1200, 1500)):
+        got = sweep_across(w, h, *VERTICAL)
         if got is None:
             continue
         half = (1080 / 1920) / (w / h) / 2
         for cx in got:
-            assert half <= cx <= 1 - half, (w, h, cx)
+            assert half - 1e-9 <= cx <= 1 - half + 1e-9, (w, h, cx)
 
 
-def test_a_wide_frame_asks_less_of_a_wide_picture():
-    """The same picture in a 1920x1080 film: the window is much wider, so
-    there is less to travel -- and below the threshold, nothing."""
-    assert sweep_across(600, 260, 1920, 1080, focus_x=0.812) is not None
-    assert sweep_across(1200, 900, 1920, 1080, focus_x=0.812) is None
+def test_every_sweep_is_worth_making():
+    for w, h in ((600, 260), (1024, 1536), (1200, 1500), (4000, 300)):
+        got = sweep_across(w, h, *VERTICAL)
+        if got is not None:
+            assert got[1] - got[0] >= MIN_SWEEP
+
+
+def test_the_frame_shape_is_what_decides_not_the_word_wide():
+    """A 1920x1080 film crops different pictures. 1200x900 is squarer
+    than that frame, so its sides survive and nothing is travelled --
+    and the same 600x260 triptych is still cropped by 23%, so it is
+    still swept. "Wide" is always relative to the frame."""
+    assert sweep_across(1200, 900, *WIDE) is None
+    got = sweep_across(600, 260, *WIDE)
+    assert got is not None and got[0] < got[1]

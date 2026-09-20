@@ -46,7 +46,16 @@ def _speed_for(path: str) -> float:
     dropped in from a camera or a phone is left alone -- this is a
     correction for talking to a lens, not a house style.
     """
-    return REC_SPEED if is_recording(Path(path).stem) else 1.0
+    stem = Path(path).stem
+    # A voiceover is you talking too. It was left at 1.0 because the
+    # narration is read, not performed to a lens -- but that put a film's
+    # own voice at two paces, 1.2 for the talking head and 1.0 over the
+    # photographs, and the step between them is audible. Asked for
+    # repeatedly by Jacek and settled 2026-09-20; see
+    # docs/decisions/0010. Change the digit in film.yaml per film.
+    if stem.lower().startswith(kinds.VOICEOVER_PREFIX):
+        return REC_SPEED
+    return REC_SPEED if is_recording(stem) else 1.0
 
 AUDIO_EXT = kinds.AUDIO
 
@@ -118,18 +127,25 @@ QUOTE_SECONDS = 5.0          # a quote needs to be READ, not glanced at
 _NUM_PREFIX = kinds.NUM_PREFIX
 
 
-# How much of a picture's width the frame has to be able to show before
-# we stop bothering to travel across it. Above this, a sweep is a wobble;
-# below it, there is material nobody would otherwise see.
-SWEEP_BELOW = 0.80
+# Anything the frame cannot show is travelled. It was 0.80 -- a picture
+# had to be a quarter wider than the frame before it got a sweep -- and
+# that was wrong for the ordinary case: a 1024x1536 diagram in a
+# 1080x1920 frame loses 15.6% of its width, which on a labelled diagram
+# is the entire right-hand column of labels. Jacek, 2026-09-20: "in the
+# case of visuals you cut the captions on the right of the images".
+SWEEP_BELOW = 1.0
 
-# Kept off the very edge of the picture. Scanned pictures have dirty
-# edges and the crop at scale 1.0 has no room to hide them.
+# Kept off the very edge, where scans are dirty -- but never more than a
+# tenth of what there is to see, or the margin eats the whole reveal on
+# exactly the pictures that are only slightly too wide.
 SWEEP_MARGIN = 0.02
 
+# Below this there is nothing to show and a sweep is just a wobble.
+MIN_SWEEP = 0.03
 
-def sweep_across(src_w: int, src_h: int, frame_w: int, frame_h: int,
-                 focus_x: float) -> tuple[float, float] | None:
+
+def sweep_across(src_w: int, src_h: int, frame_w: int,
+                 frame_h: int) -> tuple[float, float] | None:
     """Where a lateral move should start and end, across a wide picture.
 
     Returns two `cx` values -- the centre of the crop window, 0..1 across
@@ -153,12 +169,19 @@ def sweep_across(src_w: int, src_h: int, frame_w: int, frame_h: int,
     window = (frame_w / frame_h) / (src_w / src_h)
     if window >= SWEEP_BELOW:
         return None
+    available = 1.0 - window
+    margin = min(SWEEP_MARGIN, available * 0.1)
     half = window / 2
-    lo = half + SWEEP_MARGIN
-    hi = 1.0 - half - SWEEP_MARGIN
-    if hi - lo <= 1e-6:
+    lo = half + margin
+    hi = 1.0 - half - margin
+    if hi - lo < MIN_SWEEP:
         return None
-    return (lo, hi) if focus_x >= 0.5 else (hi, lo)
+    # Always left to right. It was the side the focus point sat on, which
+    # is the right instinct on a photograph and the wrong one on a
+    # diagram: what gets cropped is the label column on the right, and
+    # you want to ARRIVE there, in reading order. Jacek asked for
+    # left-to-right twice.
+    return (lo, hi)
 
 
 def _hint(stem: str) -> tuple[str | None, int | None, str]:
@@ -476,8 +499,7 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
             continue
         e = m.get("entry") or {}
         w, h = e.get("width") or 0, e.get("height") or 0
-        got = sweep_across(w, h, frame[0], frame[1],
-                           s.focus[0] if s.focus else 0.5)
+        got = sweep_across(w, h, frame[0], frame[1])
         if got is None:
             continue
         s.frm = Window(cx=got[0], cy=0.5, scale=1.0)
@@ -640,6 +662,15 @@ def shot_block(s: Shot, m: dict) -> list[str]:
         L.append(f"    voice: {s.voice}")
         L.append(f"    in: {tc(s.tin)}")
         L.append(f"    out: {tc(s.tout)}")
+        # The narration is you talking, so it gets the same correction
+        # your talking takes get. Written out rather than defaulted,
+        # because this is the number to change when a film's narration
+        # was read at a different pace -- and because a key you cannot
+        # see is a key nobody knows to change.
+        vspeed = _speed_for(s.voice or "")
+        if abs(vspeed - 1.0) > 1e-3:
+            L.append(f"    speed: {vspeed}              # 1.0 is the speed "
+                     f"you actually read at")
     else:
         L.append(f"    duration: {s.duration:.1f}")
     L.append(f"    move: {s.move}")
