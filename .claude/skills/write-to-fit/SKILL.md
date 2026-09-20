@@ -20,16 +20,34 @@ of the argument once. Estimated at about 147 s, not measured.
 
 ## The budget
 
-**1.47 words per second of finished film**, measured on one film
-(414 words → 281.8 s, pauses, title card and picture holds included). So:
+Two films measured, and they do **not** agree:
 
-| target | words |
-|---|---|
-| a Short, 3:00 | about 265 |
-| 2:00 | about 175 |
+| film | words | finished | words/s | pictures |
+|---|---|---|---|---|
+| German Forgotten Bauhaus Hope, 2026-09-19 | 414 | 281.8 s | **1.47** | 10 |
+| 1930s Austria Had Photoshop, 2026-09-20 | 296 | 161.6 s | **1.83** | 5 |
 
-Re-measure the rate on every new film and update it here. It's one data
-point until then.
+25% apart, so **plan with 1.47 and expect to come in short.** That is the
+safe direction: 1.47 over-estimates the length, and a film that lands
+under its target needs nothing done to it, while one that lands over
+costs an evening of cutting.
+
+| target | words at 1.47 (plan with this) | at 1.83 (the optimistic end) |
+|---|---|---|
+| a Short, 3:00 | about 265 | about 329 |
+| 2:00 | about 175 | about 219 |
+
+Worked example: 275 words were planned at 1.47 → 187 s, and came out at
+161.6 s. 16% short.
+
+**The likely cause, not yet measured:** Bauhaus held 10 pictures, two of
+them silent for 4.5 s each; this one held 5 and was cut tight. The
+silent holds, the title card and the gaps between paragraphs are all
+film that carries no words, and there is more of that per word in a film
+with more pictures. If that is right the rate belongs per-picture, not
+per-film. Do not build that until a third film says so.
+
+Re-measure on every new film and add a row.
 
 ## Steps
 
