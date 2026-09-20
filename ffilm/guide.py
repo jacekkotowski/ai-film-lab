@@ -320,8 +320,77 @@ def _manifest_media(manifest: Path) -> list[dict]:
     return d.get("media") or []
 
 
-def next_steps(project: Path) -> list[Step]:
-    """What to do next, best first. The rest are the sensible alternatives."""
+def _shape(args: list[str]) -> list[str]:
+    """A step's command without `-p NAME`, so two steps that run the same
+    thing compare equal whatever the film is called."""
+    out: list[str] = []
+    for a in args:
+        if a == "-p":
+            break
+        out.append(a)
+    return out
+
+
+def recording_doors(names: list[str], already: list[list[str]],
+                    windows: bool) -> list[Step]:
+    """The ways back to a microphone. Pure, off the names in media/.
+
+    The guide reads the next step off the disk, so a step vanishes the
+    moment the thing it makes exists. That is right for the best step
+    and wrong for the alternatives: it made the footage path one-way.
+
+    Measured on 2026-09-20, walking a scratch project through every
+    stage: with photos in and no narration yet, NO screen offered the
+    camera at all -- so an intro skipped by pressing ENTER could not be
+    recorded afterwards by any route the guide knew. And once a
+    narration existed, saying it again was never offered either, though
+    `kinds.pick_narration` has taken the newest one since 2026-09-18 and
+    recording again is how anybody says "not that one, this one".
+
+    `already` is the shape of the steps the menu is about to show, so a
+    door is not offered twice.
+    """
+    if not windows:
+        return []
+    stills = [n for n in names
+              if Path(n).suffix.lower() in kinds.STILL | kinds.HEIC]
+    narration = [n for n in names
+                 if Path(n).stem.lower().startswith(kinds.VOICEOVER_PREFIX)
+                 and Path(n).suffix.lower() in AUDIO_EXT]
+
+    doors: list[Step] = []
+    if names:
+        # Where a take lands is decided by the time in its name against
+        # the narration's -- scaffold.place_takes. Say which one this
+        # will be, rather than leaving it to be found in the render.
+        if narration:
+            why = ("It plays after the pictures and closes the film: that is "
+                   "what\nthe later time in its name means. To open the film "
+                   "with it\ninstead, put 0_ in front of the filename "
+                   "afterwards -- it keeps\nits speed and its look.")
+        else:
+            why = ("Takes you record before the narration open the film; "
+                   "takes\nrecorded after it close it. Nothing you have "
+                   "already recorded\nis touched.")
+        doors.append(Step("...or talk to the camera again", ["record"],
+                          why=why))
+    if stills:
+        doors.append(Step(
+            "...or say the words over these pictures again",
+            ["record", "--voice"],
+            why="The newest narration is the one the film uses, so this "
+                "replaces\nwhat you said before. Nothing is deleted -- the "
+                "old take stays\nin media."))
+    return [d for d in doors if _shape(d.args) not in already]
+
+
+def _best_steps(project: Path) -> list[Step]:
+    """What to do next, best first. The rest are the sensible alternatives.
+
+    The steps that follow from where the project has got to.
+    `next_steps` wraps this and adds the ways BACK -- see
+    `recording_doors`.
+    """
     name = project.name
     p = ["-p", name]
 
@@ -914,3 +983,21 @@ def walk(project: Path | None = None) -> None:
             continue
 
     print("\nThat is a lot of steps. Run `uv run film` again to carry on.")
+
+
+def next_steps(project: Path) -> list[Step]:
+    """What to do next, and then the ways back.
+
+    Two lists, in that order: the steps that follow from where the
+    project has got to, and the recordings you can always make again.
+    The doors go last, so ENTER and the alternatives that are genuinely
+    next keep the places they had.
+    """
+    steps = _best_steps(project)
+    media = project / "media"
+    names = ([f.name for f in media.iterdir() if f.is_file()]
+             if media.is_dir() else [])
+    p = ["-p", project.name]
+    doors = recording_doors(names, [_shape(x.args) for x in steps],
+                            sys.platform == "win32")
+    return steps + [Step(d.title, d.args + p, why=d.why) for d in doors]

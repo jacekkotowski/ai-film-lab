@@ -45,6 +45,15 @@ def titles(root: Path) -> str:
     return " | ".join(s.title for s in next_steps(root))
 
 
+def leading(root: Path) -> str:
+    """The titles of the steps that FOLLOW from where the project is,
+    without the standing "...again" doors appended by `next_steps`. The
+    doors are on every menu on purpose (2026-09-20), so a test that an
+    offer is not repeated has to say WHERE it is not repeated."""
+    return " | ".join(s.title for s in next_steps(root)
+                      if not s.title.endswith("again"))
+
+
 # --------------------------------------------------------------------------
 # The way in
 # --------------------------------------------------------------------------
@@ -381,13 +390,19 @@ def test_a_talking_clip_still_gets_the_voiceover_offer(tmp_path):
     assert "say the words over these pictures" in titles(root).lower()
 
 
-def test_a_film_with_narration_already_set_does_not_repeat_the_offer(tmp_path):
+def test_a_film_with_narration_already_set_does_not_lead_with_the_offer(
+        tmp_path):
+    """Still reachable, as the standing door: a narration you are not
+    happy with is re-recorded, not repaired, and before 2026-09-20 there
+    was no screen that offered it. What it must not do is present itself
+    as the thing to do next."""
     root = project(tmp_path, media=100, manifest=200)
     manifest_of(root, '{"path": "media/a.jpg", "kind": "still"}')
     (root / "film.yaml").write_text("audio: media/voiceover.wav\n",
                                     encoding="utf-8")
     os.utime(root / "film.yaml", (300, 300))
-    assert "say the words over these pictures" not in titles(root).lower()
+    assert "say the words over these pictures" not in leading(root).lower()
+    assert "say the words over these pictures again" in titles(root).lower()
 
 
 def test_a_narration_recorded_after_the_edit_offers_to_fold_it_in(tmp_path):
@@ -449,7 +464,7 @@ def test_new_photos_with_a_narration_already_recorded_go_straight_on(tmp_path):
     _take(root, "1_.jpg", 100)
     _take(root, "voiceover_20260919-130000.wav", 200)
     assert first(root).startswith("go")
-    assert "say the words" not in titles(root).lower()
+    assert "say the words" not in leading(root).lower()
 
 
 def test_after_the_narration_a_closing_word_to_the_camera_is_offered(
@@ -463,10 +478,16 @@ def test_after_the_narration_a_closing_word_to_the_camera_is_offered(
     assert any(s.args == ["record", "-p", root.name] for s in steps)
 
 
-def test_a_closing_word_already_said_is_not_offered_again(tmp_path):
+def test_a_closing_word_already_said_is_no_longer_the_next_step(tmp_path):
+    """Said once, it stops being news. It does not stop being possible:
+    the standing door is what you reach for when the closing came out
+    wrong, and before 2026-09-20 there was nothing to reach for."""
     root = project(tmp_path)
     _take(root, "1_.jpg", 100)
     _take(root, "voiceover_20260919-130000.wav", 200)
     _take(root, "rec_20260919-131000.mp4", 300)
-    assert not any(s.args == ["record", "-p", root.name]
-                   for s in next_steps(root))
+    steps = next_steps(root)
+    camera = [s for s in steps if s.args == ["record", "-p", root.name]]
+    assert len(camera) == 1                  # offered once, not twice
+    assert camera[0].title.endswith("again")   # and as the door, not the step
+    assert camera[0] is not steps[0]

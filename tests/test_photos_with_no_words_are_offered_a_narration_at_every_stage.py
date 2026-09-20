@@ -68,11 +68,19 @@ def test_it_survives_a_peek_and_a_draft(tmp_path):
     assert narrate_at(edited(tmp_path, peek=400, draft=500)) == 1
 
 
-def test_it_goes_once_the_pictures_carry_a_narration(tmp_path):
+def test_it_stops_leading_once_the_pictures_carry_a_narration(tmp_path):
+    """It used to vanish outright. Since 2026-09-20 it stays on as the
+    last thing on the menu -- the standing door -- because a narration
+    you are not happy with is re-recorded, and the guide offered no way
+    at all to do that. What it must not be any more is near the top."""
     slides = ("shots:\n  - src: media/a.jpg\n"
               "    voice: media/voiceover_1.wav\n    in: 0\n    out: 5\n")
-    assert narrate_at(edited(tmp_path, yml=slides)) is None
-    assert narrate_at(edited(tmp_path, yml=slides, draft=400)) is None
+    for n, renders in enumerate(({}, {"draft": 400})):
+        root = edited(tmp_path / f"r{n}", yml=slides, **renders)
+        steps = next_steps(root)
+        i = narrate_at(root)
+        assert i == len(steps) - 1
+        assert steps[i].title.endswith("again")
 
 
 def test_a_camera_take_alone_is_told_photos_can_go_in_first(tmp_path):
