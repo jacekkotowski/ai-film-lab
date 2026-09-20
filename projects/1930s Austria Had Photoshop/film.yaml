@@ -70,10 +70,15 @@ shots:
     focus: [0.535, 0.353]
     note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "When you click on sharp mask in photoshop,"
+      - text: "When you click on Unsharp Mask in Photoshop,"
         at: 0.00
         dur: 3.41
         pos: lower_third
+        # The transcriber heard "on sharp mask" and dropped the "un".
+        # Corrected by hand 2026-09-20, word for word in the same
+        # places -- on/on, sharp/Unsharp, mask/Mask, photoshop/Photoshop
+        # -- so `words:` below still lights the right syllable and is
+        # left exactly as `film caption` measured it.
         words: [0.00, 0.45, 0.60, 0.98, 1.62, 1.91, 2.36, 2.78]
       - text: "you might think it was created to make blurry portraits crisp."
         at: 3.88
