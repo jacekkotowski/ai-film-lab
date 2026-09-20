@@ -56,58 +56,39 @@ shots:
     src: media/rec_20260920-195315.mp4
     in: "00:01.35"
     out: "00:27.60"
-    speed: 1.1              # measured 2026-09-20: you read the narration
-                            # at 110 wpm and this take at 102 wpm. At 1.2
-                            # this played 122 wpm against the pictures'
-                            # 110 -- the mismatch Jacek heard. 1.1 puts
-                            # it at 112. The pictures cannot be sped up
-                            # instead: a slide's duration ignores `speed`
-                            # (spec.py, "there is no lens here") while
-                            # the sound does not, so 1.2 there drifts
-                            # 4.6s on the first picture alone.
+    speed: 1.2              # one film, one voice: your takes and your narration
+                            # both play at 1.2. See docs/decisions/0010.
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.535, 0.353]
     note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
     captions:
-      - text: "When you click on Unsharp Mask in Photoshop,"
+      - text: "When you click on sharp mask in photoshop,"
         at: 0.00
-        dur: 3.41
+        dur: 3.13
         pos: lower_third
-        # The transcriber heard "on sharp mask" and dropped the "un".
-        # Corrected by hand 2026-09-20, word for word in the same
-        # places -- on/on, sharp/Unsharp, mask/Mask, photoshop/Photoshop
-        # -- so `words:` below still lights the right syllable and is
-        # left exactly as `film caption` measured it.
-        words: [0.00, 0.45, 0.60, 0.98, 1.62, 1.91, 2.36, 2.78]
+        words: [0.00, 0.42, 0.55, 0.90, 1.48, 1.75, 2.17, 2.55]
       - text: "you might think it was created to make blurry portraits crisp."
-        at: 3.88
+        at: 3.56
         dur: 4.50
         pos: lower_third
-        words: [0.00, 0.51, 0.69, 0.98, 1.16, 1.31, 1.73, 2.38, 2.78, 3.35, 4.09]
+        words: [0.00, 0.47, 0.63, 0.90, 1.07, 1.20, 1.58, 2.18, 2.55, 3.07, 3.75]
       - text: "But it was invented in 1930s Vienna by a medical physicist and a technician."
-        at: 10.17
+        at: 9.32
         dur: 4.50
         pos: lower_third
-        words: [0.00, 0.45, 0.91, 1.05, 1.49, 1.82, 3.25, 3.71, 4.40]
+        words: [0.00, 0.42, 0.83, 0.97, 1.37, 1.67, 2.98, 3.40, 4.03, 4.45]
       - text: "Not to add detail, but to solve a life or death diagnostic problem."
-        at: 18.08
+        at: 16.57
         dur: 4.50
         pos: lower_third
-        words: [0.00, 0.49, 0.71, 0.96, 1.60, 1.75, 1.98, 2.36, 2.67, 2.96, 3.33, 3.87]
+        words: [0.00, 0.45, 0.65, 0.88, 1.47, 1.60, 1.82, 2.17, 2.45, 2.72, 3.05, 3.55, 4.23]
   - id: s02
     src: media/rec_20260920-195315.mp4
     in: "00:29.20"
     out: "00:30.10"
-    speed: 1.1              # measured 2026-09-20: you read the narration
-                            # at 110 wpm and this take at 102 wpm. At 1.2
-                            # this played 122 wpm against the pictures'
-                            # 110 -- the mismatch Jacek heard. 1.1 puts
-                            # it at 112. The pictures cannot be sped up
-                            # instead: a slide's duration ignores `speed`
-                            # (spec.py, "there is no lens here") while
-                            # the sound does not, so 1.2 there drifts
-                            # 4.6s on the first picture alone.
+    speed: 1.2              # one film, one voice: your takes and your narration
+                            # both play at 1.2. See docs/decisions/0010.
     move: drift_right
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.535, 0.353]
@@ -119,197 +100,207 @@ shots:
     voice: media/voiceover_20260920-195800.wav
     in: "00:00.00"
     out: "00:25.25"
+    speed: 1.2              # one film, one voice: your takes and your narration
+                            # both play at 1.2. See docs/decisions/0010.
     move: push_in
     focus: [0.510, 0.804]
     note: "picture 1 of 5 -- holds while these words are said"
     captions:
       - text: "In 1930,"
-        at: 0.50
-        dur: 1.94
+        at: 0.42
+        dur: 1.61
         pos: lower_third
-        words: [0.00, 0.62]
+        words: [0.00, 0.52]
       - text: "Gottfried Spiegler and Kalman Juris faced a"
-        at: 2.44
-        dur: 4.40
+        at: 2.03
+        dur: 3.66
         pos: lower_third
-        words: [0.00, 1.16, 2.14, 2.42, 2.86, 3.64, 4.08]
+        words: [0.00, 0.97, 1.78, 2.02, 2.38, 3.03, 3.40]
       - text: "problem with X-ray plates."
-        at: 6.84
-        dur: 1.75
+        at: 5.70
+        dur: 1.46
         pos: lower_third
-        words: [0.00, 0.40, 0.74, 1.10, 1.20]
+        words: [0.00, 0.33, 0.62, 0.92, 1.00]
       - text: "Medical radiographs had too much dynamic"
-        at: 9.22
-        dur: 2.84
+        at: 7.68
+        dur: 2.36
         pos: lower_third
-        words: [0.00, 0.50, 1.48, 1.68, 2.08, 2.40]
+        words: [0.00, 0.42, 1.23, 1.40, 1.73, 2.00]
       - text: "range for photographic paper:"
-        at: 12.06
-        dur: 1.84
+        at: 10.05
+        dur: 1.53
         pos: lower_third
-        words: [0.00, 0.48, 0.74, 1.46]
+        words: [0.00, 0.40, 0.62, 1.22]
       - text: "dense rib bones appeared solid white,"
-        at: 14.52
-        dur: 2.87
+        at: 12.10
+        dur: 2.39
         pos: lower_third
-        words: [0.00, 0.44, 0.78, 1.36, 1.68, 2.32]
+        words: [0.00, 0.37, 0.65, 1.13, 1.40, 1.93]
       - text: "while lung tissue turned pitch black."
-        at: 17.74
-        dur: 2.98
+        at: 14.78
+        dur: 2.48
         pos: lower_third
-        words: [0.00, 0.44, 1.04, 1.54, 2.20, 2.58]
+        words: [0.00, 0.37, 0.87, 1.28, 1.83, 2.15]
       - text: "Expose for the lungs, and the bones blew out."
-        at: 22.12
-        dur: 2.68
+        at: 18.43
+        dur: 2.23
         pos: lower_third
-        words: [0.00, 0.24, 0.44, 0.80, 1.18, 1.36, 1.78, 2.22]
+        words: [0.00, 0.20, 0.37, 0.67, 0.98, 1.13, 1.48, 1.85]
   - id: s04
     src: media/2_roentgen.png
     voice: media/voiceover_20260920-195800.wav
     in: "00:26.85"
     out: "00:52.60"
+    speed: 1.2              # one film, one voice: your takes and your narration
+                            # both play at 1.2. See docs/decisions/0010.
     move: drift_right
     focus: [0.710, 0.526]
     note: "picture 2 of 5 -- holds while these words are said"
     captions:
       - text: "They created a physical fix."
         at: 0.00
-        dur: 2.20
+        dur: 1.83
         pos: lower_third
-        words: [0.00, 2.47, 2.93, 3.19, 3.49]
+        words: [0.00, 2.06, 2.44, 2.66, 2.91]
       - text: "A positive copy of the X-ray was exposed through"
-        at: 2.20
-        dur: 3.49
+        at: 1.83
+        dur: 2.91
         pos: lower_third
-        words: [0.00, 0.14, 0.46, 0.88, 1.20, 1.36, 1.70, 1.86, 2.20, 2.88]
+        words: [0.00, 0.12, 0.38, 0.73, 1.00, 1.13, 1.42, 1.55, 1.83, 2.40]
       - text: "a thick glass spacer,"
-        at: 5.70
-        dur: 1.52
+        at: 4.75
+        dur: 1.26
         pos: lower_third
-        words: [0.00, 0.22, 0.44, 0.86]
+        words: [0.00, 0.18, 0.37, 0.72]
       - text: "intentionally blurring the light and creating an unsharp mask."
-        at: 7.96
-        dur: 4.50
+        at: 6.63
+        dur: 4.19
         pos: lower_third
-        words: [0.00, 0.80, 1.56, 1.74, 2.04, 2.80, 3.36, 3.86]
+        words: [0.00, 0.67, 1.30, 1.45, 1.70, 2.33, 2.80, 3.22, 3.87]
       - text: "Placed against the original negative,"
-        at: 13.76
-        dur: 2.50
+        at: 11.47
+        dur: 2.08
         pos: lower_third
-        words: [0.00, 0.60, 1.16, 1.50, 1.82]
+        words: [0.00, 0.50, 0.97, 1.25, 1.52]
       - text: "it acted like a mechanical dodge-and-burn tool,"
-        at: 16.56
-        dur: 2.80
+        at: 13.80
+        dur: 2.33
         pos: lower_third
-        words: [0.00, 0.12, 0.50, 0.76, 0.98, 1.38, 1.86, 2.06, 2.32]
+        words: [0.00, 0.10, 0.42, 0.63, 0.82, 1.15, 1.55, 1.72, 1.93]
       - text: "flattening global contrast so diagnostic details"
-        at: 19.96
-        dur: 3.65
+        at: 16.63
+        dur: 3.04
         pos: lower_third
-        words: [0.00, 0.68, 1.00, 1.66, 2.28, 2.82]
+        words: [0.00, 0.57, 0.83, 1.38, 1.90, 2.35]
       - text: "could fit onto paper."
-        at: 23.62
-        dur: 1.66
+        at: 19.68
+        dur: 1.38
         pos: lower_third
-        words: [0.00, 0.62, 0.88, 1.24]
+        words: [0.00, 0.52, 0.73, 1.03]
   - id: s05
     src: media/3_portrait_process.png
     voice: media/voiceover_20260920-195800.wav
     in: "00:54.40"
     out: "01:20.25"
+    speed: 1.2              # one film, one voice: your takes and your narration
+                            # both play at 1.2. See docs/decisions/0010.
     move: push_in
     focus: [0.330, 0.832]
     note: "picture 3 of 5 -- holds while these words are said"
     captions:
       - text: "Because the mask was blurred,"
         at: 0.00
-        dur: 2.42
+        dur: 2.02
         pos: lower_third
-        words: [0.00, 1.34, 1.96, 2.40, 2.60]
+        words: [0.00, 1.12, 1.63, 2.00, 2.17]
       - text: "it could cancel broad areas but not fine details."
-        at: 2.42
-        dur: 4.21
+        at: 2.02
+        dur: 3.51
         pos: lower_third
-        words: [0.00, 0.52, 0.74, 1.26, 1.66, 2.38, 2.76, 3.08, 3.54]
+        words: [0.00, 0.43, 0.62, 1.05, 1.38, 1.98, 2.30, 2.57, 2.95]
       - text: "At boundaries, this created light and dark halos."
-        at: 7.62
-        dur: 2.85
+        at: 6.35
+        dur: 2.38
         pos: lower_third
-        words: [0.00, 0.36, 0.86, 1.42, 1.90, 2.28, 2.56]
+        words: [0.00, 0.30, 0.72, 1.18, 1.58, 1.90, 2.13]
       - text: "Spiegler and Juris created them as a side"
-        at: 12.10
-        dur: 2.78
+        at: 10.08
+        dur: 2.31
         pos: lower_third
-        words: [0.00, 0.58, 0.86, 1.32, 1.68, 2.10, 2.36, 2.48]
+        words: [0.00, 0.48, 0.72, 1.10, 1.40, 1.75, 1.97, 2.07]
       - text: "effect of contrast compression."
-        at: 14.88
-        dur: 2.17
+        at: 12.40
+        dur: 1.81
         pos: lower_third
-        words: [0.00, 0.40, 0.96, 1.46]
+        words: [0.00, 0.33, 0.80, 1.22]
       - text: "Photographers later applied the technique to portraits,"
-        at: 18.02
-        dur: 3.48
+        at: 15.02
+        dur: 2.90
         pos: lower_third
-        words: [0.00, 0.64, 1.10, 1.72, 2.10, 2.52, 2.92]
+        words: [0.00, 0.53, 0.92, 1.43, 1.75, 2.10, 2.43]
       - text: "using the halos to create the illusion of sharper focus."
-        at: 21.50
-        dur: 3.69
+        at: 17.92
+        dur: 3.08
         pos: lower_third
-        words: [0.00, 0.64, 0.94, 1.56, 1.72, 2.04, 2.30, 2.56, 2.84, 3.24]
+        words: [0.00, 0.53, 0.78, 1.30, 1.43, 1.70, 1.92, 2.13, 2.37, 2.70]
   - id: s06
     src: media/4_eye.png
     voice: media/voiceover_20260920-195800.wav
     in: "01:22.25"
     out: "01:44.65"
+    speed: 1.2              # one film, one voice: your takes and your narration
+                            # both play at 1.2. See docs/decisions/0010.
     move: pull_out
     focus: [0.440, 0.478]
     note: "picture 4 of 5 -- holds while these words are said"
     captions:
       - text: "In a portrait, the same principle applies."
         at: 0.00
-        dur: 2.64
+        dur: 2.20
         pos: lower_third
-        words: [0.00, 0.44, 0.60, 0.96, 1.40, 1.62, 2.10]
+        words: [0.00, 0.37, 0.50, 0.80, 1.17, 1.35, 1.75]
       - text: "Blur the original,"
-        at: 3.23
-        dur: 0.87
+        at: 2.69
+        dur: 0.73
         pos: lower_third
-        words: [0.00, 0.22, 0.44]
+        words: [0.00, 0.18, 0.37]
       - text: "subtract the blurred copy to isolate fine edges,"
-        at: 4.57
-        dur: 3.10
+        at: 3.81
+        dur: 2.58
         pos: lower_third
-        words: [0.00, 0.36, 0.80, 1.08, 1.48, 1.68, 2.12, 2.54]
+        words: [0.00, 0.30, 0.67, 0.90, 1.23, 1.40, 1.77, 2.12]
       - text: "then add those edges back."
-        at: 8.37
-        dur: 2.07
+        at: 6.98
+        dur: 1.73
         pos: lower_third
-        words: [0.00, 0.40, 0.98, 1.30, 1.70]
+        words: [0.00, 0.33, 0.82, 1.08, 1.42]
       - text: "Eyelashes, iris,"
-        at: 11.35
-        dur: 1.70
+        at: 9.46
+        dur: 1.41
         pos: lower_third
-        words: [0.00, 1.16]
+        words: [0.00, 0.97]
       - text: "and skin contours become more defined."
-        at: 13.05
-        dur: 2.85
+        at: 10.87
+        dur: 2.38
         pos: lower_third
-        words: [0.00, 0.18, 0.52, 1.32, 1.84, 2.18]
+        words: [0.00, 0.15, 0.43, 1.10, 1.53, 1.82]
       - text: "No new detail is created;"
-        at: 16.79
-        dur: 1.67
+        at: 13.99
+        dur: 1.39
         pos: lower_third
-        words: [0.00, 0.26, 0.54, 0.92, 1.20]
+        words: [0.00, 0.22, 0.45, 0.77, 1.00]
       - text: "existing detail gains local contrast."
-        at: 19.03
-        dur: 2.90
+        at: 15.86
+        dur: 2.41
         pos: lower_third
-        words: [0.00, 0.64, 1.08, 1.66, 2.12]
+        words: [0.00, 0.53, 0.90, 1.38, 1.77]
   - id: s07
     src: media/5_example.jpg
     voice: media/voiceover_20260920-195800.wav
     in: "01:46.95"
     out: "02:04.10"
+    speed: 1.2              # one film, one voice: your takes and your narration
+                            # both play at 1.2. See docs/decisions/0010.
     from: {cx: 0.14, cy: 0.5, scale: 1.0}
     to:   {cx: 0.86, cy: 0.5, scale: 1.0}
     ease: linear
@@ -324,43 +315,36 @@ shots:
       that slows at both ends reads as a drift again."
     captions:
       - text: "Left: Natural contrast and detail on the camera negative."
-        at: 0.22
-        dur: 3.98
+        at: 0.18
+        dur: 3.31
         pos: lower_third
-        words: [0.00, 0.90, 1.18, 1.76, 2.08, 2.46, 2.76, 2.94, 3.34]
+        words: [0.00, 0.75, 0.98, 1.47, 1.73, 2.05, 2.30, 2.45, 2.78]
       - text: "Middle & Right:"
-        at: 4.20
-        dur: 2.09
+        at: 3.50
+        dur: 1.74
         pos: lower_third
-        words: [0.00, 1.38, 1.66]
+        words: [0.00, 1.15, 1.38]
       - text: "Unsharp Mask increases local edge contrast,"
-        at: 6.98
-        dur: 2.64
+        at: 5.82
+        dur: 2.20
         pos: lower_third
-        words: [0.00, 0.60, 0.80, 1.30, 1.76, 2.16]
+        words: [0.00, 0.50, 0.67, 1.08, 1.47, 1.80]
       - text: "enhancing hair, facial lines,"
-        at: 10.24
-        dur: 2.64
+        at: 8.53
+        dur: 2.20
         pos: lower_third
-        words: [0.00, 0.76, 1.68, 2.12]
+        words: [0.00, 0.63, 1.40, 1.77]
       - text: "and fabric folds without changing image resolution."
-        at: 12.88
-        dur: 3.82
+        at: 10.73
+        dur: 3.18
         pos: lower_third
-        words: [0.00, 0.62, 1.08, 1.60, 2.30, 2.78, 3.18]
+        words: [0.00, 0.52, 0.90, 1.33, 1.92, 2.32, 2.65]
   - id: s08
     src: media/rec_20260920-200039.mp4
     in: "00:00.35"
     out: "00:22.60"
-    speed: 1.1              # measured 2026-09-20: you read the narration
-                            # at 110 wpm and this take at 102 wpm. At 1.2
-                            # this played 122 wpm against the pictures'
-                            # 110 -- the mismatch Jacek heard. 1.1 puts
-                            # it at 112. The pictures cannot be sped up
-                            # instead: a slide's duration ignores `speed`
-                            # (spec.py, "there is no lens here") while
-                            # the sound does not, so 1.2 there drifts
-                            # 4.6s on the first picture alone.
+    speed: 1.2              # one film, one voice: your takes and your narration
+                            # both play at 1.2. See docs/decisions/0010.
     move: drift_left
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.377]
@@ -368,34 +352,34 @@ shots:
     captions:
       - text: "Spiegler and Juris called their process harmonization,"
         at: 0.00
-        dur: 4.07
+        dur: 3.73
         pos: lower_third
-        words: [0.00, 0.85, 1.15, 1.75, 2.04, 2.40, 2.93]
+        words: [0.00, 0.78, 1.05, 1.60, 1.87, 2.20, 2.68]
       - text: "designed to compress extreme dynamic range in medical imaging."
-        at: 4.45
-        dur: 3.65
+        at: 4.08
+        dur: 3.34
         pos: lower_third
-        words: [0.00, 0.40, 0.76, 1.13, 1.56, 2.07, 2.55, 2.76, 3.11]
+        words: [0.00, 0.37, 0.70, 1.03, 1.43, 1.90, 2.33, 2.53, 2.85]
       - text: "Decades later,"
-        at: 9.05
-        dur: 0.89
+        at: 8.30
+        dur: 0.81
         pos: lower_third
-        words: [0.00, 0.45]
+        words: [0.00, 0.42]
       - text: "those darkroom variables became digital code."
-        at: 10.11
-        dur: 2.63
+        at: 9.27
+        dur: 2.41
         pos: lower_third
-        words: [0.00, 0.24, 0.85, 1.40, 1.82, 2.24]
+        words: [0.00, 0.22, 0.78, 1.28, 1.67, 2.05]
       - text: "A medical tool for preserving diagnostic information became"
-        at: 13.56
-        dur: 3.65
+        at: 12.43
+        dur: 3.34
         pos: lower_third
-        words: [0.00, 0.13, 0.42, 0.78, 1.09, 1.58, 2.15, 2.82]
+        words: [0.00, 0.12, 0.38, 0.72, 1.00, 1.45, 1.97, 2.58]
       - text: "Photoshop’s familiar Unsharp Mask."
-        at: 17.22
-        dur: 2.58
+        at: 15.78
+        dur: 2.36
         pos: lower_third
-        words: [0.00, 0.89, 1.38, 2.24]
+        words: [0.00, 0.82, 1.27, 2.05]
 # 8 shots, about 160 seconds.
 #
 # 5 slide(s), one per picture, each holding its own piece of
