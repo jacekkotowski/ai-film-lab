@@ -53,46 +53,39 @@ shots:
       block if you would rather open on yourself talking."
 
   - id: s01
-    src: media/rec_20260921-110214.mp4
-    in: "00:01.75"
-    out: "00:25.40"
+    src: media/rec_20260921-111018.mp4
+    in: "00:01.25"
+    out: "00:21.30"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.478, 0.440]
-    note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
+    focus: [0.473, 0.391]
+    note: "the intro. Taken from the complete read, not the earlier
+      take: the transcriber collapsed that one's four sentences to
+      under half a second each, so no caption could sit on it"
     captions:
+      # measured on this take -- the transcriber's spans agree with the
+      # speech in the audio (silencedetect -38dB) to within 0.1-0.35 s
       - text: "Coalition creates the capacity for violence."
-        at: 5.58
-        dur: 0.36
+        at: 0.00
+        dur: 2.86
         pos: lower_third
-        words: [0.00]
+        words: [0.00, 0.60, 1.50, 1.72, 2.12, 2.47]
       - text: "Conflict can be repaired through reconciliation."
-        at: 6.65
-        dur: 0.48
+        at: 3.65
+        dur: 3.04
         pos: lower_third
-        words: [0.00]
+        words: [0.00, 0.57, 0.97, 1.18, 1.70, 2.18]
       - text: "Participation can turn violence into escalation."
-        at: 8.02
-        dur: 0.41
+        at: 7.87
+        dur: 2.95
         pos: lower_third
-        words: [0.00]
+        words: [0.00, 0.60, 0.98, 1.25, 1.68, 2.27]
       - text: "And identity and moral commitment can lead people to resist."
-        at: 17.43
-        dur: 0.21
+        at: 11.73
+        dur: 4.50
         pos: lower_third
-        words: [0.00]
-
-  - id: s02
-    src: media/rec_20260921-110214.mp4
-    in: "00:26.70"
-    out: "00:27.53"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.478, 0.440]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "part 2 of 2 -- one take with the long pauses cut out. Every word is kept"
+        words: [0.00, 0.33, 0.98, 1.40, 1.67, 2.13, 2.70, 2.97, 3.40, 3.92]
 
   - id: s03
     src: media/1_.jpg
@@ -346,46 +339,29 @@ shots:
 
   - id: s08
     src: media/rec_20260921-111018.mp4
-    in: "00:01.25"
+    in: "00:21.60"
     out: "00:31.00"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: drift_left
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.473, 0.391]
-    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
+    note: "the closing only. This take re-reads the four intro sentences
+      first (1.25-21.30 s) -- those are s01, so they are not said twice"
     captions:
-      - text: "Coalition creates the capacity for violence."
-        at: 0.00
-        dur: 2.86
-        pos: lower_third
-        words: [0.00, 0.60, 1.50, 1.72, 2.12, 2.47]
-      - text: "Conflict can be repaired through reconciliation."
-        at: 3.65
-        dur: 3.04
-        pos: lower_third
-        words: [0.00, 0.57, 0.97, 1.18, 1.70, 2.18]
-      - text: "Participation can turn violence into escalation."
-        at: 7.87
-        dur: 2.95
-        pos: lower_third
-        words: [0.00, 0.60, 0.98, 1.25, 1.68, 2.27]
-      - text: "And identity and moral commitment can lead people to resist."
-        at: 11.73
-        dur: 4.50
-        pos: lower_third
-        words: [0.00, 0.33, 0.98, 1.40, 1.67, 2.13, 2.70, 2.97, 3.40, 3.92]
+      # "Together," is 0.48 s because that is how long it took to say.
+      # Measured, not shortened -- it runs straight into the next line
       - text: "Together,"
-        at: 17.18
+        at: 0.23
         dur: 0.48
         pos: lower_third
         words: [0.00]
       - text: "these processes show how collective violence can begin,"
-        at: 17.67
+        at: 0.71
         dur: 3.63
         pos: lower_third
         words: [0.00, 0.52, 0.98, 1.75, 2.13, 2.47, 2.90, 3.25]
       - text: "escalate, stop, or be resisted."
-        at: 21.72
+        at: 4.76
         dur: 2.80
         pos: lower_third
         words: [0.00, 0.68, 1.70, 1.82, 2.07]
