@@ -1,0 +1,403 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# Each picture carries its own piece of
+# media/voiceover_20260921-110701.wav -- see `voice:` below.
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 2.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20260921-110214.mp4
+    in: "00:01.75"
+    out: "00:25.40"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.478, 0.440]
+    note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Coalition creates the capacity for violence."
+        at: 5.58
+        dur: 0.36
+        pos: lower_third
+        words: [0.00]
+      - text: "Conflict can be repaired through reconciliation."
+        at: 6.65
+        dur: 0.48
+        pos: lower_third
+        words: [0.00]
+      - text: "Participation can turn violence into escalation."
+        at: 8.02
+        dur: 0.41
+        pos: lower_third
+        words: [0.00]
+      - text: "And identity and moral commitment can lead people to resist."
+        at: 17.43
+        dur: 0.21
+        pos: lower_third
+        words: [0.00]
+
+  - id: s02
+    src: media/rec_20260921-110214.mp4
+    in: "00:26.70"
+    out: "00:27.53"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.478, 0.440]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 2 of 2 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s03
+    src: media/1_.jpg
+    voice: media/voiceover_20260921-110701.wav
+    in: "00:00.95"
+    out: "00:37.30"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.205, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.795, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.382, 0.347]
+    note: "picture 1 of 5 -- holds while these words are said. This picture is 559x368; the frame shows about 0.41 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "A 2014 study of 18 communities recorded 152 killings:"
+        at: 0.00
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.48, 1.23, 1.92, 2.32, 2.70, 3.38, 4.13]
+      - text: "66 percent were intergroup killings,"
+        at: 6.32
+        dur: 2.75
+        pos: lower_third
+        words: [0.00, 0.68, 1.38, 1.67, 2.23]
+      - text: "with attackers outnumbering victims by a median"
+        at: 9.08
+        dur: 3.21
+        pos: lower_third
+        words: [0.00, 0.37, 0.92, 1.88, 2.18, 2.75]
+      - text: "of eight to one."
+        at: 12.29
+        dur: 1.41
+        pos: lower_third
+        words: [0.00, 1.00, 1.27]
+      - text: "The researchers found aggression better explained by adaptive"
+        at: 15.14
+        dur: 3.24
+        pos: lower_third
+        words: [0.00, 0.22, 0.62, 1.12, 1.55, 1.88, 2.43, 2.72]
+      - text: "strategies than human disturbance."
+        at: 18.39
+        dur: 2.16
+        pos: lower_third
+        words: [0.00, 0.53, 0.90, 1.27, 1.58]
+      - text: "Coalition attacks provide numerical advantage,"
+        at: 20.56
+        dur: 3.31
+        pos: lower_third
+        words: [0.00, 1.15, 1.68, 2.23, 2.55]
+      - text: "reducing individual risk and potentially"
+        at: 24.11
+        dur: 2.30
+        pos: lower_third
+        words: [0.00, 0.37, 0.83, 1.38, 1.73]
+      - text: "giving access to territory,"
+        at: 26.41
+        dur: 1.51
+        pos: lower_third
+        words: [0.00, 0.67, 1.00, 1.20]
+      - text: "food and females."
+        at: 28.57
+        dur: 1.21
+        pos: lower_third
+        words: [0.00, 0.35, 0.75]
+
+  - id: s04
+    src: media/3_.jpeg
+    voice: media/voiceover_20260921-110701.wav
+    in: "00:39.25"
+    out: "01:14.10"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_right
+    from: {cx: 0.372, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.628, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.486, 0.824]
+    note: "picture 2 of 5 -- holds while these words are said. This picture is 622x778; the frame shows about 0.74 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Frans de Waal found that aggression does"
+        at: 1.86
+        dur: 2.36
+        pos: lower_third
+        words: [0.00, 0.40, 0.87, 1.40, 1.70, 2.08]
+      - text: "not necessarily destroy relationships."
+        at: 4.23
+        dur: 2.43
+        pos: lower_third
+        words: [0.00, 0.22, 0.87, 1.60]
+      - text: "Chimpanzees often reconcile after conflicts."
+        at: 7.39
+        dur: 3.03
+        pos: lower_third
+        words: [0.00, 0.82, 1.17, 2.15, 2.43]
+      - text: "Reconciliation was more frequent between animals with valuable"
+        at: 11.06
+        dur: 3.08
+        pos: lower_third
+        words: [0.00, 0.50, 0.97, 1.20, 1.55, 1.87, 2.37, 2.62]
+      - text: "social relationships and reduced post-conflict anxiety."
+        at: 14.14
+        dur: 4.10
+        pos: lower_third
+        words: [0.00, 0.43, 1.27, 1.98, 2.53, 3.00, 3.52]
+      - text: "Uninvolved animals could also provide consolation."
+        at: 19.51
+        dur: 2.61
+        pos: lower_third
+        words: [0.00, 0.58, 1.00, 1.25, 1.57, 1.93]
+      - text: "→ restored social contact."
+        at: 27.83
+        dur: 0.98
+        pos: lower_third
+        words: [0.00, 0.47]
+
+  - id: s05
+    src: media/4_.jpeg
+    voice: media/voiceover_20260921-110701.wav
+    in: "01:16.85"
+    out: "01:40.40"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.272, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.728, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.472, 0.411]
+    note: "picture 3 of 5 -- holds while these words are said. This picture is 1440x1291; the frame shows about 0.54 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Ervin Staub studied how violence develops into"
+        at: 0.58
+        dur: 2.81
+        pos: lower_third
+        words: [0.00, 0.53, 0.90, 1.58, 2.07, 2.43]
+      - text: "increasingly destructive collective violence."
+        at: 3.39
+        dur: 2.14
+        pos: lower_third
+        words: [0.00, 0.63, 1.12, 1.53]
+      - text: "He identified “learning by doing”:"
+        at: 6.33
+        dur: 1.96
+        pos: lower_third
+        words: [0.00, 0.28, 0.90, 1.35, 1.63]
+      - text: "participation can change attitudes and behavior,"
+        at: 8.81
+        dur: 2.28
+        pos: lower_third
+        words: [0.00, 0.63, 0.85, 1.17, 1.57, 1.82]
+      - text: "making increasingly extreme violence easier."
+        at: 11.64
+        dur: 2.91
+        pos: lower_third
+        words: [0.00, 0.38, 1.13, 1.58, 2.17]
+      - text: "He studied this in the Holocaust,"
+        at: 15.51
+        dur: 1.56
+        pos: lower_third
+        words: [0.00, 0.22, 0.63, 0.92, 1.08, 1.22]
+      - text: "Rwanda and other cases."
+        at: 17.53
+        dur: 1.61
+        pos: lower_third
+        words: [0.00, 0.38, 0.92, 1.18]
+
+  - id: s06
+    src: media/5_staub.jpeg
+    voice: media/voiceover_20260921-110701.wav
+    in: "01:41.65"
+    out: "01:49.40"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: pull_out
+    from: {cx: 0.395, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.605, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.530, 0.718]
+    note: "picture 4 of 5 -- holds while these words are said. This picture is 768x1024; the frame shows about 0.79 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Participation → changed attitudes and behavior → escalation."
+        at: 1.94
+        dur: 1.60
+        pos: lower_third
+        words: [0.00, 0.47, 0.92, 1.17]
+      - text: "Participation → changed attitudes and behavior → escalation."
+        at: 5.49
+        dur: 0.59
+        pos: lower_third
+        words: [0.00]
+
+  - id: s07
+    src: media/6_resistance.jpeg
+    voice: media/voiceover_20260921-110701.wav
+    in: "01:52.15"
+    out: "02:29.15"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_right
+    from: {cx: 0.224, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.776, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.224, 0.153]
+    note: "picture 5 of 5 -- holds while these words are said. This picture is 1012x734; the frame shows about 0.45 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Kristen Monroe and Pearl Oliner Monroe found that Holocaust"
+        at: 0.47
+        dur: 3.16
+        pos: lower_third
+        words: [0.00, 0.43, 0.85, 1.18, 1.67, 2.08, 2.47, 2.73]
+      - text: "rescuers tended to see persecuted people as part of"
+        at: 3.63
+        dur: 3.71
+        pos: lower_third
+        words: [0.00, 0.70, 1.25, 1.62, 1.97, 2.38, 2.88, 3.20, 3.42]
+      - text: "their own moral community."
+        at: 7.35
+        dur: 1.43
+        pos: lower_third
+        words: [0.00, 0.18, 0.48, 0.77]
+      - text: "Oliner found that religious culture,"
+        at: 10.12
+        dur: 1.49
+        pos: lower_third
+        words: [0.00, 0.32, 0.65, 0.97]
+      - text: "values and leaders could encourage altruism toward outsiders."
+        at: 11.87
+        dur: 3.84
+        pos: lower_third
+        words: [0.00, 0.30, 0.62, 1.00, 1.43, 2.08, 2.82, 3.15]
+      - text: "At Le Chambon-sur-Lignon,"
+        at: 16.97
+        dur: 1.23
+        pos: lower_third
+        words: [0.00, 0.33, 0.55, 0.97]
+      - text: "Protestant faith contributed to organized resistance and the"
+        at: 19.13
+        dur: 4.36
+        pos: lower_third
+        words: [0.00, 0.52, 0.87, 2.15, 2.67, 3.13, 3.68, 4.18]
+      - text: "rescue of thousands of refugees,"
+        at: 23.50
+        dur: 1.53
+        pos: lower_third
+        words: [0.00, 0.32, 0.52, 0.85, 1.23]
+      - text: "including Jews."
+        at: 25.47
+        dur: 0.53
+        pos: lower_third
+        words: [0.00, 0.15]
+      - text: "Identity and moral commitment → resistance."
+        at: 26.87
+        dur: 3.41
+        pos: lower_third
+        words: [0.00, 0.72, 0.88, 1.12, 1.58, 2.37, 2.73]
+
+  - id: s08
+    src: media/rec_20260921-111018.mp4
+    in: "00:01.25"
+    out: "00:31.00"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.473, 0.391]
+    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
+    captions:
+      - text: "Coalition creates the capacity for violence."
+        at: 0.00
+        dur: 2.86
+        pos: lower_third
+        words: [0.00, 0.60, 1.50, 1.72, 2.12, 2.47]
+      - text: "Conflict can be repaired through reconciliation."
+        at: 3.65
+        dur: 3.04
+        pos: lower_third
+        words: [0.00, 0.57, 0.97, 1.18, 1.70, 2.18]
+      - text: "Participation can turn violence into escalation."
+        at: 7.87
+        dur: 2.95
+        pos: lower_third
+        words: [0.00, 0.60, 0.98, 1.25, 1.68, 2.27]
+      - text: "And identity and moral commitment can lead people to resist."
+        at: 11.73
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.33, 0.98, 1.40, 1.67, 2.13, 2.70, 2.97, 3.40, 3.92]
+      - text: "Together,"
+        at: 17.18
+        dur: 0.48
+        pos: lower_third
+        words: [0.00]
+      - text: "these processes show how collective violence can begin,"
+        at: 17.67
+        dur: 3.63
+        pos: lower_third
+        words: [0.00, 0.52, 0.98, 1.75, 2.13, 2.47, 2.90, 3.25]
+      - text: "escalate, stop, or be resisted."
+        at: 21.72
+        dur: 2.80
+        pos: lower_third
+        words: [0.00, 0.68, 1.70, 1.82, 2.07]
+
+# 8 shots, about 187 seconds.
+#
+# 5 slide(s), one per picture, each holding its own piece of
+# the 150s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
