@@ -19,6 +19,7 @@ dead end, you need *new* measurements to reopen it, not a new argument.
 | 0009 | How does a new skill get written?                     | After the job was done once for real; copy `fit-to-length`'s shape |
 | 0010 | Should narration read over photographs be sped up too? | Yes: one film, one voice, 1.2 on everything spoken. `speed:` on a slide had been a dead key |
 | 0011 | Were the lips out of sync in the Bauhaus closing?     | No. Picture and sound within 40 ms; the shot was at 1.0, not the 1.22 blamed |
+| 0012 | What does `film check` say about captions, and why those numbers? | Unreadable and repeated captions are named; both thresholds swept over all 19 films |
 
 ## Writing a new one
 
