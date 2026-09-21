@@ -373,3 +373,76 @@ def caption_share_line(film) -> str | None:
     return (f"  --    captions: {share:.0%} of the runtime, over the "
             f"{CAPTION_SHARE_TASTE:.0%} taste rule. Right for a film "
             f"watched muted; cut the ones that repeat the picture otherwise")
+
+
+# A caption has to be on screen long enough to read. Two numbers, because
+# one clause alone gets it wrong in one direction or the other.
+#
+# Under this many seconds is worth a look at all...
+CAPTION_MIN_READ = 1.2
+# ...but only if it is also faster per word than anybody can speak.
+#
+# This number was measured, not chosen. Run at 0.30 s/word across all 19
+# films in projects/, it flagged 41 captions, and most were fine: "That
+# is the tradition." at 1.04s is 3.8 words/sec, which is fast and
+# sayable, and `stop_overlap` SHORTENS a caption on purpose so it does
+# not collide with the next -- so a short `dur` is very often correct.
+#
+# Jacek speaks at 97-110 wpm, about 0.45-0.51 s/word played. 0.15 s/word
+# is 400 wpm, past any human. The four captions that shipped invisible on
+# 2026-09-21 were at 0.026-0.097, an order of magnitude under it; the
+# shortest correct line in the whole repo is 0.24. Nothing sits between.
+CAPTION_MIN_PER_WORD = 0.15
+
+
+def unreadable_captions(film) -> list[str]:
+    """Captions that cannot be read in the time they are given. Pure.
+
+    Found 2026-09-21, after a film was published with an invisible
+    intro. The transcriber returned the right words for a take and junk
+    times for them -- 0.26s for a ten-word sentence -- and `film caption`
+    placed them on the spans it was handed. Nothing said the spans were
+    impossible, so `check` printed OK and the only way to find out was to
+    watch a draft.
+
+    The second clause catches the same fault when the duration survives
+    it: a line whose `words:` holds one time out of ten was not heard,
+    whatever its span says. The rule is the `fix-captions` skill's, which
+    had been written down for two days and was never code.
+    """
+    out = []
+    for s in film.shots:
+        for c in s.captions:
+            n = len(c.text.split())
+            if n == 0:
+                continue
+            why = []
+            unreadable = (c.dur < CAPTION_MIN_READ
+                          and c.dur / n < CAPTION_MIN_PER_WORD)
+            if unreadable:
+                why.append(f"{c.dur:.2f}s for {n} words")
+            if c.words and len(c.words) * 2 < n:
+                why.append(f"{len(c.words)} of {n} word times")
+            if not why:
+                continue
+            # Two different faults, and saying "nobody can read" about
+            # both would be untrue. A caption placed by hand on the
+            # measured speech is on screen for five seconds and perfectly
+            # readable; what is still wrong with it is that the highlight
+            # has one word time to follow. Bauhaus's two German titles are
+            # exactly that, and they were fixed and accepted on
+            # 2026-09-19. Telling Jacek they are unreadable would send him
+            # back to something already settled.
+            head = ("a caption nobody can read" if unreadable
+                    else "a caption whose highlight cannot follow the words")
+            out.append(f"[{s.id}] {head} -- {'; '.join(why)}: \"{c.text}\"")
+    if out:
+        out.append("    The words are probably right and the TIMES are "
+                   "wrong. See the")
+        out.append("    fix-captions skill: place them on the speech "
+                   "measured in the audio.")
+        out.append("    A line the transcriber only half heard cannot get "
+                   "its highlight back;")
+        out.append("    that one is worth knowing about and not worth "
+                   "fixing by hand.")
+    return out

@@ -44,7 +44,8 @@ from . import history
 from . import scaffold
 from .checks import (bokeh_notes, film_shape, framing_notes, library_lines,
                      caption_share_line, music_notes, narration_notes,
-                     preflight_report, shot_lines, unused_media)
+                     preflight_report, shot_lines, unreadable_captions,
+                     unused_media)
 from .moves import choose_moves
 from .paths import toolkit_root
 from .render import QUALITIES, render
@@ -605,6 +606,14 @@ def cmd_check(args) -> None:
     print()
     for line in shot_lines(film):
         print(line)
+
+    # Printed right under the shot listing, because that listing says how
+    # many captions a shot has and these say which of them cannot be read.
+    bad = unreadable_captions(film)
+    if bad:
+        print()
+        for note in bad:
+            print(f"  {note}" if note.startswith("[") else note)
 
     missing = unused_media(project, film)
     if missing:
