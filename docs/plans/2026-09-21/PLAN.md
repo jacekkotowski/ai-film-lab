@@ -325,7 +325,7 @@ not be expected to close it.
 `fit-to-length` exists as a *skill* for cutting what is said twice. There
 is no *check*.
 
-## The one change worth proposing, not yet asked for
+## BUILT the same evening, after Jacek said "repair now"
 
 `film check` should refuse to stay silent about both:
 
@@ -335,9 +335,16 @@ is no *check*.
   bad caption on Bauhaus and on this film. It has simply never been code.
 - **the same caption text twice in one film**, naming both shots.
 
-Either one would have put today's two defects on screen before the
-render, not after the upload. Neither is a change to the sound chain.
-**Ask Jacek before building it** — `ffilm/` is not to be touched unasked.
+Both are built: `348940b` and `27945a7`, with `docs/decisions/0012`
+for the numbers. 813 tests green.
+
+**Both thresholds were wrong on the first guess** and were fixed by
+sweeping all 19 films in `projects/` — 0.30 s/word flagged 41 captions,
+most of them correct, because `stop_overlap` shortens captions on
+purpose and a short `dur` is usually right. At 0.15 s/word the sweep
+returns 12 real ones. Re-run the sweep before touching either constant.
+
+On the published film, `check` now names both of today's defects.
 
 ## Still open, untouched today
 
