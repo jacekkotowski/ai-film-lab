@@ -44,8 +44,8 @@ from . import history
 from . import scaffold
 from .checks import (bokeh_notes, film_shape, framing_notes, library_lines,
                      caption_share_line, music_notes, narration_notes,
-                     preflight_report, shot_lines, unreadable_captions,
-                     unused_media)
+                     preflight_report, repeated_captions, shot_lines,
+                     unreadable_captions, unused_media)
 from .moves import choose_moves
 from .paths import toolkit_root
 from .render import QUALITIES, render
@@ -614,6 +614,12 @@ def cmd_check(args) -> None:
         print()
         for note in bad:
             print(f"  {note}" if note.startswith("[") else note)
+
+    again = repeated_captions(film)
+    if again:
+        print()
+        for note in again:
+            print(note if note.startswith(" ") else f"  {note}")
 
     missing = unused_media(project, film)
     if missing:

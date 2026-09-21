@@ -9,6 +9,7 @@ how every one of them is tested.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from . import cover, kinds, library
@@ -445,4 +446,65 @@ def unreadable_captions(film) -> list[str]:
                    "its highlight back;")
         out.append("    that one is worth knowing about and not worth "
                    "fixing by hand.")
+    return out
+
+
+# A repeat is only worth saying when the line is long enough to be a real
+# one. Short lines recur on purpose -- a refrain, a title, a two-word
+# answer -- and flagging those would train you to ignore this.
+REPEAT_MIN_WORDS = 3
+
+
+def _said(text: str) -> str:
+    """The words of a caption, as words. Case, spacing, punctuation and
+    the arrows in a diagram line are not part of what was said."""
+    return " ".join(re.findall(r"\w+", text.casefold()))
+
+
+def repeated_captions(film) -> list[str]:
+    """Lines the film says more than once, and where. Pure.
+
+    Found 2026-09-21, twice in one film. `init` put one take in as the
+    intro and the WHOLE of a second take in as the closing, and the
+    second take re-read the intro -- so the film said those four
+    sentences at 0:02 and again at 2:20. That one was caught by reading
+    film.yaml. The other was not: a shot showed and SAID its line at 1:40
+    and again at 1:44, and the film was published that way.
+
+    `fit-to-length` exists as a skill for cutting what a film says twice.
+    Nothing ever looked. The captions are the film's own record of what
+    is said, so this is a dictionary.
+    """
+    where: dict[str, list[tuple[str, float, str]]] = {}
+    order: list[str] = []
+    t = 0.0
+    for s in film.shots:
+        for c in s.captions:
+            key = _said(c.text)
+            if len(key.split()) < REPEAT_MIN_WORDS:
+                continue
+            if key not in where:
+                where[key] = []
+                order.append(key)
+            where[key].append((s.id, t + c.at, c.text))
+        t += s.duration or 0.0
+    out = []
+    for key in order:
+        places = where[key]
+        if len(places) < 2:
+            continue
+        how = "twice" if len(places) == 2 else f"{len(places)} times"
+        spots = " and ".join(f"{sid} at {_clock(at)}" for sid, at, _ in places)
+        out.append(f'the same words said {how} -- {spots}: "{places[0][2]}"')
+    if out:
+        out.append("    You may have read a line again and kept both takes. "
+                   "The sound")
+        out.append("    repeats as well as the caption, and so does "
+                   "upload.txt. Cutting")
+        out.append("    one is the fit-to-length skill: drop the whole "
+                   "sentence, never split it.")
+        out.append("    A refrain you meant is not a fault. Nothing here "
+                   "can tell the two")
+        out.append("    apart, so this says where they are and decides "
+                   "nothing.")
     return out
