@@ -313,34 +313,34 @@ shots:
     fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
     in: "00:23.05"
     out: "00:36.95"
-    speed: 1.0              # 1.0 is the speed you actually spoke at
+    speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.383]
     note: "hard cut in from picture 8: s14 (austere, even cheap) was cut for the Short. part 2 of 5 -- one take with the long pauses cut out. Every word is kept"
     captions:
       - text: "We still need places and tools that bring people together"
-        at: 0.19
-        dur: 4.24
+        at: 0.16
+        dur: 3.53
         pos: lower_third
-        words: [0.00, 0.22, 0.54, 0.90, 1.46, 1.90, 2.42, 2.84, 3.14, 3.54]
+        words: [0.00, 0.18, 0.45, 0.75, 1.22, 1.58, 2.02, 2.37, 2.62, 2.95]
       - text: "instead of isolating us,"
-        at: 4.43
-        dur: 2.34
+        at: 3.69
+        dur: 1.95
         pos: lower_third
-        words: [0.00, 0.88, 1.30, 1.88]
+        words: [0.00, 0.73, 1.08, 1.57]
       - text: "and things made to last instead of disposable consumption."
-        at: 6.77
-        dur: 5.40
+        at: 5.64
+        dur: 4.50
         pos: lower_third
-        words: [0.00, 1.26, 2.06, 2.56, 2.84, 3.94, 4.48, 5.00]
+        words: [0.00, 1.05, 1.72, 2.13, 2.37, 3.28, 3.73, 4.17]
 
   - id: s16
     src: media/rec_20260919-151406.mp4
     fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
     in: "00:38.50"
     out: "00:41.80"
-    speed: 1.0              # 1.0 is the speed you actually spoke at
+    speed: 1.2              # 1.0 is the speed you actually spoke at
     move: drift_left
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.383]
@@ -348,17 +348,17 @@ shots:
     note: "part 3 of 5 -- one take with the long pauses cut out. Every word is kept"
     captions:
       - text: "That was the deeper alternative"
-        at: 0.22
-        dur: 2.47
+        at: 0.18
+        dur: 2.06
         pos: lower_third
-        words: [0.00, 0.28, 0.54, 1.18, 1.64]
+        words: [0.00, 0.23, 0.45, 0.98, 1.37]
 
   - id: s17
     src: media/rec_20260919-151406.mp4
     fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
     in: "00:42.80"
     out: "00:58.30"
-    speed: 1.0              # 1.0 is the speed you actually spoke at
+    speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.544, 0.383]
@@ -367,24 +367,24 @@ shots:
     captions:
       - text: "Bauhaus offered to the politics of despair:"
         at: 0.00
-        dur: 4.12
+        dur: 3.43
         pos: lower_third
-        words: [0.00, 1.08, 1.74, 2.46, 3.02, 3.44, 3.68]
+        words: [0.00, 0.90, 1.45, 2.05, 2.52, 2.87, 3.07]
       - text: "solve poverty rather than eliminate the poor."
-        at: 4.66
-        dur: 3.37
+        at: 3.88
+        dur: 2.81
         pos: lower_third
-        words: [0.00, 0.32, 0.96, 1.42, 1.96, 2.62, 2.98]
+        words: [0.00, 0.27, 0.80, 1.18, 1.63, 2.18, 2.48]
       - text: "Give people a home, dignity, usefulness,"
-        at: 8.87
-        dur: 3.36
+        at: 7.39
+        dur: 2.80
         pos: lower_third
-        words: [0.00, 0.34, 0.74, 1.00, 1.70, 2.72]
+        words: [0.00, 0.28, 0.62, 0.83, 1.42, 2.27]
       - text: "and a place in the community."
-        at: 12.23
-        dur: 2.71
+        at: 10.19
+        dur: 2.26
         pos: lower_third
-        words: [0.00, 0.84, 1.00, 1.38, 1.98, 2.16]
+        words: [0.00, 0.70, 0.83, 1.15, 1.65, 1.80]
 
 # Cut to a Short on 2026-09-19 (was 18 shots, 281.8 s): see git log.
 #

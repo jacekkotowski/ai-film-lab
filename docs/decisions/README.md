@@ -17,6 +17,8 @@ dead end, you need *new* measurements to reopen it, not a new argument.
 | 0007 | Why is every music track at -20 LUFS, and how does it repeat? | Measured once; trimmed 18 dB under its loudness; 5 s crossfade |
 | 0008 | Which speech denoiser, where, and how is it installed? | RNNoise sh after both gates (before speechnorm hangs); fetched and checked into models/ |
 | 0009 | How does a new skill get written?                     | After the job was done once for real; copy `fit-to-length`'s shape |
+| 0010 | Should narration read over photographs be sped up too? | Yes: one film, one voice, 1.2 on everything spoken. `speed:` on a slide had been a dead key |
+| 0011 | Were the lips out of sync in the Bauhaus closing?     | No. Picture and sound within 40 ms; the shot was at 1.0, not the 1.22 blamed |
 
 ## Writing a new one
 
