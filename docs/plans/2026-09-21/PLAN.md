@@ -249,3 +249,98 @@ Two things Claude left behind, neither breaking anything:
   multiplier. The remaining idea — even out the *pace* rather than the
   multiplier — is described under "The film" above and is P's call.
 - Ideas parked and never started: Hypothesis tests, CI.
+
+---
+
+# What actually happened on 2026-09-21
+
+Appended at the end of the day. Jacek produced **Why there are wars** and
+**published it**. Two items off the list, and one new fault found that is
+worth more than either.
+
+## Done
+
+| item | outcome |
+|---|---|
+| 7. lips out of sync | **Measured. There is no sync fault.** `docs/decisions/0011`, commit `a47eacc`. Carried twice for nothing |
+| — | Bauhaus closing `s15-s17` put to 1.2 at Jacek's instruction; 171.6 s → 166.2 s. `out/final.mp4` is **stale** |
+| 3. the write-to-fit rate | third data point: **1.66 words/s** (240 words, 144.8 s). Not 1.47, not 2.08 |
+| 5. the stray breath | gone again, as a side effect. Third film running |
+
+**The film:** vertical Short, 8 shots, **144.9 s**, −13.3 LUFS,
+rendered 13:04 in 473.6 s, `cover.jpg` and `upload.txt` written.
+Uploaded by Jacek the same afternoon.
+
+## The write-to-fit rate is not a constant, and now there are three
+
+| film | words | finished | words/s |
+|---|---:|---:|---:|
+| German Forgotten Bauhaus Hope | 414 | 281.8 s | 1.47 |
+| 1930s Austria Had Photoshop | 296 | 142.2 s | 2.08 |
+| **Why there are wars** | **240** | **144.8 s** | **1.66** |
+
+All three are at different picture-hold densities. Stop calling it a
+constant. Give the skill a range, or derive it from `REC_SPEED` and the
+silent hold time. Do not pick a fourth number.
+
+## NEW, and the reason today's film shipped with a defect
+
+**Two faults reached the published film. Neither was reported by
+anything.** Both are the same shape: *the machine produced something
+obviously impossible and said nothing.*
+
+### A. Captions placed on spans that cannot hold them
+
+Take 1's transcript came back with the right **words** and junk
+**times** — 0.26 s for a ten-word sentence:
+
+| line | span given | time to say it |
+|---|---:|---:|
+| "Coalition creates the capacity for violence." | 0.44 s | ~3.4 s |
+| "And identity and moral commitment can lead people to resist." | 0.26 s | ~5.7 s |
+
+`film caption` placed them anyway. Jacek watched a draft and reported
+"the intro has no captions". Fixed by moving the intro to the complete
+second take, whose spans agree with the audio to within 0.1–0.35 s.
+
+**This is not what item 2 of this plan predicts.** Hotwords fix
+mis-*heard* words. Here every word was heard correctly. Feeding the
+script to the transcriber would not have caught this, and item 2 should
+not be expected to close it.
+
+### B. The film said the same sentence twice, three times over
+
+1. `init` put take 1 as the intro **and the whole of take 2** as the
+   closing. Take 2 re-reads the four intro sentences, so the film said
+   them at 0:02 and again at 2:20. Caught before publishing; 165.4 s →
+   144.8 s.
+2. `s06` shows and **says** "Participation → changed attitudes and
+   behavior → escalation." twice, at 1:40 and 1:44. Measured in the
+   narration: two real speech blocks, 101.65–106.11 and 106.62–109.21,
+   both inside `s06` (101.65–109.40). Jacek re-read the line; nothing
+   noticed. **This is in the published film.**
+3. The same doubling was in `upload.txt`, so it is in the YouTube
+   chapters too.
+
+`fit-to-length` exists as a *skill* for cutting what is said twice. There
+is no *check*.
+
+## The one change worth proposing, not yet asked for
+
+`film check` should refuse to stay silent about both:
+
+- **a caption that cannot be read** — on screen under ~1.2 s, or with
+  fewer than half as many word times as it has words. The rule already
+  exists, written down in the `fix-captions` skill, and it caught every
+  bad caption on Bauhaus and on this film. It has simply never been code.
+- **the same caption text twice in one film**, naming both shots.
+
+Either one would have put today's two defects on screen before the
+render, not after the upload. Neither is a change to the sound chain.
+**Ask Jacek before building it** — `ffilm/` is not to be touched unasked.
+
+## Still open, untouched today
+
+Item 2 (hotwords), item 4 (`caption --apply` doubles), item 6 (the public
+repo and the personal `script.txt` files — still his decision alone),
+item 8 (comment density, the three whole-file-rewrite commits).
