@@ -94,9 +94,20 @@ def is_recording(stem: str) -> bool:
     one way of saying where it should play, and on 2026-09-20 doing it
     stopped the file being a take at all: the 1.2x speed, the sharpening
     and the bokeh are all switched on by this one answer, so an intro
-    dragged to the front of a film quietly lost all three.
+    dragged to the front of a film quietly lost all three. A close_ in
+    front (a recorded closing, see CLOSE_PREFIX) is stripped the same way.
     """
-    return NUM_PREFIX.sub("", stem.lower()).startswith(REC_PREFIX)
+    s = NUM_PREFIX.sub("", stem.lower())
+    if s.startswith(CLOSE_PREFIX):
+        s = s[len(CLOSE_PREFIX):]
+    return s.startswith(REC_PREFIX)
+
+
+# `film record --closing` names its take close_rec_...: scaffold._hint
+# reads close_ as "play last", so the closing stays last even when the
+# narration is retaken after it. Found 2026-09-23: placed by time alone,
+# a closing recorded before a narration retake became a second intro.
+CLOSE_PREFIX = "close_"
 
 
 # What a microphone-only take (`film record --voice`) is called. Its own

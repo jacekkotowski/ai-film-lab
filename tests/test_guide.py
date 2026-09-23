@@ -203,7 +203,7 @@ def test_record_stays_offered_after_pressing_enter_on_empty_media(
     guide.walk(tmp_path)
 
     out = capsys.readouterr().out
-    assert out.count("say it to the camera") == 2
+    assert out.lower().count("say it to the camera") == 2
 
 
 def test_a_full_shelf_says_there_is_nothing_to_do(tmp_path, shelf):

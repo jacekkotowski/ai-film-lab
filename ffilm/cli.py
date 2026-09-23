@@ -787,7 +787,9 @@ def _intro_and_closing(media: Path) -> tuple[list[Path], list[Path], bool]:
         if f.suffix.lower() not in kinds.VIDEO or not kinds.is_recording(f.stem):
             continue
         at = scaffold._taken_at(f.stem)
-        if kinds.NUM_PREFIX.match(f.stem):
+        if f.stem.lower().startswith(kinds.CLOSE_PREFIX):
+            closing.append(f)
+        elif kinds.NUM_PREFIX.match(f.stem):
             if f.stem.startswith("0"):
                 intro.append(f)
         elif not when or (at and at < when):
@@ -812,14 +814,17 @@ def _replace_takes(project: Path, which: str, old: list[Path],
             print(f"  the old {which} {f.name} -> {kinds.DISCARDED_DIRNAME}\\")
         except OSError as e:
             print(f"  could not put {f.name} aside: {e}")
-    if which != "intro" or not _intro_and_closing(media)[2]:
+    if which == "intro" and not _intro_and_closing(media)[2]:
         return new
+    # 0_ opens the film, close_ closes it -- whatever is recorded later.
+    prefix = "0_" if which == "intro" else kinds.CLOSE_PREFIX
     renamed = []
     for f in new:
-        if kinds.NUM_PREFIX.match(f.stem):
+        if (kinds.NUM_PREFIX.match(f.stem)
+                or f.stem.lower().startswith(kinds.CLOSE_PREFIX)):
             renamed.append(f)
             continue
-        g = f.with_name("0_" + f.name)
+        g = f.with_name(prefix + f.name)
         f.rename(g)
         renamed.append(g)
     return renamed

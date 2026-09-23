@@ -812,6 +812,53 @@ def _make_project() -> Path | None:
     return None
 
 
+def _plain(title: str) -> str:
+    """A menu line without its "...or ", capitalised."""
+    t = title[len("...or "):] if title.startswith("...or ") else title
+    return t[:1].upper() + t[1:]
+
+
+def _devices_line() -> str:
+    """Which microphone and camera recordings will use, from the saved
+    choice -- no device scan, so the menu stays instant."""
+    if sys.platform != "win32":
+        return ""
+    from . import record as rec
+    saved = rec.load_choice()
+    if not saved:
+        return ""
+    return (f"Mic: {saved.get('audio') or '-'}   "
+            f"Camera: {saved.get('video') or '-'}")
+
+
+def _pick_devices() -> None:
+    """[M] in the menu: choose the microphone and camera by number. Asked
+    for on 2026-09-23 after takes went to the laptop mic because the
+    Samson was plugged in after the choice was saved."""
+    from . import record as rec
+    print("\n  Looking for microphones and cameras...")
+    try:
+        devices = rec.list_devices()
+    except Exception as e:                      # ffmpeg missing, etc.
+        print(f"  Could not list them: {e}")
+        return
+    saved = rec.load_choice()
+    chosen = {}
+    for kind, label in (("audio", "Microphone"), ("video", "Camera")):
+        names = [d.name for d in devices if d.kind == kind]
+        current = saved.get(kind)
+        print(f"\n  {label}:")
+        for i, n in enumerate(names, 1):
+            mark = "   <- now" if n == current else ""
+            print(f"    {i}  {n}{mark}")
+        a = _ask("  Number, or ENTER to keep:  ")
+        chosen[kind] = (names[int(a) - 1]
+                        if a.isdigit() and 1 <= int(a) <= len(names)
+                        else current)
+    rec.save_choice(chosen["video"], chosen["audio"])
+    print(f"\n  Saved.  Mic: {chosen['audio']}   Camera: {chosen['video']}")
+
+
 def other_choices(n_steps: int) -> str:
     """How the alternatives are offered at the prompt. One alternative is
     "2", not "2-2"."""
@@ -863,7 +910,14 @@ def so_far(names: list[str]) -> str:
 
     dated: list[tuple[str, str]] = []
     for t in takes:
-        if narration is None:
+        # A take named close_ always closes, 0_ always opens (2026-09-23:
+        # a narration retaken after the closing turned it into an intro).
+        low = t.lower()
+        if low.startswith(kinds.CLOSE_PREFIX):
+            label = f"closing talk ({_clock(t)})"
+        elif kinds.NUM_PREFIX.match(t):
+            label = f"opening talk ({_clock(t)})"
+        elif narration is None:
             label = f"talk to the camera ({_clock(t)})"
         elif t < when(narration):
             label = f"opening talk ({_clock(t)})"
@@ -908,38 +962,32 @@ def walk(project: Path | None = None) -> None:
         repeat = s.title == last_title and bool(s.folders)
         last_title = s.title
 
+        # Decluttered 2026-09-23 at Jacek's request: no command lines under
+        # every choice, the "...or" prefixes gone, the standing keys on one
+        # line. Every choice is still there, under the same key.
         if repeat:
-            # Short, and no Explorer window on top of the one already
-            # open -- but the alternatives still have to be SEEN, not
-            # just still work if you happen to remember the number.
-            # This used to drop them, which made "say it to the camera"
-            # look like an option that had quietly gone away the moment
-            # you pressed ENTER a second time.
             print("\n  Still nothing in media\\. Drop the files in first.")
-            for i, alt in enumerate(steps[1:], 2):
-                print(f"\n  [{i}] {alt.title}")
-                if alt.args or alt.shell:
-                    print(f"      {alt.pretty}")
         else:
             print()
             print("=" * 62)
             print(f"  {project.name}")
-            print("=" * 62)
             media = project / "media"
             if media.is_dir():
                 print("  " + so_far([f.name for f in media.iterdir()
                                      if f.is_file()]))
-            print(f"\n  {s.title}")
+            gear = _devices_line()
+            if gear:
+                print("  " + gear)
+            print("=" * 62)
+            print(f"\n  ENTER  {_plain(s.title)}")
             for line in s.why.splitlines():
-                print(f"  {line}")
-            if s.args or s.shell:
-                print(f"\n      {s.pretty}")
-            for i, alt in enumerate(steps[1:], 2):
-                print(f"\n  [{i}] {alt.title}")
-                if alt.args or alt.shell:
-                    print(f"      {alt.pretty}")
+                print(f"         {line}")
             for f in s.folders:
                 open_folder(f)
+        if steps[1:]:
+            print()
+        for i, alt in enumerate(steps[1:], 2):
+            print(f"  {i:>5}  {_plain(alt.title)}")
 
         if not interactive:
             return
@@ -948,26 +996,20 @@ def walk(project: Path | None = None) -> None:
         # finished film -- which is the whole point: you are never stuck
         # inside one project.
         others = len(known_projects()) > 1
-        print("\n  [N] Start a NEW film")
-        if others:
-            print("  [F] Switch to another film you have already started")
         claude = _claude_ready()
-        if claude:
-            print("  [C] Something feels wrong and you would rather just say so")
-
-        if s.done:
-            first = "ENTER to stop"
-        elif s.folders:
-            first = "ENTER when the files are in"
-        else:
-            first = "ENTER to run it"
-        choices = first + other_choices(len(steps))
-        choices += ", N for a new film"
+        gear_ok = sys.platform == "win32"
+        keys = (["M microphone/camera"] if gear_ok else []) + ["N new film"]
         if others:
-            choices += ", F to switch"
+            keys.append("F other film")
         if claude:
-            choices += ", C for Claude"
-        answer = _ask(f"\n{choices}, or Q to stop:  ").lower()
+            keys.append("C tell Claude")
+        keys.append("Q quit")
+        print("\n  " + "   ".join(keys))
+        answer = _ask("\n  Your choice:  ").lower()
+        if answer == "m" and gear_ok:
+            _pick_devices()
+            last_title = None
+            continue
         if answer == "q" or (answer == "" and s.done):
             print("\nStopped. Nothing is lost -- run `uv run film` any time.")
             return

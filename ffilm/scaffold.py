@@ -1453,7 +1453,8 @@ def place_takes(ordered: list[dict], narration: str | None) -> list[dict]:
     def stem(t):
         return Path(t["entry"]["path"]).stem
 
-    takes = [t for t in ordered if t["num"] is None
+    # A take named open_/close_ is already placed by its name.
+    takes = [t for t in ordered if t["num"] is None and not t.get("role")
              and kinds.is_recording(stem(t)) and _taken_at(stem(t))]
     if not takes:
         return ordered

@@ -72,6 +72,16 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "WebFetch|WebSearch|mcp__.*firecrawl.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"You just read documentation from the web. Before finishing this task, save what this project needs from it (the call, the version, the trap) to docs/tech/<library>.md and list it in docs/tech/README.md, so no later session fetches it again.\"}}'",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "Edit|Write",
         "hooks": [
           {
