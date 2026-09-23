@@ -1,6 +1,6 @@
 ---
 name: write-to-fit
-description: Before recording, turn the producer's notes and photos into three ready-to-paste texts — the intro for the camera, one narration paragraph per picture, the closing — inside a word budget for the target length (a Short: about 265 words). Checks each paragraph against its photo. Use when the user says "write the script", "help me with the text", "I have photos and notes", or starts a film with a length in mind.
+description: Before recording, turn the producer's notes and photos into three texts written straight into the files the recording windows open (script_intro.txt, narration.txt, script_outro.txt) — the intro for the camera, one narration paragraph per picture, the closing — inside a word budget for the target length (a Short: about 265 words). Checks each paragraph against its photo. Use when the user says "write the script", "help me with the text", "I have photos and notes", or starts a film with a length in mind.
 ---
 
 # Write to fit: the length is decided before the microphone is on
@@ -59,8 +59,8 @@ Re-measure on every new film and add a row.
    - Name any pictures that show the same thing. Their texts must not
      repeat.
 
-2. **Read what the user gave**: notes, an old `script.txt` or
-   `narration.txt`, a transcript. Their words and their argument come
+2. **Read what the user gave**: notes, an old `script_intro.txt`,
+   `script_outro.txt`, `script.txt` or `narration.txt`, a transcript. Their words and their argument come
    first. Tighten; don't replace.
 
 3. **Split the budget.** Bauhaus came out as intro 37, pictures 116,
@@ -82,10 +82,20 @@ Re-measure on every new film and add a row.
      didn't give. Say what you couldn't confirm from the image (on
      Bauhaus: whether picture 6 is really "Haus Anton").
 
-6. **Write it to `projects/NAME/write-to-fit_DATE.txt`**, with a word
-   count per block. Never overwrite `script.txt` or `narration.txt`:
-   the recording windows own those, and they fill in when the user
-   pastes.
+6. **Write each block where its recording window opens it**, so nothing
+   has to be pasted (Jacek's request, 2026-09-23):
+   - Intro → `projects/NAME/script_intro.txt`
+   - Narration → `projects/NAME/narration.txt`
+   - Closing → `projects/NAME/script_outro.txt`
+
+   Plain text only: no headings and no word counts inside these files,
+   because the window shows every character on the prompter.
+   **If one of these files already exists and is not empty, don't
+   overwrite it.** It holds words the user typed or already recorded.
+   Put that block in `write-to-fit_DATE.txt` instead, and say so.
+   Always also write `projects/NAME/write-to-fit_DATE.txt`: all three
+   blocks with a word count per block, as the record of what was
+   planned.
 
 7. **Show the table** (block, words, seconds) and the file path. After
    the user records, measure the real length and update the rate above.
