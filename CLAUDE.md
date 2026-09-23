@@ -74,6 +74,12 @@ Hooks in `.claude/settings.json` run whether or not you remember them:
   `film check` on it and shows you the result. If it fails, fix the file
   before doing anything else.
 
+## Proof, always
+
+No "fixed" or "works" without the number from HIS file or render in the
+same message. Unchecked parts go in the FIRST line, not the last. If he
+writes "proof?", show the measurement or say it was not measured.
+
 ## Never
 
 - Add a dependency. The film needs four packages, and that is the point.

@@ -380,6 +380,16 @@ def cmd_caption(args) -> None:
             part=None if narrated else part)
         lines = voice.transcribe(src.audio_path, model_size=args.model,
                                  language=args.lang, script=script)
+        # A camera take's sound starts late against its picture (see
+        # audio.sound_lag); the soundtrack is moved by that much, so the
+        # captions timed off the sound move with it.
+        if not narrated and src.shot_srcs:
+            from .audio import sound_lag
+            lag = sound_lag(project / src.shot_srcs[0])
+            for ln in lines:
+                ln.start += lag
+                ln.end += lag
+                ln.words = [w + lag for w in ln.words]
         all_lines_for_transcript.append((src.label, lines))
 
         if args.transcript_only:

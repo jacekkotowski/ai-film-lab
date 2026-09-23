@@ -14,10 +14,16 @@ move it to the bottom section with the commit id — do not delete it.
 - **Inferred, not measured:** the gap grows through the take — in sync at
   the start, sound up to ~0.5 s ahead of the lips at the end.
 - **Not the cause:** the 1.2 speed (it is applied to picture and sound alike).
-- **Fix proposed, waiting for Jacek's yes** (touches `audio.py`, which he
-  asked to be left alone): stretch each camera take's sound to its picture
-  length at build time; and keep them in step while recording
-  (`record.py`). The slides narration is a separate file — not touched.
+- **Measured cause (a test take with the real clock kept):** the microphone
+  starts 0.849 s after the camera; the file stamps both from 0, so the
+  voice plays that much before the lips. A constant shift, not a drift.
+- **FIXED in code 2026-09-23, waiting for Jacek to see it:**
+  `audio.sound_lag` reads each camera take's sound `picture − sound`
+  seconds later, every project, every render; captions move with it.
+  Slides narration untouched (test). Measured on the new Turn Heat draft:
+  intro voice vs. lips +40 ms (r 0.97), closing −80 ms (r 0.78); before
+  the fix they were −483 ms and −314 ms. **Not measured:** that picture
+  and sound stop together (the shift assumes it).
 
 ## 2. A very tall photo is cut in a vertical film
 - **Found:** 2026-09-23, `4_evaporograph.jfif` (361×811, width/height 0.45)

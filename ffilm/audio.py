@@ -30,6 +30,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from . import kinds
 from . import models
 from .spec import Film, Shot
 
@@ -1183,7 +1184,42 @@ def measure_music(path: Path, cache_dir: Path | None = None) -> MusicMeasure:
     return m
 
 
-def speech_specs(film: Film, fps: int, audio_for) -> list[tuple]:
+_LAG_CACHE: dict[str, float] = {}
+
+
+def sound_lag(src: Path) -> float:
+    """Seconds the sound of one of YOUR camera takes started after its
+    picture. 0 for anything else.
+
+    Measured 2026-09-23 (docs/OPEN.md #1): `film record` opens camera
+    and microphone as two inputs, each stamped from its own first packet,
+    so both start at 0 in the file -- but the microphone really starts
+    0.4-0.9 s after the camera (0.849 s on a test with the real clock
+    kept). Both stop together, on `q`, so the sound's shortfall against
+    the picture IS that late start. Heard uncorrected: the voice runs
+    ahead of the lips by that much, through the whole take."""
+    if not kinds.is_recording(Path(src).stem):
+        return 0.0
+    key = str(src)
+    if key not in _LAG_CACHE:
+        from .ffmpeg import ffprobe_bin
+        lens = {}
+        for s in ("v", "a"):
+            r = subprocess.run(
+                [ffprobe_bin(), "-v", "error", "-select_streams", f"{s}:0",
+                 "-show_entries", "stream=duration", "-of", "csv=p=0",
+                 str(src)], capture_output=True, text=True)
+            try:
+                lens[s] = float(r.stdout.strip().split(",")[0])
+            except ValueError:
+                lens[s] = 0.0
+        lag = lens["v"] - lens["a"]
+        _LAG_CACHE[key] = lag if 0.02 < lag < 3.0 and lens["a"] else 0.0
+    return _LAG_CACHE[key]
+
+
+def speech_specs(film: Film, fps: int, audio_for,
+                 late_for=None) -> list[tuple]:
     """Every piece of recorded speech in this film, and where it goes.
 
     One entry per piece: (file, start, end or None for "to the end of
@@ -1227,6 +1263,18 @@ def speech_specs(film: Film, fps: int, audio_for) -> list[tuple]:
             # screen, times speed, is how much of the take was shown.
             start, end, speed = shot.tin, shot.tin + (n / fps) * shot.speed, \
                 shot.speed
+            # The sound's own clock runs `lag` behind the picture's (see
+            # sound_lag): what is heard at picture time t is sound at
+            # t - lag. Before its first sample there is silence.
+            lag = late_for(src) if late_for else 0.0
+            if lag:
+                start, end = start - lag, end - lag
+                if start < 0:
+                    wait = int(round(-start / speed * 1000))
+                    specs.append((src, 0.0, end, int(round(at / fps * 1000))
+                                  + wait, speed))
+                    at += n
+                    continue
         else:
             # A slide's words are where they were said, whatever the
             # picture does. Holding the photograph longer does not
@@ -1328,7 +1376,7 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
         return src
 
     specs: list[tuple[Path, float, float | None, int, float]] = \
-        speech_specs(film, fps, audio_for)
+        speech_specs(film, fps, audio_for, late_for=sound_lag)
 
     # Voice each distinct (take, speed) ONCE, and cut the pieces out of
     # the result. The recording is continuous; only the picture was cut.
