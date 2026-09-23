@@ -1,0 +1,462 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# Each picture carries its own piece of
+# media/voiceover_20260923-112752.wav -- see `voice:` below.
+# The newest of 4 recordings in media/. The older one(s) are not used;
+# move them to media/_discarded/ to tidy up.
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 2.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20260923-105256.mp4
+    in: "00:00.95"
+    out: "00:13.30"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.542, 0.361]
+    note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Just radiation, evaporation, condensation, surface tension,"
+        at: 8.56
+        dur: 0.64
+        pos: lower_third
+        words: [0.00]
+      - text: "Invisible heat had become visible."
+        at: 9.21
+        dur: 0.63
+        pos: lower_third
+        words: [0.00]
+
+  - id: s02
+    src: media/rec_20260923-105256.mp4
+    in: "00:14.20"
+    out: "00:15.47"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.542, 0.361]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 2 of 2 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s03
+    src: media/1_oil_on_water.jpg
+    voice: media/voiceover_20260923-112752.wav
+    in: "00:00.85"
+    out: "00:20.60"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.266, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.734, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.423, 0.462]
+    note: "picture 1 of 6 -- holds while these words are said. This picture is 1024x895; the frame shows about 0.53 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "A thin film of oil floating on water"
+        at: 0.00
+        dur: 2.58
+        pos: lower_third
+        words: [0.00, 0.42, 0.72, 1.07, 1.30, 1.65, 2.10, 2.35]
+      - text: "can produce vivid colours."
+        at: 2.58
+        dur: 1.01
+        pos: lower_third
+        words: [0.00, 0.40, 0.77]
+      - text: "The colours change with its thickness,"
+        at: 4.61
+        dur: 2.06
+        pos: lower_third
+        words: [0.00, 0.07, 0.40, 0.85, 1.42, 1.63]
+      - text: "because light reflected from its two surfaces interferes."
+        at: 6.67
+        dur: 3.93
+        pos: lower_third
+        words: [0.00, 0.62, 0.92, 1.38, 1.68, 1.88, 2.18, 2.72]
+      - text: "This simple optical effect would become a remarkable"
+        at: 11.82
+        dur: 2.63
+        pos: lower_third
+        words: [0.00, 0.33, 0.67, 1.17, 1.53, 1.87, 2.22]
+      - text: "way to visualize heat."
+        at: 14.46
+        dur: 1.58
+        pos: lower_third
+        words: [0.00, 0.42, 0.62, 1.05]
+
+  - id: s04
+    src: media/2_infrared_thermometers.jfif
+    voice: media/voiceover_20260923-112752.wav
+    in: "00:21.35"
+    out: "00:43.25"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_right
+    from: {cx: 0.292, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.708, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.509, 0.652]
+    note: "picture 2 of 6 -- holds while these words are said. This picture is 550x532; the frame shows about 0.58 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "In 1800,"
+        at: 0.00
+        dur: 1.76
+        pos: lower_third
+        words: [0.00, 1.77]
+      - text: "William Herschel used thermometers to measure sunlight"
+        at: 1.76
+        dur: 3.76
+        pos: lower_third
+        words: [0.00, 0.67, 1.27, 2.07, 2.70, 3.00, 3.27]
+      - text: "beyond the visible spectrum."
+        at: 5.52
+        dur: 1.50
+        pos: lower_third
+        words: [0.00, 0.47, 0.67, 0.95]
+      - text: "The temperature rose toward the red end—and"
+        at: 7.77
+        dur: 3.23
+        pos: lower_third
+        words: [0.00, 0.22, 0.55, 1.03, 1.62, 2.22, 2.42, 2.77]
+      - text: "even higher beyond it,"
+        at: 11.01
+        dur: 1.49
+        pos: lower_third
+        words: [0.00, 0.25, 0.58, 1.08]
+      - text: "where there was no visible light."
+        at: 12.68
+        dur: 1.99
+        pos: lower_third
+        words: [0.00, 0.70, 0.95, 1.13, 1.32, 1.55]
+      - text: "He had detected infrared radiation."
+        at: 15.27
+        dur: 2.48
+        pos: lower_third
+        words: [0.00, 0.35, 0.68, 1.18, 1.72]
+
+  - id: s05
+    src: media/3_infographics_oil.png
+    voice: media/voiceover_20260923-112752.wav
+    in: "00:45.25"
+    out: "01:18.80"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.438, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.562, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.534, 0.514]
+    note: "picture 3 of 6 -- holds while these words are said. This picture is 1024x1536; the frame shows about 0.88 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "The key was evaporation."
+        at: 0.18
+        dur: 1.68
+        pos: lower_third
+        words: [0.00, 0.22, 0.53, 0.87]
+      - text: "If infrared heated an oil film unevenly,"
+        at: 1.86
+        dur: 3.56
+        pos: lower_third
+        words: [0.00, 0.68, 1.27, 1.72, 1.92, 2.18, 2.58]
+      - text: "different areas evaporated at different rates."
+        at: 5.86
+        dur: 2.53
+        pos: lower_third
+        words: [0.00, 0.30, 0.77, 1.60, 1.85, 2.07]
+      - text: "Its thickness changed, producing a pattern of colours."
+        at: 9.17
+        dur: 2.70
+        pos: lower_third
+        words: [0.00, 0.25, 0.67, 1.58, 2.00, 2.27, 2.53]
+      - text: "In 1929,"
+        at: 12.88
+        dur: 1.38
+        pos: lower_third
+        words: [0.00, 0.30]
+      - text: "Marianus Czerny developed this"
+        at: 14.26
+        dur: 2.18
+        pos: lower_third
+        words: [0.00, 0.83, 1.33, 1.88]
+      - text: "principle into the evaporograph,"
+        at: 16.44
+        dur: 2.78
+        pos: lower_third
+        words: [0.00, 0.52, 1.38, 1.90]
+      - text: "using a thin film to record variations in infrared radiation."
+        at: 19.56
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.48, 0.92, 1.08, 1.53, 1.98, 2.42, 2.95, 3.33, 3.88]
+      - text: "Heat could now produce an image."
+        at: 24.09
+        dur: 3.41
+        pos: lower_third
+        words: [0.00, 1.42, 1.88, 2.22, 2.60, 3.07]
+
+  - id: s06
+    src: media/4_evaporograph.jfif
+    voice: media/voiceover_20260923-112752.wav
+    in: "01:19.80"
+    out: "01:49.25"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: pull_out
+    focus: [0.475, 0.847]
+    note: "picture 4 of 6 -- holds while these words are said"
+    captions:
+      - text: "In the same year,"
+        at: 1.21
+        dur: 0.86
+        pos: lower_third
+        words: [0.00, 0.23, 0.35, 0.55]
+      - text: "Kálmán Tihanyi was developing something radically different:"
+        at: 3.21
+        dur: 2.31
+        pos: lower_third
+        words: [0.00, 0.57, 1.12, 1.40, 1.90]
+      - text: "an infrared-sensitive electronic camera"
+        at: 6.09
+        dur: 2.56
+        pos: lower_third
+        words: [0.00, 0.37, 0.93, 1.52, 2.12]
+      - text: "for British anti-aircraft defence."
+        at: 8.66
+        dur: 2.05
+        pos: lower_third
+        words: [0.00, 0.55, 1.03, 1.55]
+      - text: "Two approaches to the same problem appeared in 1929."
+        at: 11.91
+        dur: 4.14
+        pos: lower_third
+        words: [0.00, 0.70, 1.18, 1.37, 1.48, 1.67, 2.02, 2.42, 2.90]
+      - text: "One used electronics and image sensors."
+        at: 16.52
+        dur: 2.76
+        pos: lower_third
+        words: [0.00, 0.35, 0.82, 1.52, 2.03, 2.37]
+      - text: "The other used evaporation,"
+        at: 19.88
+        dur: 1.95
+        pos: lower_third
+        words: [0.00, 0.46, 0.64, 1.08]
+      - text: "thin films and optics."
+        at: 22.33
+        dur: 1.73
+        pos: lower_third
+        words: [0.00, 0.13, 0.58, 1.22]
+
+  - id: s07
+    src: media/5.jpg
+    voice: media/voiceover_20260923-112752.wav
+    in: "01:51.50"
+    out: "02:13.65"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_right
+    from: {cx: 0.395, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.605, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.548, 0.390]
+    note: "picture 5 of 6 -- holds while these words are said. This picture is 450x600; the frame shows about 0.79 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "A simple experiment is described at"
+        at: 0.17
+        dur: 2.23
+        pos: lower_third
+        words: [0.00, 0.23, 0.47, 0.97, 1.35, 1.77]
+      - text: "www.sparkbangbuzz.com/evaporograph and you can do it yourself."
+        at: 2.41
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.60, 2.52, 3.37, 4.45]
+      - text: "Both warm and cold objects can cause"
+        at: 10.68
+        dur: 2.51
+        pos: lower_third
+        words: [0.00, 0.35, 0.83, 1.03, 1.28, 1.77, 2.18]
+      - text: "local evaporation or condensation,"
+        at: 13.19
+        dur: 2.13
+        pos: lower_third
+        words: [0.00, 0.33, 1.10, 1.48]
+      - text: "and you can see a thermal image of the object."
+        at: 15.32
+        dur: 2.81
+        pos: lower_third
+        words: [0.00, 0.50, 0.68, 0.83, 1.10, 1.28, 1.52, 2.00, 2.33, 2.47]
+
+  - id: s08
+    src: media/6.jpg
+    voice: media/voiceover_20260923-112752.wav
+    in: "02:15.10"
+    out: "02:58.10"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.231, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.769, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.490, 0.672]
+    note: "picture 6 of 6 -- holds while these words are said. This picture is 600x450; the frame shows about 0.46 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Think about how far this could be taken."
+        at: 0.07
+        dur: 1.95
+        pos: lower_third
+        words: [0.00, 0.35, 0.67, 0.95, 1.18, 1.33, 1.50, 1.63]
+      - text: "Better photographic lenses."
+        at: 2.85
+        dur: 1.16
+        pos: lower_third
+        words: [0.00, 0.25, 0.87]
+      - text: "Purified kitchen salt cristals polished to form a lens works"
+        at: 4.52
+        dur: 2.99
+        pos: lower_third
+        words: [0.00, 0.38, 0.70, 1.08, 1.47, 2.08, 2.37, 2.57, 2.72]
+      - text: "better for infrared wavelengths."
+        at: 8.33
+        dur: 1.84
+        pos: lower_third
+        words: [0.00, 0.37, 0.70, 1.20]
+      - text: "Different oils that respond more strongly to temperature."
+        at: 11.22
+        dur: 2.83
+        pos: lower_third
+        words: [0.00, 0.28, 0.70, 1.13, 1.50, 1.72, 2.15, 2.37]
+      - text: "Studying not only evaporation,"
+        at: 14.88
+        dur: 1.81
+        pos: lower_third
+        words: [0.00, 0.52, 0.87, 1.10]
+      - text: "but local circulation within the liquid."
+        at: 17.07
+        dur: 2.18
+        pos: lower_third
+        words: [0.00, 0.15, 0.48, 1.20, 1.62, 1.83]
+      - text: "Different substrates—perhaps reflective ones."
+        at: 20.05
+        dur: 3.16
+        pos: lower_third
+        words: [0.00, 0.65, 2.00, 2.23, 2.80]
+      - text: "Liquid crystals, electricity, polarization."
+        at: 23.73
+        dur: 2.50
+        pos: lower_third
+        words: [0.00, 0.28, 1.07, 2.03]
+      - text: "I am not a scientist,"
+        at: 27.48
+        dur: 1.16
+        pos: lower_third
+        words: [0.00, 0.53, 0.68, 0.83]
+      - text: "but how many simple physical effects were explored deeply"
+        at: 28.92
+        dur: 3.09
+        pos: lower_third
+        words: [0.00, 0.12, 0.32, 0.60, 1.12, 1.40, 1.97, 2.28, 2.75]
+      - text: "enough before electronics became the obvious solution?"
+        at: 32.02
+        dur: 3.29
+        pos: lower_third
+        words: [0.00, 0.47, 1.25, 1.95, 2.28, 2.58, 2.82]
+
+  - id: s09
+    src: media/rec_20260923-113208.mp4
+    in: "00:00.00"
+    out: "00:21.75"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.493, 0.368]
+    note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "There were no electronic sensors or digital displays."
+        at: 0.95
+        dur: 3.40
+        pos: lower_third
+        words: [0.00, 0.42, 0.57, 0.82, 1.40, 1.85, 2.42, 2.92]
+      - text: "Just radiation, evaporation, condensation,"
+        at: 4.85
+        dur: 3.06
+        pos: lower_third
+        words: [0.00, 0.28, 1.50, 2.58]
+      - text: "surface tension,"
+        at: 8.53
+        dur: 0.83
+        pos: lower_third
+        words: [0.00, 0.37]
+      - text: "optics—and an incredibly thin layer of oil."
+        at: 9.87
+        dur: 4.00
+        pos: lower_third
+        words: [0.00, 1.27, 1.67, 2.17, 2.62, 3.07, 3.42, 3.68]
+      - text: "Invisible heat had become visible."
+        at: 14.75
+        dur: 2.83
+        pos: lower_third
+        words: [0.00, 0.52, 0.93, 1.78, 2.28]
+
+  - id: s10
+    src: media/rec_20260923-113208.mp4
+    in: "00:22.70"
+    out: "00:23.73"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.493, 0.368]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 2 of 2 -- one take with the long pauses cut out. Every word is kept"
+
+# 10 shots, about 203 seconds.
+#
+# 6 slide(s), one per picture, each holding its own piece of
+# the 178s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
