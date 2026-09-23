@@ -360,20 +360,19 @@ def recording_doors(names: list[str], already: list[list[str]],
 
     doors: list[Step] = []
     if names:
-        # Where a take lands is decided by the time in its name against
-        # the narration's -- scaffold.place_takes. Say which one this
-        # will be, rather than leaving it to be found in the render.
+        # A retake REPLACES (2026-09-23): the old take goes to
+        # media/_discarded/, so an intro said twice no longer plays twice,
+        # and one said again after the narration still opens the film.
+        doors.append(Step("...or record the intro again (replaces it)",
+                          ["record", "--intro"],
+                          why="Opens the film. The old intro is moved to "
+                              "media\\_discarded\\, not deleted, and only "
+                              "once the new one is saved."))
         if narration:
-            why = ("It plays after the pictures and closes the film: that is "
-                   "what\nthe later time in its name means. To open the film "
-                   "with it\ninstead, put 0_ in front of the filename "
-                   "afterwards -- it keeps\nits speed and its look.")
-        else:
-            why = ("Takes you record before the narration open the film; "
-                   "takes\nrecorded after it close it. Nothing you have "
-                   "already recorded\nis touched.")
-        doors.append(Step("...or talk to the camera again", ["record"],
-                          why=why))
+            doors.append(Step("...or record the closing words again "
+                              "(replaces them)", ["record", "--closing"],
+                              why="Ends the film. The old closing is moved to "
+                                  "media\\_discarded\\, not deleted."))
     if stills:
         doors.append(Step(
             "...or say the words over these pictures again",
@@ -447,13 +446,27 @@ def _best_steps(project: Path) -> list[Step]:
                 else:
                     steps[0].title = "...or build the whole film in one go"
                     steps.insert(0, narrate)
+                    # Photos in, nothing said to the camera yet: the intro
+                    # comes first, because a take recorded AFTER the
+                    # narration closes the film instead. Found 2026-09-23:
+                    # ENTER went straight to the pictures and the intro was
+                    # a door at the bottom titled "again".
+                    if not _newest(media, kinds.VIDEO):
+                        narrate.title = ("...or skip the intro and say the "
+                                         "words over these pictures")
+                        steps.insert(0, Step(
+                            "Record your intro to the camera",
+                            ["record", "--intro"] + p,
+                            why="SPACE ends the take. After it, this offers "
+                                "the narration over your pictures, one at a "
+                                "time."))
             elif narration and _newest(media, kinds.VIDEO) < narration:
                 # Intro, pictures, and now the last word. A take recorded
                 # after the narration plays after the pictures (see
                 # scaffold.place_takes), so this is all it takes.
                 steps.append(Step(
                     "...or say a few closing words to the camera",
-                    ["record"] + p,
+                    ["record", "--closing"] + p,
                     why="Recorded after your narration, so it plays after "
                         "the pictures and ends the film."))
         return steps
@@ -995,10 +1008,12 @@ def walk(project: Path | None = None) -> None:
             # camera, you closed the window. Ending the whole walk-through
             # at "press any key" means going back to the start for what is
             # nearly always just: go again.
-            print("\nThat stopped early -- the reason is above.")
+            # Back to the full menu, not a yes/no retry: a stopped take is
+            # often a sign to do something ELSE first (found 2026-09-23,
+            # narration stopped midway, no way to the intro).
+            print("\nThat stopped early -- the reason is above. "
+                  "Nothing half-done is used.")
             if not interactive:
-                return
-            if _ask("\n  ENTER to try that again, or Q to stop:  ").startswith("q"):
                 return
             last_title = None
             continue

@@ -62,7 +62,7 @@ def test_neither_door_is_offered_where_there_is_no_camera():
 
 def test_the_camera_is_offered_to_anything_that_has_material():
     doors = shapes(recording_doors(["a.jpg"], [], windows=True))
-    assert ["record"] in doors
+    assert ["record", "--intro"] in doors
 
 
 def test_the_narration_is_offered_wherever_there_are_pictures():
@@ -74,14 +74,14 @@ def test_a_film_with_no_pictures_is_not_offered_a_narration():
     doors = shapes(recording_doors(["rec_20260920-1400.mp4"], [],
                                    windows=True))
     assert ["record", "--voice"] not in doors
-    assert ["record"] in doors
+    assert ["record", "--intro"] in doors
 
 
 def test_a_door_already_on_the_menu_is_not_offered_twice():
     doors = shapes(recording_doors(["a.jpg"], [["record", "--voice"]],
                                    windows=True))
     assert ["record", "--voice"] not in doors
-    assert ["record"] in doors
+    assert ["record", "--intro"] in doors
 
 
 def test_the_narration_door_says_the_newest_one_wins():
@@ -97,8 +97,10 @@ def test_photos_with_no_narration_can_still_reach_the_camera(tmp_path):
     on any screen afterwards would record an intro."""
     at(tmp_path, "media/1_xray.jpg", 100)
     steps = next_steps(tmp_path)
-    assert shapes(steps)[0] == ["record", "--voice"]     # still the best
-    assert ["record"] in shapes(steps)                   # and now reachable
+    # 2026-09-23: reachable was not enough -- the intro is now the best
+    # step, since a take recorded after the narration closes the film.
+    assert shapes(steps)[0] == ["record", "--intro"]
+    assert shapes(steps)[1] == ["record", "--voice"]
 
 
 def test_a_narration_you_are_not_happy_with_can_be_said_again(tmp_path):
@@ -112,7 +114,7 @@ def test_a_finished_film_can_still_go_back_to_the_camera(tmp_path):
     at(tmp_path, "media/voiceover_20260920-142000.wav", 200)
     at(tmp_path, "media/rec_20260920-1430.mp4", 300)
     shp = shapes(next_steps(tmp_path))
-    assert ["record"] in shp
+    assert ["record", "--intro"] in shp
     assert ["record", "--voice"] in shp
 
 

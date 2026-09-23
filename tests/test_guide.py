@@ -475,7 +475,7 @@ def test_after_the_narration_a_closing_word_to_the_camera_is_offered(
     _take(root, "voiceover_20260919-130000.wav", 300)
     steps = next_steps(root)
     assert steps[0].args[0] == "go"
-    assert any(s.args == ["record", "-p", root.name] for s in steps)
+    assert any(s.args == ["record", "--closing", "-p", root.name] for s in steps)
 
 
 def test_a_closing_word_already_said_is_no_longer_the_next_step(tmp_path):
@@ -487,7 +487,50 @@ def test_a_closing_word_already_said_is_no_longer_the_next_step(tmp_path):
     _take(root, "voiceover_20260919-130000.wav", 200)
     _take(root, "rec_20260919-131000.mp4", 300)
     steps = next_steps(root)
-    camera = [s for s in steps if s.args == ["record", "-p", root.name]]
+    camera = [s for s in steps
+              if s.args == ["record", "--closing", "-p", root.name]]
     assert len(camera) == 1                  # offered once, not twice
-    assert camera[0].title.endswith("again")   # and as the door, not the step
+    assert "again" in camera[0].title     # and as the door, not the step
     assert camera[0] is not steps[0]
+
+
+# --------------------------------------------------------------------------
+# Photos first, intro not yet said (found 2026-09-23): ENTER went straight
+# to the narration, and stopping a take left only "try again" or quit.
+# --------------------------------------------------------------------------
+
+def test_photos_with_no_intro_offer_the_intro_first(tmp_path, monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    root = project(tmp_path)
+    _take(root, "1_.jpg", 100)
+    steps = next_steps(root)
+    assert steps[0].args == ["record", "--intro", "-p", root.name]
+    assert steps[1].args[:2] == ["record", "--voice"]
+    assert not any(s.title.endswith("again") and s.args[:1] == ["record"]
+                   and "--voice" not in s.args for s in steps)
+
+
+def test_after_the_intro_the_narration_is_next(tmp_path, monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    root = project(tmp_path)
+    _take(root, "1_.jpg", 100)
+    _take(root, "rec_20260923-100000.mp4", 200)
+    assert next_steps(root)[0].args[:2] == ["record", "--voice"]
+
+
+def test_a_stopped_take_goes_back_to_the_whole_menu(
+        tmp_path, shelf, monkeypatch, capsys):
+    monkeypatch.setattr(sys, "platform", "win32")
+    root = project(tmp_path)
+    _take(root, "1_.jpg", 100)
+    answers = iter(["2", "q"])          # narration, stopped midway; then quit
+    monkeypatch.setattr(guide, "_ask", lambda prompt: next(answers))
+    monkeypatch.setattr(guide, "open_folder", lambda folder: None)
+    monkeypatch.setattr(guide, "_run", lambda args: 1)
+    fake_stdin = type("FakeStdin", (), {"isatty": lambda self: True})()
+    monkeypatch.setattr(sys, "stdin", fake_stdin)
+
+    guide.walk(root)
+
+    out = capsys.readouterr().out
+    assert out.count("Record your intro to the camera") == 2
