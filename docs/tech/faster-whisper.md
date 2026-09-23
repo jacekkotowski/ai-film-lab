@@ -8,5 +8,5 @@
   the `fix-captions` skill places those from the measured speech and keeps
   the script's spelling.
 - Captions take their spelling from the text you pasted when recording:
-  `narration.txt` (pictures), `intro.txt` / `closing.txt` (camera, since
-  2026-09-23), `script.txt` (older projects).
+  `narration.txt` (pictures), `script_intro.txt` / `script_outro.txt`
+  (camera), `intro.txt` / `closing.txt` / `script.txt` (older projects).

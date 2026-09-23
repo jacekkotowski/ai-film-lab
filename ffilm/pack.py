@@ -54,7 +54,8 @@ TOOLKIT = [
 
 # Of a project, the parts that cannot be made again.
 PROJECT_KEEP = ["media", "music", "cover", "film.yaml", "script.txt",
-                "narration.txt",
+                "narration.txt", "script_intro.txt", "script_outro.txt",
+                "intro.txt", "closing.txt",
                 ".vertical"]
 
 SKIP_DIRS = {".venv", ".git", "__pycache__", ".pytest_cache", ".Rproj.user",

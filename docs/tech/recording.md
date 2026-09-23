@@ -20,8 +20,10 @@
   `go --rewrite` (old edit kept as film.yaml.bak).
 
 ## Texts shown while recording
-`intro.txt`, `narration.txt` (blank line = next picture), `closing.txt`;
-`script.txt` for older projects. `booth.script_path` decides.
+`script_intro.txt`, `narration.txt` (blank line = next picture),
+`script_outro.txt`. Older names (`intro.txt`, `closing.txt`, `script.txt`)
+are still read. The outro never opens on the intro's words.
+`booth.script_path` / `booth.PART_FILES` decide.
 
 ## Where in the code
 See [[code-map]].

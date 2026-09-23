@@ -207,20 +207,24 @@ def reflow(text: str) -> str:
 # paragraph over the photographs.
 NARRATION_FILE = "narration.txt"
 
+# The intro and the closing shared script.txt until 2026-09-23, so the
+# closing's words overwrote the intro's and a retaken intro opened on the
+# wrong text. They were split into intro.txt / closing.txt that morning,
+# and renamed the same afternoon to the names Jacek asked for. The older
+# names are still read, newest first, so no project loses its words.
+PART_FILES = {"intro": ["script_intro.txt", "intro.txt", "script.txt"],
+              "closing": ["script_outro.txt", "closing.txt"]}
+
 
 def script_path(project: Path, voice: bool = False,
                 part: str | None = None) -> Path:
     """Where a window keeps its words: narration.txt for the words over
-    the pictures, intro.txt / closing.txt for a retaken intro or closing,
-    script.txt for any other words said to the camera.
-
-    The intro and the closing shared script.txt until 2026-09-23, so the
-    closing's words overwrote the intro's and a retaken intro opened on
-    the wrong text."""
+    the pictures, script_intro.txt / script_outro.txt for the intro and
+    the closing, script.txt for any other words said to the camera."""
     if voice:
         return project / NARRATION_FILE
-    if part in ("intro", "closing"):
-        return project / f"{part}.txt"
+    if part in PART_FILES:
+        return project / PART_FILES[part][0]
     return project / "script.txt"
 
 
@@ -236,11 +240,13 @@ def read_script(project: Path, given: str | None, voice: bool = False,
         if not p.exists():
             raise SystemExit(f"No script file at {p}")
         return reflow(p.read_text(encoding="utf-8"))
-    default = script_path(project, voice, part)
-    if not default.exists() and part:
-        default = script_path(project)      # before intro.txt existed
-    if default.exists():
-        return reflow(default.read_text(encoding="utf-8"))
+    names = ([script_path(project, voice).name] if voice or part not in
+             PART_FILES else PART_FILES[part])
+    # Never the intro's words for the closing: with no closing written
+    # yet, the closing window opened on script.txt, which is the intro.
+    for name in names:
+        if (project / name).exists():
+            return reflow((project / name).read_text(encoding="utf-8"))
     return ""
 
 

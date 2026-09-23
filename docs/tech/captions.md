@@ -2,8 +2,8 @@
 
 - Transcribed on this machine by [[faster-whisper]] (optional `voice`
   extra). Spelling and line breaks come from the text pasted when
-  recording: `narration.txt`, `intro.txt`, `closing.txt` (`script.txt`
-  for older projects).
+  recording: `narration.txt`, `script_intro.txt`, `script_outro.txt`
+  (`intro.txt`, `closing.txt`, `script.txt` in older projects).
 - The English model misses German/Polish words, names, numbers → skill
   `fix-captions`; it keeps the script's spelling, never invents timings.
 - Camera-take captions move with the sound-lag fix — see [[sync]].

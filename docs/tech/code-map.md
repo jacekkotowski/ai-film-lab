@@ -13,7 +13,8 @@ Pointers, not copies. File, function, what it decides.
 - `ffilm/scaffold.py` `place_takes` — takes before the narration open the
   film, after it close it; named `0_`/`close_` ones stay put.
 - `ffilm/booth.py` `script_path` — which text the window opens with:
-  `narration.txt`, `intro.txt`, `closing.txt`, `script.txt`.
+  `narration.txt`, `script_intro.txt`, `script_outro.txt`; older names
+  in `PART_FILES`.
 - `ffilm/kinds.py` — `STILL` (picture types), `is_recording`,
   `CLOSE_PREFIX`, `NUM_PREFIX`.
 
