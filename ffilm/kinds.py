@@ -144,6 +144,23 @@ def pick_narration(paths, when=None) -> Path | None:
     return max(pool, key=lambda p: (when(p), p.name))
 
 
+def older_narrations(paths, keep: Path) -> list[Path]:
+    """The narration takes a new one replaces, with their cues beside
+    them. Only files named voiceover_ -- never music, which is audio too.
+
+    The film already used only the newest; the rest stayed in media/,
+    six of them in Turn Heat Into Images on 2026-09-23, alike by name
+    and 139 MB between them."""
+    paths = [Path(p) for p in paths]
+    old = [p for p in paths if p.suffix.lower() in AUDIO
+           and p.name.lower().startswith(VOICEOVER_PREFIX)
+           and p.name != Path(keep).name]
+    stems = {p.stem + "." for p in old}
+    cues = [p for p in paths if p.suffix.lower() not in AUDIO
+            and any(p.name.startswith(s) for s in stems)]
+    return old + cues
+
+
 def is_video(path: str | Path) -> bool:
     return Path(path).suffix.lower() in VIDEO
 

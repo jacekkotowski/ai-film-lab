@@ -1058,6 +1058,17 @@ def cmd_record(args) -> None:
         raise SystemExit("\nNothing was recorded. Nothing has changed.")
     if replacing:
         takes[:] = _replace_takes(project, replacing, old_takes, takes)
+    if args.voice:
+        # The newest narration is the film's; the older ones only looked
+        # like it. Only once the new one is saved, as for a retaken intro.
+        media = project / "media"
+        for f in kinds.older_narrations(media.iterdir(), takes[-1]):
+            try:
+                ingest_mod.quarantine(f, media, where=kinds.DISCARDED_DIRNAME)
+                print(f"  the old narration {f.name} -> "
+                      f"{kinds.DISCARDED_DIRNAME}\\")
+            except OSError as e:
+                print(f"  could not put {f.name} aside: {e}")
 
     total = sum(rec.verify_take(t, None, False)[0] for t in takes)
     print(f"\n  {len(takes)} take{'s' if len(takes) > 1 else ''}, "

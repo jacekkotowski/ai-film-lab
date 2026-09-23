@@ -378,8 +378,9 @@ def recording_doors(names: list[str], already: list[list[str]],
             "...or say the words over these pictures again",
             ["record", "--voice"],
             why="The newest narration is the one the film uses, so this "
-                "replaces\nwhat you said before. Nothing is deleted -- the "
-                "old take stays\nin media."))
+                "replaces\nwhat you said before. The old take is moved to "
+                "media\\_discarded\\,\nnot deleted, and only once the new "
+                "one is saved."))
     return [d for d in doors if _shape(d.args) not in already]
 
 
