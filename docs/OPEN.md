@@ -4,43 +4,21 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
-## 1. Lips drift from the sound in camera takes (intro, closing)
-- **Found:** 2026-09-23, "Turn Heat Into Images" (published). Also the
-  Bauhaus closing on 2026-09-21 — decision 0011 measured the wrong thing.
-- **Measured:** in every `rec_` take the sound is shorter than the picture:
-  intro 12:30 14.10 s picture / 13.52 s sound (−4.1 %), closing 12:42
-  21.88 / 21.51 (−1.7 %), an older take 15.47 / 14.51 (−6.2 %). Both start
-  at 0. The camera says 60 fps, delivers ~43, unevenly.
-- **Inferred, not measured:** the gap grows through the take — in sync at
-  the start, sound up to ~0.5 s ahead of the lips at the end.
-- **Not the cause:** the 1.2 speed (it is applied to picture and sound alike).
-- **Measured cause (a test take with the real clock kept):** the microphone
-  starts 0.849 s after the camera; the file stamps both from 0, so the
-  voice plays that much before the lips. A constant shift, not a drift.
-- **FIXED in code 2026-09-23, waiting for Jacek to see it:**
-  `audio.sound_lag` reads each camera take's sound `picture − sound`
-  seconds later, every project, every render; captions move with it.
-  Slides narration untouched (test). Measured on the new Turn Heat draft:
-  intro voice vs. lips +40 ms (r 0.97), closing −80 ms (r 0.78); before
-  the fix they were −483 ms and −314 ms. **Not measured:** that picture
-  and sound stop together (the shift assumes it).
-
-## 2. A very tall photo is cut in a vertical film
-- **Found:** 2026-09-23, `4_evaporograph.jfif` (361×811, width/height 0.45)
-  in a 1080×1920 film (0.56): cropped top and bottom, more by the
-  `drift_right` zoom — the equipment is never seen whole.
-- **Cause:** `fill: crop` fills the width. `fill: blur` exists per shot,
-  but its sharp part has the film's `fill_aspect` (1.0, square), which
-  would cut a tall picture even more. There is no per-shot aspect.
-- **FIXED in code 2026-09-23, waiting for Jacek to see it** (his idea):
-  a photo narrower than the frame by >10% gets move `rise` at render —
-  bottom edge to top edge, no zoom — every project. Proof: first frame of
-  the Turn Heat draft shows the caption text at the bottom, last frame the
-  camera head at the top. Opt out per shot: `move: static`, or from/to.
+(nothing open)
 
 ---
 
 ## Fixed (with the commit, once Jacek has seen it work)
+- 2026-09-23 lips drift from the sound in camera takes — c802fcd.
+  Cause measured: the microphone starts 0.849 s after the camera; fixed by
+  `audio.sound_lag` (intro +40 ms, closing −80 ms, were −483 / −314 ms).
+  Jacek watched the Turn Heat draft: "good enough", accepted provisionally
+  — reopen if it shows again. **Still not measured:** that picture and
+  sound stop together at the end of a take.
+- 2026-09-23 a very tall photo is cut in a vertical film — 78801ad.
+  Move `rise` (bottom to top, no zoom) for photos >10% narrower than the
+  frame. Jacek watched `4_evaporograph.jfif`: it stays longer at the
+  bottom, then travels to the top; "looks good", accepted provisionally.
 - 2026-09-23 `.jfif` pictures missing from the narration window — 74461ac
 - 2026-09-23 retaken intro/closing played twice / at the wrong end;
   intro and closing shared one text — 576fdaf, 4a2b029
