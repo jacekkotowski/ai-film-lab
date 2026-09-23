@@ -211,6 +211,36 @@ def write_cues(take: Path, cues: list[float], pictures: list[str]) -> Path:
     return out
 
 
+RETAKE_SUFFIX = ".picture.json"
+
+
+def write_retake(take: Path, picture: str, tin: float, tout: float,
+                 words: str = "") -> Path:
+    """Beside a picture retake: which picture it is the words for, where
+    in it they are, and the words that were on screen -- the captions'
+    spelling. The N in picture4_ is only where that picture was in the
+    film the day it was recorded; this is what a rewritten edit finds it
+    by (scaffold.keep_retakes)."""
+    out = take.with_name(take.stem + RETAKE_SUFFIX)
+    out.write_text(json.dumps({"picture": picture, "in": round(tin, 2),
+                               "out": round(tout, 2), "words": words},
+                              indent=2, ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+    return out
+
+
+def read_retake(take: Path) -> dict | None:
+    """What write_retake wrote, or None -- as read_cues, a broken file
+    costs the retake, not the film."""
+    try:
+        d = json.loads(Path(take).with_name(Path(take).stem + RETAKE_SUFFIX)
+                       .read_text(encoding="utf-8"))
+        return {"picture": str(d["picture"]), "in": float(d["in"]),
+                "out": float(d["out"]), "words": str(d.get("words") or "")}
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        return None
+
+
 def read_cues(take: Path) -> dict | None:
     """What `write_cues` wrote, or None -- for no file, and equally for
     a file that is not what it should be. A cues file somebody opened

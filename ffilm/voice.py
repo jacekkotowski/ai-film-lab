@@ -169,6 +169,12 @@ def voice_sources(project: Path, film=None) -> list[VoiceSource]:
     if pick is not None and pick.name.lower().startswith("voiceover"):
         quoted = slides_using(film, pick)
         narration = [VoiceSource(pick, pick.name, quoted)]
+        # A picture said again (`record --voice --picture N`) is its own
+        # file under its own shot; listened to only if a shot uses it.
+        for p in here:
+            if kinds.is_picture_retake(p) and slides_using(film, p):
+                narration.append(VoiceSource(p, p.name,
+                                             slides_using(film, p)))
         if not quoted:
             return narration
         # The narration is cut across the pictures, and every clip keeps

@@ -381,6 +381,13 @@ def recording_doors(names: list[str], already: list[list[str]],
                 "replaces\nwhat you said before. The old take is moved to "
                 "media\\_discarded\\,\nnot deleted, and only once the new "
                 "one is saved."))
+        if narration:
+            doors.append(Step(
+                "...or say the words over ONE picture again",
+                ["record", "--voice", "--picture"],
+                why="You pick the picture from a list. Only its shot "
+                    "changes: its sound\nand its captions. The rest of the "
+                    "narration stays as it is."))
     return [d for d in doors if _shape(d.args) not in already]
 
 

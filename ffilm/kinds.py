@@ -117,6 +117,18 @@ CLOSE_PREFIX = "close_"
 # on this as a PREFIX, so a dated file still counts.
 VOICEOVER_PREFIX = "voiceover_"
 
+# `film record --voice --picture 4`: the words over one picture, said
+# again. Not voiceover_, so it is never taken for the whole narration --
+# see pick_narration -- and the shot it belongs to is written beside it
+# (record.write_retake), because the number is only the picture's place
+# in the film on the day it was recorded.
+PICTURE_RETAKE = re.compile(r"^picture\d+_", re.IGNORECASE)
+
+
+def is_picture_retake(path) -> bool:
+    return (Path(path).suffix.lower() in AUDIO
+            and bool(PICTURE_RETAKE.match(Path(path).name)))
+
 
 def pick_narration(paths, when=None) -> Path | None:
     """Which of these files is the film's narration. Pure, given `when`.
@@ -150,10 +162,12 @@ def older_narrations(paths, keep: Path) -> list[Path]:
 
     The film already used only the newest; the rest stayed in media/,
     six of them in Turn Heat Into Images on 2026-09-23, alike by name
-    and 139 MB between them."""
+    and 139 MB between them. Retakes of single pictures go too: after a
+    whole new reading they would put an old one back."""
     paths = [Path(p) for p in paths]
     old = [p for p in paths if p.suffix.lower() in AUDIO
-           and p.name.lower().startswith(VOICEOVER_PREFIX)
+           and (p.name.lower().startswith(VOICEOVER_PREFIX)
+                or is_picture_retake(p))
            and p.name != Path(keep).name]
     stems = {p.stem + "." for p in old}
     cues = [p for p in paths if p.suffix.lower() not in AUDIO

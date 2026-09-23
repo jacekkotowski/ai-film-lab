@@ -14,8 +14,20 @@
 | intro (menu, `record --intro`) | `rec_…`, or `0_rec_…` if a narration exists | first |
 | narration (`record --voice`) | `voiceover_….wav` + `.cues.json` | over the pictures; newest wins |
 | closing (`record --closing`) | `close_rec_…` | last, always |
+| one picture again (`record --voice --picture [N]`) | `pictureN_….wav` + `.picture.json` | over that picture only |
 - A retake moves the old take to `media/_discarded/` only after the new
   one saved. A stopped narration is discarded; the menu comes back.
+- A new whole narration also moves the older narrations and every
+  picture retake aside (3855bb7).
+- Picture retake: only that shot's `voice/in/out/note` and captions
+  change; in/out = first word − 0.3 s to last word + 0.3 s. The
+  `.picture.json` names the picture (the N is only its place that day),
+  so `go --rewrite` / `init --force` keep it if it is newer than the
+  narration (`scaffold.keep_retakes`). The text in the window is saved to
+  `analysis/pictureN.txt`, never over `narration.txt`. Trial on a copy of
+  Turn Heat, 2026-09-23: 17.7 s from take to captions; only s05 changed.
+  **Not measured yet:** the level step between a retake and the
+  narration around it (a real retake is a new sitting).
 - A recording newer than film.yaml → menu's first step is
   `go --rewrite` (old edit kept as film.yaml.bak).
 

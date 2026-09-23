@@ -1,6 +1,11 @@
 # Re-record one picture's words, not the whole narration
 
-**Status: plan only. Nothing built. Waiting for Jacek.**
+**Status: BUILT 2026-09-23.** Tried on a copy of Turn Heat with
+picture 4's own words cut out of the narration (not a real microphone
+take): only s05 changed, 8 captions with the same text, the draft
+rendered (173.9 s), `init --force` kept it. **Still needs Jacek:** one
+real retake through the window, and the level step measured on it.
+Music risk checked: music comes only from `music/` or the library.
 
 ## Why
 

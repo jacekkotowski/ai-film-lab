@@ -378,6 +378,13 @@ def cmd_caption(args) -> None:
             project, None,
             voice=narrated and booth.script_path(project, True).exists(),
             part=None if narrated else part)
+        # One picture said again: spelled from the words that were on
+        # screen for it, not the whole narration.
+        retake = kinds.is_picture_retake(src.audio_path)
+        if retake:
+            from .record import read_retake
+            script = (read_retake(src.audio_path) or {}).get(
+                "words", "")
         lines = voice.transcribe(src.audio_path, model_size=args.model,
                                  language=args.lang, script=script)
         # A camera take's sound starts late against its picture (see
@@ -406,7 +413,7 @@ def cmd_caption(args) -> None:
         # somebody's decision, and the captions are simply placed on them.
         # And only for the narration -- in a film that also has talking
         # clips, a clip's own words are not paragraphs of the script.
-        if (paragraphs and any(s.voice for s in film.shots)
+        if (paragraphs and not retake and any(s.voice for s in film.shots)
                 and any(s.voice in src.shot_srcs for s in film.shots)
                 and not scaffold.cut_by_hand(film)):
             windows = voice.paragraph_windows(
@@ -809,6 +816,29 @@ def _intro_and_closing(media: Path) -> tuple[list[Path], list[Path], bool]:
     return intro, closing, bool(when)
 
 
+def _which_picture(project: Path, n: int) -> int:
+    """`--picture N`, checked; `--picture` alone asks, from a list."""
+    yml = project / "film.yaml"
+    if not yml.exists():
+        raise SystemExit("There is no edit yet. Record the whole narration "
+                         "first; then one picture can be said again.")
+    menu = scaffold.picture_menu(Film.load(yml))
+    if not menu:
+        raise SystemExit("No picture in this film has words over it yet. "
+                         "Record the narration first: film record --voice")
+    if 1 <= n <= len(menu):
+        return n
+    print("\nWhich picture do you want to say again?\n")
+    for line in menu:
+        print(line)
+    while True:
+        a = input(f"\n  1-{len(menu)}, or ENTER to stop:  ").strip()
+        if not a:
+            raise SystemExit("Nothing recorded. Nothing has changed.")
+        if a.isdigit() and 1 <= int(a) <= len(menu):
+            return int(a)
+
+
 def _replace_takes(project: Path, which: str, old: list[Path],
                    new: list[Path]) -> list[Path]:
     """`record --intro` / `--closing`: a retake REPLACES. Found 2026-09-23:
@@ -848,6 +878,12 @@ def cmd_record(args) -> None:
     rec.require_windows()
 
     project = _record_project(args.project)
+    # --picture: the words over one picture, said again. Asked before the
+    # devices are opened, so a wrong number costs nothing.
+    picking = getattr(args, "picture", None)
+    if picking is not None:
+        args.voice = True
+        picking = _which_picture(project, picking)
     replacing = ("intro" if getattr(args, "intro", False) else
                  "closing" if getattr(args, "closing", False) else None)
     old_takes = []
@@ -890,7 +926,32 @@ def cmd_record(args) -> None:
     shown: list[str] = []
     steps: list = []
     pair = None
-    if args.voice:
+    words_path = None
+    if picking:
+        # One picture, one step, its own words. Never saved over
+        # narration.txt: the window writes back what it shows, and this
+        # is one paragraph of it.
+        film_now = Film.load(project / "film.yaml")
+        picture = scaffold.picture_shots(film_now)[picking - 1].src
+        script = scaffold.words_for_picture(project, film_now, picking,
+                                            script)
+        words_path = project / "analysis" / f"picture{picking}.txt"
+        words_path.parent.mkdir(parents=True, exist_ok=True)
+        booth.save_script(words_path, script)
+
+        def pair(words: str) -> list:
+            shown[:] = [picture]
+            return [(project / picture, words)]
+
+        steps = pair(script)
+
+        def as_picture(out: Path) -> Path:
+            """Renamed the moment it is saved: a voiceover_ file left in
+            media/ would be taken for the whole narration."""
+            return out.rename(out.with_name(
+                f"picture{picking}_"
+                + out.name[len(kinds.VOICEOVER_PREFIX):]))
+    elif args.voice:
         from . import voice as voice_mod
         pictures = scaffold.pictures_in_order(project)
 
@@ -964,12 +1025,14 @@ def cmd_record(args) -> None:
                     "A narration counts only when it reaches the last "
                     "picture, so this one was put aside, not used.",
                     f"{len(takes)} finished so far."]
+        if picking:
+            out = as_picture(out)
         takes.append(out)
         print(f"  Take {len(takes)}: {_secs(length)}")
         # Where Next was pressed, beside the take. Not written when it
         # never was: then `init` guesses from the pauses, which beats
         # putting the whole narration under the first picture.
-        if shown and take.presses:
+        if shown and take.presses and not picking:
             cues, pictures = rec.settle_cues(
                 rec.press_times(take.presses, take.stopped_wall, length),
                 length, shown)
@@ -1016,8 +1079,8 @@ def cmd_record(args) -> None:
     if windowed:
         print("\nThe window is open. Everything happens in it.")
         booth.session(script=script,
-                      script_path=booth.script_path(project, args.voice,
-                                                    replacing),
+                      script_path=words_path or booth.script_path(
+                          project, args.voice, replacing),
                       wpm=args.wpm, title=project.name,
                       start=new_take, finish=took, seconds=args.seconds,
                       discard=drop_last, voice_only=args.voice,
@@ -1047,7 +1110,7 @@ def cmd_record(args) -> None:
                       "else is lost.")
             else:
                 length, warnings = rec.verify_take(out, mode, bool(audio))
-                takes.append(out)
+                takes.append(as_picture(out) if picking else out)
                 print(f"\n  Got it -- {_secs(length)}.")
                 for w in warnings:
                     print(f"  Careful: {w}")
@@ -1058,6 +1121,22 @@ def cmd_record(args) -> None:
         raise SystemExit("\nNothing was recorded. Nothing has changed.")
     if replacing:
         takes[:] = _replace_takes(project, replacing, old_takes, takes)
+    if picking:
+        # The last take is the one; any before it in this sitting were
+        # tries at the same words.
+        for f in takes[:-1]:
+            ingest_mod.quarantine(f, project / "media",
+                                  where=kinds.DISCARDED_DIRNAME)
+        words = words_path.read_text(encoding="utf-8") \
+            if words_path.exists() else script
+        print()
+        for line in scaffold.retake_picture(project, picking, takes[-1],
+                                            words):
+            print(f"  {line}")
+        print("\n  Watch it: uv run film draft -p "
+              f'"{project.name}"')
+        guide.print_next(project)
+        return
     if args.voice:
         # The newest narration is the film's; the older ones only looked
         # like it. Only once the new one is saved, as for a retaken intro.
@@ -1542,6 +1621,10 @@ def main() -> None:
     p.add_argument("--closing", action="store_true",
                    help="the take closes the film and replaces the old "
                         "closing (moved to media/_discarded)")
+    p.add_argument("--picture", type=int, nargs="?", const=0, default=None,
+                   help="with --voice: say the words over ONE picture again "
+                        "(its number; left out, you are asked). Only that "
+                        "picture's shot changes")
     p.add_argument("--script", default=None,
                    help="text file to scroll while you talk "
                         "(default: script.txt in the project)")
