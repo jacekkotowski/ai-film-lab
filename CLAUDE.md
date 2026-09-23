@@ -100,6 +100,6 @@ writes "proof?", show the measurement or say it was not measured.
 | how the code is laid out, how to change it | `ffilm/CLAUDE.md`                 |
 | **what is broken and not yet fixed**     | **`docs/OPEN.md` — read it at the start of every session** |
 | why things are the way they are          | `docs/decisions/` — read before re-proposing anything |
-| what we know about a library or tool     | `docs/tech/` — read the note before fetching docs; add to it after |
+| what we know, by area (sync, audio, video, recording, captions) and by tool | `docs/tech/` — read the area's file before working in it; add to it after |
 | how this whole Claude setup works        | `docs/HOW_CLAUDE_IS_SET_UP.md`      |
 | how a human uses the program             | `HOW_TO_USE.md`                     |

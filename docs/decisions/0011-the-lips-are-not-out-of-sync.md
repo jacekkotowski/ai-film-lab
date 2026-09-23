@@ -1,7 +1,12 @@
 # 0011 — Were the lips out of sync in the closing? No. Measured.
 
 **Date:** 2026-09-21
-**Status:** settled — the render puts picture and sound together within
+**SUPERSEDED 2026-09-23 — this conclusion was WRONG.** It compared the
+film's sound with the take's sound; both carried the same fault. Inside
+every camera take the microphone starts 0.4–0.9 s after the picture.
+Measured and fixed in c802fcd — see `docs/tech/sync.md`.
+
+**Status (as written then):** settled — the render puts picture and sound together within
 about 40 ms. Carried as "FIRST" in the 2026-09-20 plan and again in the
 2026-09-21 plan; do not carry it a third time without new evidence.
 
