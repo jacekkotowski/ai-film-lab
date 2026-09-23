@@ -119,8 +119,12 @@ VIDEO_BASE = 1.0
 MOVES = [
     "push_in", "pull_out", "pan_left", "pan_right",
     "tilt_up", "tilt_down", "drift_left", "drift_right",
-    "punch_in", "reveal", "static",
+    "punch_in", "reveal", "static", "rise",
 ]
+
+# A picture narrower than the frame by more than this cannot be shown
+# whole by any crop; `rise` travels up its full height instead.
+TALL_BY = 0.9
 
 # Moves that read as "similar" -- we avoid using two from the same family
 # back to back, which is what kills the mechanical feeling.
@@ -129,7 +133,7 @@ FAMILY = {
     "pull_out": "out", "reveal": "out",
     "pan_left": "lateral", "pan_right": "lateral",
     "drift_left": "lateral", "drift_right": "lateral",
-    "tilt_up": "vertical", "tilt_down": "vertical",
+    "tilt_up": "vertical", "tilt_down": "vertical", "rise": "vertical",
     "static": "static",
 }
 
@@ -201,6 +205,15 @@ def windows_for(shot: Shot, seed: int = 0) -> tuple[Window, Window]:
         s = base + 0.03 * a
         f = Window(mid_x - d * DRIFT * a, mid_y, s, 0.0)
         t = Window(mid_x + d * DRIFT * a, mid_y, s + 0.012 * a, ROLL * 0.3 * a * d)
+    elif m == "rise":
+        # Bottom to top over the WHOLE picture, widest window, no zoom.
+        # render.warp keeps the window inside the image, so aiming past
+        # both edges lands exactly on them; the end is set so the move
+        # reaches the top at SETTLE. Found 2026-09-23: a 361x811 photo in
+        # a vertical film showed at most 79% of its height, and the
+        # equipment in it was never seen whole.
+        f = Window(0.5, 1.0, 1.0, 0.0)
+        t = Window(0.5, 1.0 - 1.0 / SETTLE, 1.0, 0.0)
     elif m == "static":
         f = Window(mid_x, mid_y, base, 0.0)
         t = Window(mid_x, mid_y, base, 0.0)

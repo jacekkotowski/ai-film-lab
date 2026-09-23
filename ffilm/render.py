@@ -87,6 +87,24 @@ QUALITIES = {"peek": PEEK, "draft": DRAFT, "final": FINAL}
 # --------------------------------------------------------------------------
 
 
+def is_too_tall(film, shot: Shot, frame_aspect: float) -> bool:
+    """A photograph narrower than the frame (width/height) by more than
+    moves.TALL_BY: no crop shows it whole, so it gets `rise` -- bottom to
+    top over its full height. Hand-set `from`/`to` and `fill: blur` are
+    left alone; `move: static` too, if somebody wants it held."""
+    from .moves import TALL_BY
+    if (shot.kind != "still" or shot.frm is not None or shot.to is not None
+            or shot.move == "static" or (shot.fill or film.fill) == "blur"):
+        return False
+    try:
+        from PIL import Image
+        with Image.open(film.resolve(shot.src)) as im:
+            w, h = im.size
+    except Exception:
+        return False
+    return h > 0 and (w / h) < frame_aspect * TALL_BY
+
+
 def warp(src: np.ndarray, win: Window, ow: int, oh: int, interp: int) -> np.ndarray:
     """Sample the source image through `win` into an ow x oh frame.
 
@@ -873,6 +891,8 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
             if stopped_early:
                 break
             n = frames_for(shot.duration, fps)
+            if is_too_tall(film, shot, ow / oh):
+                shot.move = "rise"
             max_scale = max(window_at(shot, 0, seed).scale,
                             window_at(shot, 1, seed).scale) * 1.05
             src = open_source(film, shot, rw, rh, max_scale)

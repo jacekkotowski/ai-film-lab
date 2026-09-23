@@ -32,8 +32,11 @@ move it to the bottom section with the commit id — do not delete it.
 - **Cause:** `fill: crop` fills the width. `fill: blur` exists per shot,
   but its sharp part has the film's `fill_aspect` (1.0, square), which
   would cut a tall picture even more. There is no per-shot aspect.
-- **Fix to decide:** a picture narrower than the frame shows whole, with
-  a blurred copy at the sides, automatically. Waiting for Jacek.
+- **FIXED in code 2026-09-23, waiting for Jacek to see it** (his idea):
+  a photo narrower than the frame by >10% gets move `rise` at render —
+  bottom edge to top edge, no zoom — every project. Proof: first frame of
+  the Turn Heat draft shows the caption text at the bottom, last frame the
+  camera head at the top. Opt out per shot: `move: static`, or from/to.
 
 ---
 
