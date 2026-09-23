@@ -411,6 +411,19 @@ def _best_steps(project: Path) -> list[Step]:
                  ["ingest"] + p,
                  why="Finds the faces and the interesting part of each picture."),
         ]
+        # A take recorded after the edit was written: the edit points at
+        # takes a retake has moved to media/_discarded/, and plain `go`
+        # KEEPS that edit -- so it stopped on "file not found". Found
+        # 2026-09-23 after retaking intro, narration and closing.
+        yml = project / "film.yaml"
+        if yml.exists() and _newest(media, kinds.VIDEO | AUDIO_EXT) > _mtime(yml):
+            steps[0] = Step(
+                "Build the film from your new recordings",
+                ["go", "--rewrite"] + p,
+                why="Writes the edit again from what is in media\\ now, "
+                    "adds captions, renders a draft. The old edit is kept "
+                    "as film.yaml.bak.",
+                ask_length=True)
         # Straight out of the booth there is one camera take and nothing
         # else, and "build the whole film" read as the only way on. Whoever
         # meant to talk over some photos too was never told that the photos

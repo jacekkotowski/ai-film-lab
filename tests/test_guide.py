@@ -534,3 +534,18 @@ def test_a_stopped_take_goes_back_to_the_whole_menu(
 
     out = capsys.readouterr().out
     assert out.count("Record your intro to the camera") == 2
+
+
+def test_a_retake_after_the_edit_rebuilds_the_edit(tmp_path):
+    """Found 2026-09-23: intro, narration and closing retaken, and the
+    menu offered plain `go`, which kept the old film.yaml pointing at the
+    takes the retakes had moved aside -- "file not found"."""
+    root = project(tmp_path, manifest=100, yml=150)
+    _take(root, "1_.jpg", 50)
+    _take(root, "0_rec_20260923-123013.mp4", 200)
+    assert next_steps(root)[0].args[:2] == ["go", "--rewrite"]
+
+
+def test_photos_added_to_an_edit_do_not_throw_the_edit_away(tmp_path):
+    root = project(tmp_path, manifest=100, yml=150, media=200)
+    assert next_steps(root)[0].args[:2] != ["go", "--rewrite"]
