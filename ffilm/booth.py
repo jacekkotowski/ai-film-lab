@@ -208,13 +208,24 @@ def reflow(text: str) -> str:
 NARRATION_FILE = "narration.txt"
 
 
-def script_path(project: Path, voice: bool = False) -> Path:
+def script_path(project: Path, voice: bool = False,
+                part: str | None = None) -> Path:
     """Where a window keeps its words: narration.txt for the words over
-    the pictures, script.txt for the words said to the camera."""
-    return project / (NARRATION_FILE if voice else "script.txt")
+    the pictures, intro.txt / closing.txt for a retaken intro or closing,
+    script.txt for any other words said to the camera.
+
+    The intro and the closing shared script.txt until 2026-09-23, so the
+    closing's words overwrote the intro's and a retaken intro opened on
+    the wrong text."""
+    if voice:
+        return project / NARRATION_FILE
+    if part in ("intro", "closing"):
+        return project / f"{part}.txt"
+    return project / "script.txt"
 
 
-def read_script(project: Path, given: str | None, voice: bool = False) -> str:
+def read_script(project: Path, given: str | None, voice: bool = False,
+                part: str | None = None) -> str:
     """Whatever was left here last time, ready to be changed. An explicit
     --script wins; otherwise the project's own file -- see script_path --
     which is where the window saves what you paste."""
@@ -225,7 +236,9 @@ def read_script(project: Path, given: str | None, voice: bool = False) -> str:
         if not p.exists():
             raise SystemExit(f"No script file at {p}")
         return reflow(p.read_text(encoding="utf-8"))
-    default = script_path(project, voice)
+    default = script_path(project, voice, part)
+    if not default.exists() and part:
+        default = script_path(project)      # before intro.txt existed
     if default.exists():
         return reflow(default.read_text(encoding="utf-8"))
     return ""

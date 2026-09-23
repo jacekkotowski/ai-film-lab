@@ -370,9 +370,14 @@ def cmd_caption(args) -> None:
         # The narration's words are in narration.txt since 2026-09-19;
         # a film narrated before then still has them in script.txt.
         narrated = Path(src.label).suffix.lower() in kinds.AUDIO
+        intro, closing, _ = _intro_and_closing(project / "media")
+        name = Path(src.label).name
+        part = ("intro" if any(f.name == name for f in intro) else
+                "closing" if any(f.name == name for f in closing) else None)
         script = booth.read_script(
             project, None,
-            voice=narrated and booth.script_path(project, True).exists())
+            voice=narrated and booth.script_path(project, True).exists(),
+            part=None if narrated else part)
         lines = voice.transcribe(src.audio_path, model_size=args.model,
                                  language=args.lang, script=script)
         all_lines_for_transcript.append((src.label, lines))
@@ -769,6 +774,57 @@ def _ask_another(n: int) -> bool:
     return not answer.startswith(("n", "q"))
 
 
+def _intro_and_closing(media: Path) -> tuple[list[Path], list[Path], bool]:
+    """The camera takes that open the film and the ones that close it,
+    by the same rule scaffold.place_takes plays them: before the
+    narration opens, after it closes, a 0_ in front always opens. Also
+    whether there is a narration at all."""
+    files = [f for f in media.iterdir() if f.is_file()] if media.is_dir() else []
+    narration = kinds.pick_narration(files)
+    when = narration and scaffold._taken_at(narration.stem)
+    intro, closing = [], []
+    for f in files:
+        if f.suffix.lower() not in kinds.VIDEO or not kinds.is_recording(f.stem):
+            continue
+        at = scaffold._taken_at(f.stem)
+        if kinds.NUM_PREFIX.match(f.stem):
+            if f.stem.startswith("0"):
+                intro.append(f)
+        elif not when or (at and at < when):
+            intro.append(f)
+        elif at:
+            closing.append(f)
+    return intro, closing, bool(when)
+
+
+def _replace_takes(project: Path, which: str, old: list[Path],
+                   new: list[Path]) -> list[Path]:
+    """`record --intro` / `--closing`: a retake REPLACES. Found 2026-09-23:
+    an intro recorded again played twice, or, after the narration, played
+    at the end. Called only once the new take is saved, so a retake given
+    up on loses nothing. The old takes go to media/_discarded/, never
+    deleted. A new intro recorded after the narration gets a 0_ in front,
+    which is what makes it open the film. Returns the new takes' paths."""
+    media = project / "media"
+    for f in old:
+        try:
+            ingest_mod.quarantine(f, media, where=kinds.DISCARDED_DIRNAME)
+            print(f"  the old {which} {f.name} -> {kinds.DISCARDED_DIRNAME}\\")
+        except OSError as e:
+            print(f"  could not put {f.name} aside: {e}")
+    if which != "intro" or not _intro_and_closing(media)[2]:
+        return new
+    renamed = []
+    for f in new:
+        if kinds.NUM_PREFIX.match(f.stem):
+            renamed.append(f)
+            continue
+        g = f.with_name("0_" + f.name)
+        f.rename(g)
+        renamed.append(g)
+    return renamed
+
+
 def cmd_record(args) -> None:
     """Camera + microphone -> files in media/, and nothing else."""
     from . import booth
@@ -777,6 +833,12 @@ def cmd_record(args) -> None:
     rec.require_windows()
 
     project = _record_project(args.project)
+    replacing = ("intro" if getattr(args, "intro", False) else
+                 "closing" if getattr(args, "closing", False) else None)
+    old_takes = []
+    if replacing:
+        intro, closing, _ = _intro_and_closing(project / "media")
+        old_takes = intro if replacing == "intro" else closing
     devices = rec.list_devices()
     if not devices:
         raise SystemExit(
@@ -802,7 +864,8 @@ def cmd_record(args) -> None:
         raise SystemExit("I found no camera and no microphone to record with.")
 
     mode = rec.best_mode(rec.camera_modes(video)) if video else None
-    script = booth.read_script(project, args.script, voice=args.voice)
+    script = booth.read_script(project, args.script, voice=args.voice,
+                               part=replacing)
     windowed = booth.available() and not args.no_window
 
     # Narrating photographs: the window shows them one at a time, each
@@ -938,7 +1001,8 @@ def cmd_record(args) -> None:
     if windowed:
         print("\nThe window is open. Everything happens in it.")
         booth.session(script=script,
-                      script_path=booth.script_path(project, args.voice),
+                      script_path=booth.script_path(project, args.voice,
+                                                    replacing),
                       wpm=args.wpm, title=project.name,
                       start=new_take, finish=took, seconds=args.seconds,
                       discard=drop_last, voice_only=args.voice,
@@ -977,6 +1041,8 @@ def cmd_record(args) -> None:
 
     if not takes:
         raise SystemExit("\nNothing was recorded. Nothing has changed.")
+    if replacing:
+        takes[:] = _replace_takes(project, replacing, old_takes, takes)
 
     total = sum(rec.verify_take(t, None, False)[0] for t in takes)
     print(f"\n  {len(takes)} take{'s' if len(takes) > 1 else ''}, "
@@ -1444,6 +1510,12 @@ def main() -> None:
     p.add_argument("--voice", action="store_true",
                    help="microphone only -- no camera. For a narration "
                         "read over photographs; writes voiceover_*.wav")
+    p.add_argument("--intro", action="store_true",
+                   help="the take opens the film and replaces the old intro "
+                        "(moved to media/_discarded)")
+    p.add_argument("--closing", action="store_true",
+                   help="the take closes the film and replaces the old "
+                        "closing (moved to media/_discarded)")
     p.add_argument("--script", default=None,
                    help="text file to scroll while you talk "
                         "(default: script.txt in the project)")
