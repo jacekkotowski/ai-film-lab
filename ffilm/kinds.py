@@ -15,7 +15,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-STILL = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp", ".bmp"}
+STILL = {".jpg", ".jpeg", ".jfif", ".png", ".tif", ".tiff", ".webp", ".bmp"}
 
 # What an iPhone shoots by default. Converted to jpg on ingest, because
 # neither OpenCV nor Pillow can open it.
