@@ -1,0 +1,429 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# Each picture carries its own piece of
+# media/voiceover_20260923-174326.wav -- see `voice:` below.
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 2.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20260923-172642.mp4
+    in: "00:01.20"
+    out: "00:16.35"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.532, 0.403]
+    note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "Poland’s prime minister says intelligence assessments point to"
+        at: 0.21
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.80, 1.08, 1.85, 2.03, 2.78, 3.00, 3.95]
+      - text: "possible Russian hybrid drone and missile strikes"
+        at: 5.43
+        dur: 3.13
+        pos: lower_third
+        words: [0.00, 0.37, 0.73, 1.25, 1.73, 2.28, 2.62]
+      - text: "against countries supporting Ukraine,"
+        at: 8.56
+        dur: 2.20
+        pos: lower_third
+        words: [0.00, 0.57, 1.12, 1.77]
+      - text: "including Poland."
+        at: 11.49
+        dur: 0.86
+        pos: lower_third
+        words: [0.00, 0.48]
+
+  - id: s02
+    src: media/rec_20260923-172642.mp4
+    in: "00:17.45"
+    out: "00:32.20"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.532, 0.403]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 2 of 2 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "NATO, meanwhile,"
+        at: 0.33
+        dur: 0.85
+        pos: lower_third
+        words: [0.00, 0.46]
+      - text: "says it sees no imminent threat of a direct attack."
+        at: 1.18
+        dur: 3.81
+        pos: lower_third
+        words: [0.00, 0.70, 1.28, 1.52, 1.85, 2.27, 2.78, 3.00, 3.13, 3.33]
+      - text: "Russia is under sanctions."
+        at: 5.00
+        dur: 1.99
+        pos: lower_third
+        words: [0.00, 0.85, 1.28, 1.50]
+      - text: "So where did Western trade go after 2022?"
+        at: 7.47
+        dur: 4.28
+        pos: lower_third
+        words: [0.00, 0.32, 1.15, 1.40, 1.68, 2.07, 2.42, 3.00]
+
+  - id: s03
+    src: media/1german_exports_english.png
+    voice: media/voiceover_20260923-174326.wav
+    in: "00:00.90"
+    out: "00:25.10"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.191, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.809, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.436, 0.532]
+    note: "picture 1 of 5 -- holds while these words are said. This picture is 2048x1243; the frame shows about 0.38 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Germany shows the clearest shift."
+        at: 0.00
+        dur: 2.69
+        pos: lower_third
+        words: [0.00, 0.72, 1.40, 1.82, 2.30]
+      - text: "After 2021,"
+        at: 2.69
+        dur: 2.13
+        pos: lower_third
+        words: [0.00, 0.68]
+      - text: "exports to Kazakhstan,"
+        at: 4.83
+        dur: 2.75
+        pos: lower_third
+        words: [0.00, 1.53, 2.23]
+      - text: "Uzbekistan,"
+        at: 8.41
+        dur: 0.83
+        pos: lower_third
+        words: [0.00]
+      - text: "Georgia and especially Kyrgyzstan rose sharply,"
+        at: 9.58
+        dur: 3.58
+        pos: lower_third
+        words: [0.00, 0.30, 0.82, 1.18, 1.97, 2.92]
+      - text: "while direct trade with Russia collapsed."
+        at: 13.16
+        dur: 2.84
+        pos: lower_third
+        words: [0.00, 0.53, 1.13, 1.53, 1.73, 2.07]
+      - text: "The timing is visible."
+        at: 16.66
+        dur: 1.04
+        pos: lower_third
+        words: [0.00, 0.08, 0.38, 0.65]
+      - text: "So are the destinations."
+        at: 18.21
+        dur: 1.43
+        pos: lower_third
+        words: [0.00, 0.30, 0.63, 0.85]
+
+  - id: s04
+    src: media/2french_exports_english.png
+    voice: media/voiceover_20260923-174326.wav
+    in: "00:26.20"
+    out: "00:47.75"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_right
+    from: {cx: 0.209, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.791, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.410, 0.539]
+    note: "picture 2 of 5 -- holds while these words are said. This picture is 2023x1360; the frame shows about 0.42 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "France shows a similar change,"
+        at: 0.00
+        dur: 2.36
+        pos: lower_third
+        words: [0.00, 0.77, 1.37, 1.63, 1.88]
+      - text: "although less uniformly."
+        at: 2.39
+        dur: 1.44
+        pos: lower_third
+        words: [0.00, 0.27, 0.82]
+      - text: "Exports to Kazakhstan jumped after 2021,"
+        at: 4.64
+        dur: 2.98
+        pos: lower_third
+        words: [0.00, 0.52, 0.78, 1.13, 1.67, 2.00]
+      - text: "while several other markets around Russia also expanded."
+        at: 8.43
+        dur: 3.30
+        pos: lower_third
+        words: [0.00, 0.38, 0.80, 1.13, 1.57, 1.95, 2.37, 2.78]
+      - text: "Again,"
+        at: 12.29
+        dur: 0.29
+        pos: lower_third
+        words: [0.00]
+      - text: "the geography changed at the same time as direct trade with"
+        at: 13.28
+        dur: 3.11
+        pos: lower_third
+        words: [0.00, 0.10, 0.52, 1.03, 1.42, 1.55, 1.78, 2.10, 2.33, 2.58, 2.93]
+      - text: "Russia was being cut."
+        at: 16.39
+        dur: 1.16
+        pos: lower_third
+        words: [0.00, 0.27, 0.53, 0.82]
+
+  - id: s05
+    src: media/3american_exports_english.png
+    voice: media/voiceover_20260923-174326.wav
+    in: "00:49.50"
+    out: "01:24.45"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.209, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.791, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.420, 0.464]
+    note: "picture 3 of 5 -- holds while these words are said. This picture is 2023x1360; the frame shows about 0.42 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "The United States shows another strong post-2022 increase."
+        at: 0.00
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.47, 0.68, 1.37, 2.18, 2.85, 3.22, 3.53]
+      - text: "Exports to Georgia,"
+        at: 6.05
+        dur: 1.10
+        pos: lower_third
+        words: [0.00, 0.43, 0.72]
+      - text: "Kazakhstan and Uzbekistan all rose,"
+        at: 7.45
+        dur: 2.61
+        pos: lower_third
+        words: [0.00, 0.30, 0.85, 1.58, 2.10]
+      - text: "with exports to Georgia reaching about $1.74 billion in 2024,"
+        at: 10.77
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.25, 0.67, 0.92, 1.32, 1.67, 2.05, 2.43, 3.33, 3.75, 4.10]
+      - text: "compared with about $657 million in 2021."
+        at: 16.80
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.50, 0.83, 1.23, 2.83, 3.17, 3.90]
+      - text: "The goods were officially going to these countries."
+        at: 22.75
+        dur: 2.66
+        pos: lower_third
+        words: [0.00, 0.73, 0.97, 1.20, 1.67, 1.93, 2.13, 2.32]
+      - text: "What happened after that is another question."
+        at: 25.88
+        dur: 0.83
+        pos: lower_third
+        words: [0.00, 0.17, 0.48]
+
+  - id: s06
+    src: media/4british_exports_english.png
+    voice: media/voiceover_20260923-174326.wav
+    in: "01:26.45"
+    out: "01:50.35"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: pull_out
+    from: {cx: 0.209, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.791, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.406, 0.452]
+    note: "picture 4 of 5 -- holds while these words are said. This picture is 2023x1360; the frame shows about 0.42 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Britain shows the same broader pattern."
+        at: 0.00
+        dur: 2.85
+        pos: lower_third
+        words: [0.00, 0.73, 1.47, 1.80, 2.02, 2.28]
+      - text: "Exports to Kazakhstan, Georgia,"
+        at: 3.33
+        dur: 1.76
+        pos: lower_third
+        words: [0.00, 0.47, 0.78, 1.50]
+      - text: "Azerbaijan and Central Asian markets"
+        at: 5.50
+        dur: 2.40
+        pos: lower_third
+        words: [0.00, 0.63, 1.20, 1.57, 1.97]
+      - text: "increased substantially after 2021."
+        at: 7.90
+        dur: 3.14
+        pos: lower_third
+        words: [0.00, 0.67, 1.62, 2.13]
+      - text: "These are not random markets."
+        at: 12.10
+        dur: 1.90
+        pos: lower_third
+        words: [0.00, 0.60, 0.82, 1.02, 1.37]
+      - text: "They form a belt of countries surrounding Russia and connected"
+        at: 14.32
+        dur: 3.88
+        pos: lower_third
+        words: [0.00, 0.20, 0.52, 0.70, 0.97, 1.18, 1.62, 2.27, 2.83, 3.42]
+      - text: "to its trading system."
+        at: 18.20
+        dur: 1.34
+        pos: lower_third
+        words: [0.00, 0.40, 0.57, 0.93]
+
+  - id: s07
+    src: media/5total_intermediary_exports_english.png
+    voice: media/voiceover_20260923-174326.wav
+    in: "01:52.30"
+    out: "02:20.45"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_right
+    from: {cx: 0.169, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.831, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.382, 0.414]
+    note: "picture 5 of 5 -- holds while these words are said. This picture is 2047x1085; the frame shows about 0.34 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "And when the four exporters are put together,"
+        at: 0.16
+        dur: 2.81
+        pos: lower_third
+        words: [0.00, 0.43, 0.80, 1.00, 1.32, 1.93, 2.22, 2.38]
+      - text: "the pattern becomes difficult to miss."
+        at: 3.31
+        dur: 1.83
+        pos: lower_third
+        words: [0.00, 0.12, 0.47, 0.92, 1.30, 1.60]
+      - text: "In 2024,"
+        at: 5.98
+        dur: 1.58
+        pos: lower_third
+        words: [0.00, 0.22]
+      - text: "exports to these intermediary markets were substantially"
+        at: 8.21
+        dur: 3.33
+        pos: lower_third
+        words: [0.00, 0.38, 0.70, 0.93, 1.72, 2.15, 2.60]
+      - text: "higher than in 2021 across Germany,"
+        at: 11.54
+        dur: 3.96
+        pos: lower_third
+        words: [0.00, 0.53, 1.27, 1.50, 2.60, 3.30]
+      - text: "France, the United States and Britain."
+        at: 15.94
+        dur: 1.83
+        pos: lower_third
+        words: [0.00, 0.52, 0.58, 0.73, 1.20, 1.52]
+      - text: "The currencies differ."
+        at: 17.77
+        dur: 1.96
+        pos: lower_third
+        words: [0.00, 1.15, 1.60]
+      - text: "The countries differ."
+        at: 20.31
+        dur: 0.75
+        pos: lower_third
+        words: [0.00, 0.08, 0.38]
+      - text: "But the direction is the same."
+        at: 21.66
+        dur: 1.36
+        pos: lower_third
+        words: [0.00, 0.20, 0.37, 0.68, 0.95, 1.10]
+
+  - id: s08
+    src: media/close_rec_20260923-174641.mp4
+    in: "00:01.45"
+    out: "00:16.55"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.548, 0.363]
+    note: "closer"
+    captions:
+      - text: "The charts show the numbers."
+        at: 0.25
+        dur: 2.45
+        pos: lower_third
+        words: [0.00, 0.45, 0.97, 1.68, 2.05]
+      - text: "The timing is on the screen."
+        at: 2.98
+        dur: 1.65
+        pos: lower_third
+        words: [0.00, 0.23, 0.57, 0.97, 1.18, 1.28]
+      - text: "The countries are on the screen."
+        at: 4.90
+        dur: 2.08
+        pos: lower_third
+        words: [0.00, 0.37, 0.75, 1.17, 1.60, 1.72]
+      - text: "The scale is on the screen."
+        at: 7.45
+        dur: 1.45
+        pos: lower_third
+        words: [0.00, 0.13, 0.48, 0.78, 0.95, 1.05]
+      - text: "Look at the pattern."
+        at: 9.58
+        dur: 1.04
+        pos: lower_third
+        words: [0.00, 0.43, 0.57, 0.68]
+      - text: "You decide what it means."
+        at: 10.95
+        dur: 1.48
+        pos: lower_third
+        words: [0.00, 0.38, 0.77, 1.05, 1.18]
+
+# 8 shots, about 172 seconds.
+#
+# 5 slide(s), one per picture, each holding its own piece of
+# the 142s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
