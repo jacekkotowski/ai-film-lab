@@ -15,6 +15,18 @@ Read before any "the lips are out of sync" work. Add to it after.
   (r 0.78); before −483 / −314 ms. Visible from ~80 ms.
 - **Not measured:** that picture and sound really stop together.
 
+## 2026-09-24 — two more faults from the same lost clock
+- **The webcam's frame rate varies** (Frankfurt intro: 1423 frames in
+  31.1 s; labelled 60, OpenCV says 44.72). The final picked frame =
+  time × one rate: lips +0.47 s late at 2 s, −0.50 s early at 27 s.
+  Fixed 646de5c: frames found by their own timestamps. Measured on the
+  take: −0.017 s (one frame) everywhere. **Drafts hide this fault**
+  (proxy re-timed to a steady rate) — sync must be checked on a FINAL.
+- **Cut points were on the sound's clock** after c802fcd moved the
+  sound: last word clipped 0.31/0.36 s. Fixed 2881ea5.
+- Root, not done: recording keeps no real timing (both streams start at
+  0, varying frame rate). Every stage reconstructs it.
+
 ## Wrong turns — do not repeat
 - **Decision 0011 (2026-09-21) said "no sync fault".** It compared the
   film's sound with the take's sound — both carry the same fault, so
