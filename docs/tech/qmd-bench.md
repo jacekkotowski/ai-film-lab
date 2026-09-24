@@ -79,6 +79,12 @@ message arriving mid-call; not confirmed) and `Object is disposed` on 6
 calls in a row right after Q4; the same calls worked when retried. Cause
 of the second not measured.
 
+Second full run, same searches, nothing else running (23:00:54–23:01:09):
+**10/10 returned, no errors, 14.8 s in total, 1.24–1.65 s per call**
+(Q1 1.47, Q2 1.54, Q3 1.47, Q4 1.50, Q5 1.54, Q6 1.52, Q7 1.54, Q8 1.31,
+Q9 1.65, Q10 1.24). Files, ranks and scores identical to the first run,
+so found 9/10 (Q7 the miss) is repeatable.
+
 ### qmd from the shell, `qmd query`, same 10 questions, 2026-09-24
 **0/10 returned anything.** Each call died at "Reranking 27 chunks" with
 `ggml_vulkan: Device memory allocation of size 633207232 failed`

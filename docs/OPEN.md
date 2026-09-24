@@ -4,6 +4,12 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-09-24 qmd MCP `query` returned `Object is disposed` on 6 calls in
+  a row (right after a burst of calls that were cancelled mid-flight);
+  the same calls worked on retry, and 12 later calls had no error. Cause
+  not found (docs/tech/qmd-bench.md). If it recurs: retry once, then
+  grep. The qmd indexes (`code`, `history`) are not refreshed by
+  themselves: docs/tech/qmd.md says how.
 - 2026-09-24 last word of a camera intro/closing cut mid-vowel. Caused
   by c802fcd (sound moved by the lag, cuts not). Code fixed in 2881ea5,
   Frankfurt film.yaml fixed by hand. **Not yet heard in a render.**

@@ -34,6 +34,39 @@ Question: "Background hiss grows towards the end of the film. What fixed it?"
 - Not yet known: why the reranker crashed once, and whether forcing CPU
   (not the Intel iGPU, issue #969) changes the 140 s.
 
+## Code collection, added 2026-09-24 (measured)
+- `qmd collection add . --name code --mask "ffilm/**/*.py,tests/**/*.py"`,
+  then `qmd context add qmd://code "..."`, then
+  `qmd embed --chunk-strategy auto`.
+- 90 files indexed (`ffilm/__init__.py` is empty, so left out). Embedded
+  **580 chunks in 9 m 15 s** from the shell, no error.
+- The running MCP server searched it at once, no restart: bench Q8
+  (booth.py, rank 1, 1.29 s) and Q9 (scaffold.py, rank 5, 1.36 s;
+  guide.py first). Pass `collections: ["code"]`.
+- **The index does not follow the code.** After code changes run
+  `qmd update`, then `qmd embed --chunk-strategy auto` (only changed
+  files are re-embedded; not yet timed).
+- Files are read as they are on disk (CRLF), so snippets end in `\r`.
+
+## History collection, added 2026-09-24 (measured)
+- qmd never calls git, so the log is written to files first: one file per
+  commit in `C:\Users\jacek\.cache\qmd\history\` (outside the repo),
+  `<date>-<hash>.md` = `# <hash> <date> <subject>`, blank line, message.
+  191 files, 193 chunks embedded in 1 m 30 s.
+  `qmd collection add <that folder> --name history`, `qmd context add`,
+  `qmd embed`. Pass `collections: ["history"]`.
+- **One file for the whole log did not work:** qmd returns one hit per
+  file, so every search returned 1 result, and not the right commit (the
+  music question gave d2c51b5, not 878207e). One file per commit fixed it.
+- Bench Q10 now: 878207e first, 1.54 s. "Which commit fixed the microphone
+  starting later than the camera?": 2881ea5 first, c802fcd (the fix)
+  second, 1.31 s.
+- **Refresh after new commits** (only the new ones are re-embedded; not
+  yet timed): write a file for each new hash the same way, e.g.
+  `git log -1 --format='# %h %ad %s%n%n%b' --date=short <hash> >
+  <folder>/<date>-<hash>.md`, then `qmd update` and `qmd embed`.
+- `qmd cleanup` removed 3 orphaned records after the switch.
+
 Below: from the README and the issue list.
 
 ## What it is
