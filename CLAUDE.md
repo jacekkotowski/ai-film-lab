@@ -118,8 +118,9 @@ Grep finds a word. qmd finds the file that says it in other words
   *settled* is not re-proposed without a new measurement.
 - **How:** the MCP `query` tool, with the searches written by you:
   `lex` for exact names, constants, errors; `vec` for a symptom in
-  plain words. Never `qmd query` from the shell: measured 142 s and a
-  wrong answer on this laptop (`docs/tech/qmd.md`).
+  plain words. `qmd query` from the shell is allowed but slow: one
+  call measured 142 s on this laptop (`docs/tech/qmd.md`). Run it in
+  the background and say the time.
 - **Never act on a snippet.** `get` the whole file, cite `path:line`.
 - **Code and measurements beat notes.** If a note contradicts the code,
   say so; don't follow the note.
