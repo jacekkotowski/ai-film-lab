@@ -103,3 +103,27 @@ writes "proof?", show the measurement or say it was not measured.
 | what we know, by area (sync, audio, video, recording, captions) and by tool | `docs/tech/` — read the area's file before working in it; add to it after |
 | how this whole Claude setup works        | `docs/HOW_CLAUDE_IS_SET_UP.md`      |
 | how a human uses the program             | `HOW_TO_USE.md`                     |
+
+## Searching past knowledge (qmd)
+
+Grep finds a word. qmd finds the file that says it in other words
+("hiss" → the decision about "noise"). Bench: `docs/tech/qmd-bench.md`.
+
+- **Indexed today:** `docs` (decisions, tech notes, OPEN, plans).
+  `code` and `history` are not yet. Until they are, grep code and
+  `git log` as before.
+- **Before proposing a fix or a design:** search for the area (sync,
+  noise, captions, moves, recording). Say in 2–3 lines what was tried,
+  what was rejected, and which decision covers it. A decision marked
+  *settled* is not re-proposed without a new measurement.
+- **How:** the MCP `query` tool, with the searches written by you:
+  `lex` for exact names, constants, errors; `vec` for a symptom in
+  plain words. Never `qmd query` from the shell: measured 142 s and a
+  wrong answer on this laptop (`docs/tech/qmd.md`).
+- **Never act on a snippet.** `get` the whole file, cite `path:line`.
+- **Code and measurements beat notes.** If a note contradicts the code,
+  say so; don't follow the note.
+- **At the end:** a fault → `docs/OPEN.md`; a measured fact →
+  `docs/tech/<area>.md`; a reason → `docs/decisions/`. No other file.
+- **qmd not connected** (tools missing, "Connection closed"): say so in
+  the first line and fall back to grep. Don't try to repair it unasked.

@@ -132,8 +132,14 @@ Is it what a module is or does?                 → that module's docstring
 
 ## What this set-up deliberately does not have
 
-- **No framework.** No agents calling agents, no MCP servers, no vector
-  database. Plain files that a person reads the same way Claude does.
+- **No framework.** No agents calling agents. Knowledge lives in plain
+  files that a person reads the same way Claude does.
+- **MCP servers and a vector index are allowed** (Jacek, 2026-09-24).
+  The earlier "no MCP servers, no vector database" was Claude's reading
+  of "keep it lean", never his rule. "Lean" is about the film's code and
+  its four packages, not about the tools Claude uses. The index is qmd
+  (`docs/tech/qmd.md`). It searches the plain files and never replaces
+  them: a file is still the one home of each fact.
 - **No duplicated knowledge.** Each fact has one home, and the other
   places point to it. A map copied into three files is wrong in two of them
   within a month.

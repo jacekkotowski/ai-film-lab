@@ -22,10 +22,13 @@ A fault not yet fixed → `docs/OPEN.md`, not here.
 | [[pillow]] | picture types read / not read |
 | [[faster-whisper]] | the caption model |
 | [[agent-memory]] | vector search vs a code-to-test map, the TDAD numbers |
+| [[qmd]] | local markdown search + MCP server: install, models, Windows traps (not installed) |
+| [[qmd-bench]] | 10 questions with known answers: grep vs qmd, scored the same way |
 
 ## Code
 [[code-map]] — which file and function decides what. Read 5 lines, not
 a 1,500-line file.
 
-Why files and not a vector database: at tens of files a name finds the
-right one exactly. Add semantic search when there are hundreds.
+Files stay the home of every fact. Since 2026-09-24 they are also
+searched by meaning with qmd ([[qmd]]): a name finds a file you know,
+qmd finds one that uses other words ([[qmd-bench]]).

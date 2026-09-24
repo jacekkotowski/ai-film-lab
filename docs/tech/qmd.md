@@ -1,0 +1,99 @@
+# qmd — local search over markdown (tobi/qmd), looked up 2026-09-24
+
+## Installed here 2026-09-24 (measured)
+- Node 24.19.0 LTS via `winget install --id OpenJS.NodeJS.LTS --exact`
+  (admin prompt). npm 11.17.0.
+- `npm install -g @tobilu/qmd` -> qmd 2.8.3. **Trap:** npm 11 blocks
+  install scripts by default and says so in a warning: node-llama-cpp
+  postinstall and 5 tree-sitter builds did not run. AST chunking still
+  reports "active" (it uses .wasm grammars).
+- Plugin: `claude plugin marketplace add tobi/qmd`, `claude plugin install
+  qmd@qmd` (user scope). It carries 2 skills and the MCP server
+  `qmd mcp`. `claude mcp list` -> `plugin:qmd:qmd ... Connected`.
+- **Trap:** a shell or app started before Node was installed has no `qmd`
+  on PATH. Restart the desktop app once.
+- Config: `C:\Users\jacek\.config\qmd\index.yml`. Index:
+  `C:\Users\jacek\.cache\qmd\index.sqlite`.
+- **Trap:** `docs/tech/qmd-bench.md` holds the test questions word for
+  word; it came up first until excluded with `ignore:` under the
+  collection in index.yml.
+- Built in: `qmd bench <fixture.json>` runs a search-quality benchmark.
+
+## Speed on this laptop, docs/ only (35 files, 93 chunks), 2026-09-24
+Question: "Background hiss grows towards the end of the film. What fixed it?"
+(answer: 0003). CLI, each call loads its models afresh.
+| Call | Seconds | Result |
+|---|---|---|
+| `qmd embed` (incl. 318 MB download) | 120.6 | 93 chunks |
+| `qmd search` (keywords, no model) | 0.5 | |
+| `qmd query`, 1st (incl. 1.8 GB download) | 146.1 | **crashed** loading the reranker |
+| `qmd query`, 2nd | 141.7 | 2 results, 0011 then a plan: **wrong** |
+| `qmd vsearch` | 15.2 | 0003 2nd (tied 0.48 with a plan), audio.md 3rd: right |
+- The query expander rewrote the hiss question as "Importance of setting
+  the right tone": the 1.7B model gets this vocabulary wrong.
+- Not yet known: why the reranker crashed once, and whether forcing CPU
+  (not the Intel iGPU, issue #969) changes the 140 s.
+
+Below: from the README and the issue list.
+
+## What it is
+A command-line search engine over folders of markdown: keyword (BM25),
+vector, and a hybrid with re-ranking. Everything runs locally. It also runs
+as an MCP server, so Claude can call it as a tool.
+
+## Install
+- Needs Node >= 22 or Bun >= 1.0. On 2026-09-24 this machine had neither
+  (`node`, `npm`, `bun` not on PATH).
+- `npm install -g @tobilu/qmd` (or `bun install -g @tobilu/qmd`)
+- Claude Code plugin (starts the MCP server for Claude):
+  `claude plugin marketplace add tobi/qmd`, then `claude plugin install qmd@qmd`
+- Or by hand: MCP server `{"command": "qmd", "args": ["mcp"]}`
+
+## Where it puts things (outside the repo)
+- Models, downloaded on first use, about 2 GB in total, to `~/.cache/qmd/models/`:
+  embeddinggemma-300M (~300 MB), qwen3-reranker-0.6b (~640 MB),
+  qmd-query-expansion-1.7B (~1.1 GB)
+- Index: `~/.cache/qmd/index.sqlite`. Config: `~/.config/qmd/index.yml`
+
+## Use
+```
+qmd collection add <folder> --name <name>
+qmd context add qmd://<name> "what is in it"
+qmd embed                      # builds the vectors
+qmd search "words"             # keyword only, no models
+qmd vsearch "meaning"          # vectors only
+qmd query "question"           # hybrid + re-rank, uses all 3 models
+```
+
+## Masks, code, refresh, MCP tools (README + src/ast.ts, 2026-09-24)
+- Any text type via a mask: `qmd collection add <dir> --name x --mask "**/*.py,**/*.md"`
+  (comma = union).
+- Code: `qmd embed --chunk-strategy auto` splits .py (also ts/js/go/rs) at
+  function/class boundaries with tree-sitter; falls back to regex if the
+  grammar fails to load. Other text: ~900-token chunks, 15% overlap, cut at
+  headings first.
+- `qmd update` re-scans all collections (runs a collection's `update`
+  command first, if one is set). New text needs `qmd embed` after it.
+- MCP server tools: `query` (hybrid lex/vec/hyde + rerank), `get` (path or
+  #docid, line range), `multi_get` (glob), `status`.
+
+## Git: not used (read in src/store.ts, 2026-09-24)
+- No git calls at all. `.git` is on a fixed skip list (with node_modules,
+  .cache, vendor, dist, build).
+- It indexes the files on disk as they are now: tracked, untracked and
+  uncommitted alike. It does not read .gitignore.
+- Change detection is a hash of the content. A changed file replaces its old
+  version in the index, so the index keeps no history.
+- It only reads the folder. The index lives in ~/.cache, not in the repo.
+- Default mask `**/*.md`: `.txt` (scripts, narration) is NOT indexed unless
+  the mask is changed. Dot-folders (`dot: false`) are skipped, so
+  `.claude/` (skills) is not indexed either.
+
+## Traps on Windows (from the issue list, 2026-09-24)
+- #981 Windows path support: open, still being worked on.
+- #968 the `embed` lock does nothing on Windows (closed). #924 same area, open.
+- #969 Vulkan picks the Intel integrated GPU. This laptop has Intel UHD 630
+  plus a Radeon 540X, so this one applies.
+- #977 `vsearch`/`query` hang with no error if a model file is missing or
+  corrupt. A half-finished download looks like a freeze.
+- #935 `embed` fails partway with DisposedError (2.8.3), open.
