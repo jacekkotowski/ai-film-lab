@@ -316,12 +316,52 @@ class StillSource:
         pass
 
 
+def frame_on_screen(times: list[float], t: float) -> int:
+    """Which frame is on screen `t` seconds into a clip: the last one whose
+    own timestamp is not after `t`. `times` sorted, in seconds.
+
+    Not `round(t * fps)`: the webcam records at a varying rate (Frankfurt
+    intro: 1423 frames in 31.1 s, labelled 60, OpenCV says 44.72), and one
+    number for the rate put the lips 0.5 s late at the start of the take
+    and 0.5 s early at the end. Only the final showed it -- the draft's
+    proxy is re-timed to a steady rate by ffmpeg."""
+    return max(0, min(len(times) - 1, bisect_right(times, t + 1e-6) - 1))
+
+
+def frame_times(path: Path) -> list[float]:
+    """Every frame's own presentation time, sorted -- the order OpenCV
+    hands frames out in. Empty if ffprobe can't say."""
+    r = subprocess.run(
+        [ffprobe_bin(), "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "packet=pts_time", "-of", "csv=p=0", str(path)],
+        capture_output=True, text=True)
+    out = []
+    for x in r.stdout.split():
+        try:
+            out.append(float(x.strip(",")))
+        except ValueError:
+            pass
+    return sorted(out)
+
+
+def _steady(times: list[float]) -> bool:
+    """True when every frame follows the one before by the same step, so
+    seeking by frame number lands where it should."""
+    if len(times) < 3:
+        return True
+    steps = sorted(b - a for a, b in zip(times, times[1:]))
+    mid = steps[len(steps) // 2]
+    return mid > 0 and steps[0] > mid * 0.9 and steps[-1] < mid * 1.1
+
+
 class VideoSource:
     """Sequential reader with a cursor. Seeking backwards is rare, so we
     optimise for the common case: walking forward through the clip."""
 
     segmenter = None                 # no bokeh unless __init__ says so
     sharpness = 0.0                  # and no sharpening either
+    times: list[float] = []          # no timestamps: frame = time x fps
+    can_seek = True
     _told_no_bokeh = False
 
     def __init__(self, path: Path, shot: Shot, ow: int, oh: int, max_scale: float,
@@ -349,16 +389,35 @@ class VideoSource:
                     print(f"\n  bokeh left out: {str(e).splitlines()[0]}")
                     VideoSource._told_no_bokeh = True
         self.smoother = segment.MaskSmoother()
-        start = int(round(shot.tin * self.src_fps))
-        if start > 0:
+        # Frames are found by their own timestamps (see frame_on_screen).
+        # Seeking by frame number is only safe at a steady rate; at a
+        # varying one we walk from the start instead, a few seconds of
+        # decoding against a render of minutes.
+        self.path = path
+        self.times = frame_times(path)
+        self.can_seek = _steady(self.times)
+        start = self._index(shot.tin)
+        if start > 0 and self.can_seek:
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, start)
             self.cursor = start - 1
 
+    def _index(self, at: float) -> int:
+        if not self.times:                       # ffprobe said nothing
+            return int(round(at * self.src_fps))
+        return frame_on_screen(self.times, at)
+
     def frame(self, t: float) -> np.ndarray:
-        target = int(round((self.shot.tin + t * self.shot.speed) * self.src_fps))
+        target = self._index(self.shot.tin + t * self.shot.speed)
         if target < self.cursor:                 # backwards: re-seek
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, target)
-            self.cursor = target - 1
+            if self.can_seek:
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, target)
+            else:                                # from the top, frame by frame
+                self.cap.release()
+                self.cap = cv2.VideoCapture(str(self.path))
+                self.cursor = -1
+                target = max(target, 0)
+            if self.can_seek:
+                self.cursor = target - 1
         ran_out = False
         while self.cursor < target:
             if not self.cap.grab():

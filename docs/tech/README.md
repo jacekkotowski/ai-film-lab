@@ -21,6 +21,7 @@ A fault not yet fixed → `docs/OPEN.md`, not here.
 | [[opencv]] | Windows paths, the 5.0 trap |
 | [[pillow]] | picture types read / not read |
 | [[faster-whisper]] | the caption model |
+| [[agent-memory]] | vector search vs a code-to-test map, the TDAD numbers |
 
 ## Code
 [[code-map]] — which file and function decides what. Read 5 lines, not
