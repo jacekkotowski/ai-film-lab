@@ -187,10 +187,10 @@ shots:
 
   - id: s06
     src: analysis/title.jpg
-    duration: 10.0
+    duration: 20.0
     move: static
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "the closing card -- the opening picture again, held 10 s.
+    note: "the closing card -- the opening picture again, held 20 s.
       The title words are already in the picture, so no caption is
       added on top. Static so the words stay still."
 
