@@ -4,7 +4,13 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
-(nothing open)
+- 2026-09-24 last word of a camera intro/closing cut mid-vowel. Caused
+  by c802fcd (sound moved by the lag, cuts not). Code fixed in 2881ea5,
+  Frankfurt film.yaml fixed by hand. **Not yet heard in a render.**
+  Films drafted between c802fcd and 2881ea5 (Turn Heat, Trade Behind War)
+  keep the old cuts until their intro/closing `out:` is moved by ~0.6 s.
+- 2026-09-24 the check_film hook fails on a folder name with "ł" (the
+  path is garbled); `film check` itself works when run by hand.
 
 ---
 
