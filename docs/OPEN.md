@@ -4,6 +4,11 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-09-24 music went silent at the last word (ducking stops with the
+  speech). Fixed in audio.duck_filters; Happy Birthday peek measured
+  -25..-33 LUFS over the 20 s closing card (was -55.4). **Not yet heard
+  by Jacek.** Every earlier film that ends on a silent picture has this.
+
 - 2026-09-24 last word of a camera intro/closing cut mid-vowel. Caused
   by c802fcd (sound moved by the lag, cuts not). Code fixed in 2881ea5,
   Frankfurt film.yaml fixed by hand. **Not yet heard in a render.**

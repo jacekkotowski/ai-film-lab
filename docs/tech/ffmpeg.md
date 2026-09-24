@@ -22,6 +22,9 @@ Found on the PATH by `ffilm/ffmpeg.py`. Not a Python package.
 ## Filter order
 - `arnndn` goes **after** `speechnorm`; before it, ffmpeg hangs at the end
   of the stream (decision 0008).
+- `sidechaincompress` stops when its **trigger** stops (20 s music, 5 s
+  key -> 4.96 s out). The speech key is `apad`-ed to the film length
+  (`audio.duck_filters`), or the music dies at the last word.
 
 ## Probing a file
 `ffprobe -v error -show_entries stream=codec_type,width,height,r_frame_rate:format=duration -of compact f`

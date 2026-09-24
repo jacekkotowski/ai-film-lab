@@ -327,6 +327,22 @@ def duck_threshold(duck: float) -> float:
     return float(10.0 ** ((KEY_LEVEL_DB - head) / 20.0))
 
 
+def duck_filters(music: str, key: str, total: float, duck: float) -> str:
+    """The music ducked under the speech, as filtergraph text ending in
+    [ducked].
+
+    sidechaincompress stops when its trigger stops, and the trigger is the
+    speech. A film that ended on a picture with nobody talking lost its
+    music at the last word: 10 s of silence under a closing card, measured
+    at -55.4 LUFS. So the trigger is padded with silence to the length of
+    the film, and the compressor runs to the end with nothing to duck."""
+    return (f"[{key}]apad=whole_dur={total:.3f}[key_full];"
+            f"[{music}][key_full]sidechaincompress="
+            f"threshold={duck_threshold(duck):.5f}:"
+            f"ratio={DUCK_RATIO:.1f}:attack=5:"
+            f"release=350:makeup=1[ducked]")
+
+
 def _glob_escape(s: str) -> str:
     """Filenames off a camera contain [ ] often enough to matter, and glob
     reads those as character classes."""
@@ -1524,10 +1540,8 @@ def build_soundtrack(film: Film, silent_video: Path, out: Path,
 
         # See duck_threshold: music_duck sets the THRESHOLD, which is what
         # actually decides the depth, and the ratio is fixed.
-        filters.append(f"[{music_label}][{key}]sidechaincompress="
-                      f"threshold={duck_threshold(film.music_duck):.5f}:"
-                      f"ratio={DUCK_RATIO:.1f}:attack=5:"
-                      f"release=350:makeup=1[ducked]")
+        filters.append(duck_filters(music_label, key, total,
+                                    film.music_duck))
         # Music FIRST. amix anchors its output to its first input, and the
         # speech streams are `adelay`-ed to start partway in -- putting a
         # delayed stream first makes the whole mix start late, silencing
