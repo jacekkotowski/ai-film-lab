@@ -185,4 +185,13 @@ shots:
         pos: lower_third
         words: [0.00, 0.28, 1.17, 1.27, 1.65]
 
+  - id: s06
+    src: analysis/title.jpg
+    duration: 10.0
+    move: static
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "the closing card -- the opening picture again, held 10 s.
+      The title words are already in the picture, so no caption is
+      added on top. Static so the words stay still."
+
 # 5 shots, about 47 seconds.
