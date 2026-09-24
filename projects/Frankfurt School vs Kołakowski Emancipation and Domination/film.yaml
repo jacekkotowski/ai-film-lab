@@ -55,7 +55,7 @@ shots:
   - id: s01
     src: media/rec_20260924-100838.mp4
     in: "00:01.65"
-    out: "00:27.95"
+    out: "00:28.60"   # was 27.95: sound lags picture 0.61 s, "domination" ended at 27.66 on the sound clock
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
@@ -434,7 +434,7 @@ shots:
   - id: s11
     src: media/close_rec_20260924-102319.mp4
     in: "00:00.00"
-    out: "00:25.10"
+    out: "00:25.80"   # was 25.10: sound lags picture 0.62 s, "disagreement" ended at 24.84 on the sound clock
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: drift_right
     amount: 0.6            # how much of the move to use. 0 = none

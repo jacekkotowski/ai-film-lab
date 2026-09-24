@@ -290,7 +290,7 @@ def talking_segments(dur: float, snd: dict) -> list[tuple[float, float]]:
     return [(round(x, 2), round(y, 2)) for x, y in out if y - x >= MIN_PIECE]
 
 
-def video_segments(entry: dict) -> list[tuple[float, float]]:
+def video_segments(entry: dict, lag: float = 0.0) -> list[tuple[float, float]]:
     """Turn a clip into usable in/out pairs.
 
     A clip with sound on it is kept (see `is_talking`). A silent clip is
@@ -298,12 +298,23 @@ def video_segments(entry: dict) -> list[tuple[float, float]]:
     it doesn't -- normal for handheld footage, and for anything long and
     continuous -- we sample along it instead. Roughly one shot per minute
     of source, so a ten minute clip yields several candidates, not one.
+
+    `lag` is how late the take's sound started against its picture
+    (audio.sound_lag). The words and pauses were measured on the sound's
+    clock, but in/out are the picture's, and the render plays sound at
+    picture time minus lag. Without this every intro and closing lost
+    its last `lag` seconds -- "domination" cut mid-vowel, 2026-09-24.
     """
     dur = float(entry.get("duration") or 0.0)
     if dur < 1.5:
         return []
     if is_talking(entry):
-        return talking_segments(dur, entry["sound"])
+        segs = talking_segments(dur, entry["sound"])
+        if not lag:
+            return segs
+        moved = [(round(a + lag, 2), round(min(dur, b + lag), 2))
+                 for a, b in segs]
+        return [(a, b) for a, b in moved if b - a >= MIN_PIECE] or moved
     cuts = [c for c in entry.get("cuts", []) if 0.0 < c < dur]
     bounds = [0.0] + cuts + [dur]
 
@@ -415,7 +426,8 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     shots: list[Shot] = []
     meta: list[dict] = []
     for t in ordered:
-        made, made_meta = shots_for(t["entry"], len(shots) + 1)
+        made, made_meta = shots_for(t["entry"], len(shots) + 1,
+                                    lag=_lag_of(project, t["entry"]))
         shots.extend(made)
         meta.extend(made_meta)
 
@@ -1140,8 +1152,18 @@ def fit_to_target(shots: list[Shot], meta: list[dict],
     return notes
 
 
-def shots_for(entry: dict, first_id: int,
-              run: int | None = None) -> tuple[list[Shot], list[dict]]:
+def _lag_of(project: Path, entry: dict) -> float:
+    """How late this take's sound starts (audio.sound_lag). 0 for a still,
+    or for a file that is not one of your camera takes. Asked of the disk,
+    so kept out of the pure functions above."""
+    if entry.get("kind") != "video" or "path" not in entry:
+        return 0.0
+    from .audio import sound_lag
+    return sound_lag(project / entry["path"])
+
+
+def shots_for(entry: dict, first_id: int, run: int | None = None,
+              lag: float = 0.0) -> tuple[list[Shot], list[dict]]:
     """The shot(s) one media file becomes.
 
     The ONLY place that decides this. `build` used to hold a second copy
@@ -1178,7 +1200,7 @@ def shots_for(entry: dict, first_id: int,
         shots.append(s)
         meta.append({"entry": entry, "role": role})
     else:
-        segments = video_segments(entry)
+        segments = video_segments(entry, lag)
         talking = is_talking(entry)
         spd = _speed_for(entry["path"])
         spot = _video_focus(entry)
@@ -1226,7 +1248,8 @@ def append_new(project: Path, seed: int = 0) -> list[str]:
     meta: list[dict] = []
     for e in fresh:
         s, m = shots_for(e, next_id + len(shots),
-                         run=len(film.shots) + len(shots))
+                         run=len(film.shots) + len(shots),
+                         lag=_lag_of(project, e))
         shots.extend(s)
         meta.extend(m)
     if not shots:
