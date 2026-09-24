@@ -48,3 +48,42 @@ terms were fixed before running, taken from the question's own words.
 
 **grep: found 6/10, useful 2/10, 71–101 ms each.** Every miss is the same
 kind: the question uses a different word than the file.
+
+### qmd through the MCP `query` tool, 2026-09-24 (commit b3e7915)
+Not the Rules' `qmd query "<question>"`: the searches were typed, as
+CLAUDE.md prescribes. Per question: `vec` = the question word for word,
+`lex` = keywords taken from the question only, `collections: docs`,
+`limit: 5`. Whether the reranker ran is not known. ms = wall clock of the
+call from two `date` calls (includes tool overhead); Q2 and Q5 were
+retries, not timed; Q1's is an upper bound (includes a turn gap).
+
+| # | rank of accepted file | found | useful | ms | note |
+|---|---|---|---|---|---|
+| 1 | 1 (opencv.md) | yes | **yes** | <=2650 | |
+| 2 | 2 (0003) | yes | **yes** | — | top hit was an unrelated plan |
+| 3 | 4 (0010) | yes | **yes** | 1050 | top hit was a plan quoting "faster" |
+| 4 | 2 (sync.md) | yes | **yes** | 1390 | 0011 first |
+| 5 | 1 (0001) | yes | **yes** | — | |
+| 6 | 1 (recording.md), 0004 3rd | yes | **yes** | 1000 | |
+| 7 | none | **no** | no | 1350 | 0007 not in the 5; audio.py is not indexed |
+| 8 | 1 (code-map.md) | yes | **yes** | 1190 | booth.py is not indexed |
+| 9 | 4 (code-map.md) | yes | **yes** | 1630 | scaffold.py is not indexed |
+| 10 | 2 (OPEN.md holds `878207e`) | yes | **yes** | 1160 | no `history` collection; the hash is in OPEN.md |
+
+**qmd (MCP, typed searches): found 9/10, useful 9/10 (every result list
+had 5 files), 1.0–1.6 s per warm call.** Rank 1 in only 4 of 10. Q10
+counts as found because the answer is in the snippet; that is a judgement.
+
+Failures while running it: "interrupted" on 5 calls (likely a user
+message arriving mid-call; not confirmed) and `Object is disposed` on 6
+calls in a row right after Q4; the same calls worked when retried. Cause
+of the second not measured.
+
+### qmd from the shell, `qmd query`, same 10 questions, 2026-09-24
+**0/10 returned anything.** Each call died at "Reranking 27 chunks" with
+`ggml_vulkan: Device memory allocation of size 633207232 failed`
+(`ErrorOutOfDeviceMemory`); rc=1, 35–126 s per call (Q3 rc=127, killed).
+`qmd doctor` at the same time reported the GPU fine (10.9 GB free). The
+`--no-gpu` run was stopped by hand after Q1 had sat at the rerank step
+for over 10 minutes while a second qmd run was competing for the CPU; it
+is not a clean measurement.
