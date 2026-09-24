@@ -6,7 +6,8 @@ move it to the bottom section with the commit id — do not delete it.
 
 - 2026-09-24 music went silent at the last word (ducking stops with the
   speech). Fixed in audio.duck_filters; Happy Birthday peek measured
-  -25..-33 LUFS over the 20 s closing card (was -55.4). **Not yet heard
+  -25..-33 LUFS over the 20 s closing card (was -55.4); the final
+  (878207e) measured the same, -25..-33, fading to -34.8. **Not yet heard
   by Jacek.** Every earlier film that ends on a silent picture has this.
 
 - 2026-09-24 last word of a camera intro/closing cut mid-vowel. Caused
