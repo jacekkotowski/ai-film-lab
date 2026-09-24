@@ -10,9 +10,12 @@ move it to the bottom section with the commit id — do not delete it.
   Films drafted between c802fcd and 2881ea5 (Turn Heat, Trade Behind War)
   keep the old cuts until their intro/closing `out:` is moved by ~0.6 s.
 - 2026-09-24 lips drift ±0.5 s in a FINAL (camera's varying frame rate;
-  drafts hide it). Fixed 646de5c, measured on the take (−0.017 s).
+  drafts hide it). Fixed 646de5c, measured on the take (−0.017 s) and in the
+  Frankfurt final (frames matched to the take at 3–23 s: −0.02–0.00 s).
   **Not yet seen in a final by Jacek.** Every earlier final with a camera
   take has this drift.
+- 2026-09-24 "redo one picture" was hard to find: now key P in the
+  menu (c52336d). The P → pick → window path has not been walked.
 - 2026-09-24 the check_film hook fails on a folder name with "ł" (the
   path is garbled); `film check` itself works when run by hand.
 
