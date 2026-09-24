@@ -381,14 +381,37 @@ def recording_doors(names: list[str], already: list[list[str]],
                 "replaces\nwhat you said before. The old take is moved to "
                 "media\\_discarded\\,\nnot deleted, and only once the new "
                 "one is saved."))
-        if narration:
-            doors.append(Step(
-                "...or say the words over ONE picture again",
-                ["record", "--voice", "--picture"],
-                why="You pick the picture from a list. Only its shot "
-                    "changes: its sound\nand its captions. The rest of the "
-                    "narration stays as it is."))
+    # One picture said again is not a numbered door: it is the key P, on
+    # the line that is always shown. See standing_keys.
     return [d for d in doors if _shape(d.args) not in already]
+
+
+def can_redo_one_picture(names: list[str], has_edit: bool,
+                         windows: bool) -> bool:
+    """True when `record --voice --picture` has something to work on: a
+    narration, already cut into an edit, and a window to record in."""
+    if not (windows and has_edit):
+        return False
+    return any(Path(n).stem.lower().startswith(kinds.VOICEOVER_PREFIX)
+               and Path(n).suffix.lower() in AUDIO_EXT for n in names)
+
+
+def standing_keys(gear_ok: bool, others: bool, claude: bool,
+                  one_picture: bool) -> list[str]:
+    """The line of letter keys under every menu.
+
+    P comes first (2026-09-24, "I did not see the button"): after
+    watching a draft, one fluffed sentence is the likeliest thing to
+    fix, and it used to be the eighth numbered line. A letter does not
+    move when the menu above it changes."""
+    keys = ["P redo one picture"] if one_picture else []
+    keys += (["M microphone/camera"] if gear_ok else []) + ["N new film"]
+    if others:
+        keys.append("F other film")
+    if claude:
+        keys.append("C tell Claude")
+    keys.append("Q quit")
+    return keys
 
 
 def _best_steps(project: Path) -> list[Step]:
@@ -1019,14 +1042,21 @@ def walk(project: Path | None = None) -> None:
         others = len(known_projects()) > 1
         claude = _claude_ready()
         gear_ok = sys.platform == "win32"
-        keys = (["M microphone/camera"] if gear_ok else []) + ["N new film"]
-        if others:
-            keys.append("F other film")
-        if claude:
-            keys.append("C tell Claude")
-        keys.append("Q quit")
+        media = project / "media"
+        one_picture = can_redo_one_picture(
+            [f.name for f in media.iterdir() if f.is_file()]
+            if media.is_dir() else [],
+            (project / "film.yaml").exists(), gear_ok)
+        keys = standing_keys(gear_ok, others, claude, one_picture)
         print("\n  " + "   ".join(keys))
         answer = _ask("\n  Your choice:  ").lower()
+        if answer == "p" and one_picture:
+            if _run(["record", "--voice", "--picture",
+                     "-p", project.name]) != 0:
+                print("\nThat stopped early -- the reason is above. "
+                      "Nothing half-done is used.")
+            last_title = None
+            continue
         if answer == "m" and gear_ok:
             _pick_devices()
             last_title = None
