@@ -1,0 +1,501 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# Each picture carries its own piece of
+# media/voiceover_20260924-101945.wav -- see `voice:` below.
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 2.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20260924-100838.mp4
+    in: "00:01.65"
+    out: "00:27.95"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.510, 0.330]
+    note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "The Frankfurt School and"
+        at: 0.51
+        dur: 1.76
+        pos: lower_third
+        words: [0.00, 0.50, 0.85, 1.28]
+      - text: "Leszek Kołakowski confronted domination,"
+        at: 3.14
+        dur: 1.16
+        pos: lower_third
+        words: [0.00, 0.40]
+      - text: "but reached opposing conclusions."
+        at: 4.68
+        dur: 1.74
+        pos: lower_third
+        words: [0.00, 0.27, 0.75, 1.22]
+      - text: "The Frankfurt School asked:"
+        at: 7.63
+        dur: 1.53
+        pos: lower_third
+        words: [0.00, 0.27, 0.63, 1.03]
+      - text: "why does modern society reproduce"
+        at: 9.56
+        dur: 1.80
+        pos: lower_third
+        words: [0.00, 0.18, 0.47, 0.75, 1.37]
+      - text: "domination despite formal freedom?"
+        at: 11.36
+        dur: 2.23
+        pos: lower_third
+        words: [0.00, 0.78, 1.33, 1.83]
+      - text: "Kołakowski, shaped by Stalinism, asked:"
+        at: 15.51
+        dur: 1.65
+        pos: lower_third
+        words: [0.00, 0.25, 0.53, 1.45]
+      - text: "can an ideology of emancipation itself produce domination?"
+        at: 17.76
+        dur: 4.03
+        pos: lower_third
+        words: [0.00, 0.18, 0.55, 0.97, 1.40, 2.25, 2.68, 3.55]
+
+  - id: s02
+    src: media/rec_20260924-100838.mp4
+    in: "00:30.20"
+    out: "00:31.12"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.510, 0.330]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 2 of 2 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s03
+    src: media/1hockheimer.jfif
+    voice: media/voiceover_20260924-101945.wav
+    in: "00:01.30"
+    out: "00:12.10"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.231, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.769, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.458, 0.173]
+    note: "picture 1 of 8 -- holds while these words are said. This picture is 960x720; the frame shows about 0.46 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "The Institute for Social Research was founded in 1923;"
+        at: 0.00
+        dur: 4.20
+        pos: lower_third
+        words: [0.00, 0.45, 1.08, 1.42, 1.77, 2.32, 2.60, 3.00, 3.25]
+      - text: "Max Horkheimer became director in 1930."
+        at: 5.02
+        dur: 3.11
+        pos: lower_third
+        words: [0.00, 0.43, 1.38, 1.72, 2.17, 2.47]
+
+  - id: s04
+    src: media/2adorno.jfif
+    voice: media/voiceover_20260924-101945.wav
+    in: "00:12.70"
+    out: "00:39.20"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_right
+    from: {cx: 0.324, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.676, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.469, 0.141]
+    note: "picture 2 of 8 -- holds while these words are said. This picture is 1060x1145; the frame shows about 0.65 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Horkheimer and Theodor W."
+        at: 0.00
+        dur: 2.76
+        pos: lower_third
+        words: [0.00, 1.00, 1.63, 2.13]
+      - text: "Adorno extended Marxist critique to culture,"
+        at: 2.80
+        dur: 3.66
+        pos: lower_third
+        words: [0.00, 0.42, 1.32, 1.88, 2.30, 2.87]
+      - text: "bureaucracy,"
+        at: 6.75
+        dur: 0.36
+        pos: lower_third
+        words: [0.00]
+      - text: "technology and instrumental reason."
+        at: 7.77
+        dur: 2.39
+        pos: lower_third
+        words: [0.00, 1.02, 1.37, 1.80]
+      - text: "In Dialectic of Enlightenment (1944–47),"
+        at: 10.17
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 1.33, 2.40, 2.62, 3.87, 4.42]
+      - text: "they argued that reason itself could become"
+        at: 16.45
+        dur: 2.88
+        pos: lower_third
+        words: [0.00, 0.18, 0.67, 1.10, 1.40, 1.93, 2.40]
+      - text: "an instrument of domination."
+        at: 19.33
+        dur: 1.73
+        pos: lower_third
+        words: [0.00, 0.32, 0.68, 1.22]
+
+  - id: s05
+    src: media/3kolakowski.jfif
+    voice: media/voiceover_20260924-101945.wav
+    in: "00:40.70"
+    out: "01:10.60"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.207, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.793, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.599, 0.561]
+    note: "picture 3 of 8 -- holds while these words are said. This picture is 1240x826; the frame shows about 0.41 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "After 1945,"
+        at: 0.13
+        dur: 1.23
+        pos: lower_third
+        words: [0.00, 0.47]
+      - text: "Leszek Kołakowski embraced"
+        at: 1.37
+        dur: 2.26
+        pos: lower_third
+        words: [0.00, 0.73, 1.42]
+      - text: "Marxism and socialist egalitarianism."
+        at: 3.63
+        dur: 2.46
+        pos: lower_third
+        words: [0.00, 0.82, 1.02, 1.35]
+      - text: "The Stalinist period,"
+        at: 6.10
+        dur: 1.81
+        pos: lower_third
+        words: [0.00, 0.87, 1.43]
+      - text: "1948–56,"
+        at: 8.23
+        dur: 1.98
+        pos: lower_third
+        words: [0.00, 0.53, 1.32]
+      - text: "and the suppression of dissent in 1968 changed his position."
+        at: 10.22
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.75, 0.95, 1.35, 1.62, 2.05, 2.25, 3.05, 4.18, 4.48]
+      - text: "He saw a regime claiming to"
+        at: 16.10
+        dur: 1.79
+        pos: lower_third
+        words: [0.00, 0.22, 0.55, 0.80, 1.10, 1.55]
+      - text: "liberate humanity suppress dialogue,"
+        at: 17.90
+        dur: 2.13
+        pos: lower_third
+        words: [0.00, 0.48, 1.40, 1.63]
+      - text: "intellectual freedom and disagreement in the"
+        at: 20.35
+        dur: 2.73
+        pos: lower_third
+        words: [0.00, 0.27, 1.27, 1.45, 1.92, 2.60]
+      - text: "name of historical necessity."
+        at: 23.08
+        dur: 1.39
+        pos: lower_third
+        words: [0.00, 0.20, 0.33, 0.68]
+
+  - id: s06
+    src: media/4_apokalypse.jfif
+    voice: media/voiceover_20260924-101945.wav
+    in: "01:12.40"
+    out: "01:38.25"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: pull_out
+    from: {cx: 0.464, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.536, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.321, 0.543]
+    note: "picture 4 of 8 -- holds while these words are said. This picture is 900x1454; the frame shows about 0.93 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Kołakowski saw the Frankfurt School as trying to preserve"
+        at: 0.72
+        dur: 2.46
+        pos: lower_third
+        words: [0.00, 0.30, 0.47, 0.82, 1.37, 1.65, 1.87, 2.03]
+      - text: "Marxism after abandoning the revolutionary proletariat."
+        at: 3.18
+        dur: 3.53
+        pos: lower_third
+        words: [0.00, 0.70, 1.15, 2.00, 2.18, 2.68]
+      - text: "His critique of domination remained,"
+        at: 7.50
+        dur: 1.86
+        pos: lower_third
+        words: [0.00, 0.28, 0.63, 0.90, 1.30]
+      - text: "but the political alternative was not clear anymore."
+        at: 9.70
+        dur: 3.13
+        pos: lower_third
+        words: [0.00, 0.28, 0.73, 1.13, 1.80, 2.20, 2.38, 2.68]
+      - text: "For Kołakowski, the decisive question was:"
+        at: 13.67
+        dur: 2.50
+        pos: lower_third
+        words: [0.00, 0.33, 0.97, 1.40, 1.80, 2.17]
+      - text: "can the theory of emancipation itself justify coercion?"
+        at: 16.17
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.47, 0.85, 1.27, 1.55, 2.35, 2.95, 3.75]
+
+  - id: s07
+    src: media/5_tanks.jfif
+    voice: media/voiceover_20260924-101945.wav
+    in: "01:38.70"
+    out: "01:51.45"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_right
+    from: {cx: 0.230, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.770, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.467, 0.496]
+    note: "picture 5 of 8 -- holds while these words are said. This picture is 1920x1433; the frame shows about 0.46 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "The Frankfurt School asked:"
+        at: 0.00
+        dur: 3.02
+        pos: lower_third
+        words: [0.00, 2.53, 2.88, 3.28]
+      - text: "How does society reproduce domination?"
+        at: 3.02
+        dur: 2.45
+        pos: lower_third
+        words: [0.00, 0.53, 0.77, 1.32, 1.62]
+      - text: "Kołakowski asked:"
+        at: 6.70
+        dur: 0.45
+        pos: lower_third
+        words: [0.00]
+      - text: "How can abolishing domination reproduce it?"
+        at: 7.15
+        dur: 3.18
+        pos: lower_third
+        words: [0.00, 0.53, 0.88, 1.47, 2.05, 2.63]
+
+  - id: s08
+    src: media/6tear_gas.jfif
+    voice: media/voiceover_20260924-101945.wav
+    in: "01:52.25"
+    out: "02:07.80"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.207, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.792, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.118, 0.384]
+    note: "picture 6 of 8 -- holds while these words are said. This picture is 900x600; the frame shows about 0.42 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "His experience of Stalinism made the danger concrete:"
+        at: 1.11
+        dur: 2.81
+        pos: lower_third
+        words: [0.00, 0.20, 0.73, 0.93, 1.53, 1.77, 1.97, 2.20]
+      - text: "when ideology claims the necessary direction of history,"
+        at: 4.19
+        dur: 3.23
+        pos: lower_third
+        words: [0.00, 0.25, 0.70, 1.30, 1.52, 1.98, 2.45, 2.72]
+      - text: "dialogue becomes disobedience"
+        at: 8.21
+        dur: 1.95
+        pos: lower_third
+        words: [0.00, 0.50, 1.03]
+      - text: "and disagreement becomes deviation."
+        at: 10.16
+        dur: 2.28
+        pos: lower_third
+        words: [0.00, 0.50, 0.95, 1.62]
+
+  - id: s09
+    src: media/7 tear_gas.jfif
+    voice: media/voiceover_20260924-101945.wav
+    in: "02:09.05"
+    out: "02:17.80"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_left
+    from: {cx: 0.178, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.822, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.232, 0.571]
+    note: "picture 7 of 8 -- holds while these words are said. This picture is 960x540; the frame shows about 0.36 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "That is the divide:"
+        at: 0.00
+        dur: 1.56
+        pos: lower_third
+        words: [0.00, 0.93, 1.13, 1.33]
+      - text: "emancipation from domination versus suspicion"
+        at: 1.56
+        dur: 2.78
+        pos: lower_third
+        words: [0.00, 0.62, 0.83, 1.30, 1.93]
+      - text: "of emancipation becoming domination."
+        at: 4.34
+        dur: 2.44
+        pos: lower_third
+        words: [0.00, 0.43, 1.23, 1.58]
+
+  - id: s10
+    src: media/7 tear_gas.jfif
+    voice: media/voiceover_20260924-101945.wav
+    in: "02:19.25"
+    out: "02:35.80"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: tilt_up
+    from: {cx: 0.178, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.822, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.232, 0.571]
+    note: "picture 8 of 8 -- holds while these words are said. This picture is 960x540; the frame shows about 0.36 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Kołakowski’s warning reaches into the present:"
+        at: 0.06
+        dur: 2.63
+        pos: lower_third
+        words: [0.00, 0.78, 1.07, 1.57, 2.05, 2.25]
+      - text: "when a movement claims moral authority through"
+        at: 2.99
+        dur: 2.78
+        pos: lower_third
+        words: [0.00, 0.28, 0.48, 0.70, 1.17, 1.53, 2.32]
+      - text: "the language of emancipation,"
+        at: 5.78
+        dur: 1.53
+        pos: lower_third
+        words: [0.00, 0.20, 0.47, 0.68]
+      - text: "dissent can be redefined as oppression,"
+        at: 7.86
+        dur: 2.71
+        pos: lower_third
+        words: [0.00, 0.53, 0.92, 1.18, 2.00, 2.25]
+      - text: "and opponents as fascists."
+        at: 10.57
+        dur: 2.43
+        pos: lower_third
+        words: [0.00, 0.65, 1.13, 1.72]
+
+  - id: s11
+    src: media/close_rec_20260924-102319.mp4
+    in: "00:00.00"
+    out: "00:25.10"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.527, 0.379]
+    note: "closer"
+    captions:
+      - text: "The result is the very paradox he feared:"
+        at: 0.51
+        dur: 3.16
+        pos: lower_third
+        words: [0.00, 0.28, 0.67, 1.02, 1.93, 2.10, 2.50, 2.78]
+      - text: "a politics that claims to liberate society begins to police"
+        at: 4.20
+        dur: 4.16
+        pos: lower_third
+        words: [0.00, 0.12, 0.47, 1.13, 1.42, 1.63, 2.12, 2.62, 3.33, 3.83]
+      - text: "what may be said,"
+        at: 8.36
+        dur: 1.31
+        pos: lower_third
+        words: [0.00, 0.65, 0.85, 0.98]
+      - text: "questioned or opposed."
+        at: 10.05
+        dur: 1.50
+        pos: lower_third
+        words: [0.00, 0.87, 1.00]
+      - text: "The question remains:"
+        at: 12.50
+        dur: 0.91
+        pos: lower_third
+        words: [0.00, 0.18, 0.45]
+      - text: "who protects freedom when the language of liberation becomes a"
+        at: 14.16
+        dur: 4.33
+        pos: lower_third
+        words: [0.00, 0.25, 0.63, 1.13, 1.53, 1.68, 1.93, 2.13, 2.83, 4.05]
+      - text: "justification for silencing disagreement?"
+        at: 18.50
+        dur: 2.21
+        pos: lower_third
+        words: [0.00, 0.48, 0.95, 1.57]
+
+  - id: s12
+    src: media/close_rec_20260924-102319.mp4
+    in: "00:29.20"
+    out: "00:30.13"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.527, 0.379]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "closer"
+
+# 12 shots, about 194 seconds.
+#
+# 8 slide(s), one per picture, each holding its own piece of
+# the 156s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
