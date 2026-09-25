@@ -67,6 +67,36 @@ Question: "Background hiss grows towards the end of the film. What fixed it?"
   <folder>/<date>-<hash>.md`, then `qmd update` and `qmd embed`.
 - `qmd cleanup` removed 3 orphaned records after the switch.
 
+## Trap: installed inside the Claude app's private folder (measured 2026-09-25)
+- The Claude desktop app is a Windows Store (MSIX) package
+  (`Claude_pzs8sxrjxfjjc`). Anything it writes to `AppData\Roaming`,
+  including `npm install -g` run from a Claude session, lands in
+  `C:\Users\jacek\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\npm\`.
+  Inside the app it looks like `AppData\Roaming\npm`. Every other program
+  (Obsidian/Claudian, a normal terminal) sees no npm folder at all:
+  Claudian, same user and host, got `Test-Path ...\Roaming\npm\qmd.cmd` = False.
+- Not affected: Node itself (`C:\Program Files\nodejs`), the index and
+  models (`~\.cache\qmd`), the config (`~\.config\qmd`), `~\.claude`.
+- So global npm tools for use outside the app must be installed outside
+  `AppData`, or from a normal terminal.
+- **Fixed 2026-09-25** by moving the folder with the apps closed: a .bat
+  run from Explorer did `move <LocalCache>\Roaming\npm %APPDATA%\npm`
+  (same drive, so a rename). Measured afterwards from inside the Claude
+  app: the private copy is gone, `qmd --version` = 2.8.3 from
+  `C:\Users\jacek\AppData\Roaming\npm`, `claude mcp list` =
+  `plugin:qmd:qmd ... Connected`. Index, models and config untouched.
+  The app finds the real folder once its private copy is gone.
+
+## From Obsidian (Claudian), looked up 2026-09-25, not tried
+- Claudian's README (YishenTu/claudian) says only: MCP servers come from
+  "each coding agent's native CLI-managed MCP configuration". It does not
+  say whether plugin-provided servers (our `qmd@qmd`) are loaded, which
+  transports it supports, or anything about Windows.
+- 2026-09-25: this Claude session started with qmd "failed to connect",
+  while `claude mcp list` from the shell said Connected minutes later.
+  Cause not measured. Happened again 2026-09-25 after the move: the
+  failure is cached for 15 min and the session cannot force a retry.
+
 Below: from the README and the issue list.
 
 ## What it is

@@ -4,6 +4,12 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-09-25 qmd MCP fails to connect at the start of some Claude
+  sessions ("recent failure cached", 15 min), while `claude mcp list` in
+  the same session says Connected. qmd itself is fine since the move out
+  of the app's private folder (docs/tech/qmd.md). Cause of the start-up
+  failure not measured. Workaround: a new session, or `/mcp` in a
+  terminal `claude`. Not yet seen working from Claudian.
 - 2026-09-24 qmd MCP `query` returned `Object is disposed` on 6 calls in
   a row (right after a burst of calls that were cancelled mid-flight);
   the same calls worked on retry, and 12 later calls had no error. Cause
