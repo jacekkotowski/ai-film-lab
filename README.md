@@ -79,3 +79,15 @@ have ever watched can be brought back:
 ```powershell
 uv run film undo -p my_movie
 ```
+
+## Into 3D
+
+`film final` also writes `out\final.timeline.json` beside the film: where
+every shot starts and ends, frame by frame, and what it is for — title,
+intro, slide, closing. Other tools can pick the film up from there
+without guessing.
+
+The first one is **[ai-3d-studio](https://github.com/jacekkotowski/ai-3d-studio)**.
+It turns the finished film into a Prezi-style flight in Blender: every
+part of the film on its own screen around the title, the camera diving
+into each one as it plays, and back to the middle for your closing.
