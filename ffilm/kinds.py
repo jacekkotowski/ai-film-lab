@@ -110,6 +110,33 @@ def is_recording(stem: str) -> bool:
 CLOSE_PREFIX = "close_"
 
 
+def hint(stem: str) -> tuple[str | None, int | None, str]:
+    """Returns (role, explicit_number, clean_stem). role is one of:
+    None, 'open', 'close', 'open_close', 'quote'.
+
+    A number and a role are independent -- `00_open_close_x.png` gets
+    BOTH: shown first (the number) AND treated as the opener/closer (the
+    role). Strip the number first, then look for a role in what's left.
+
+    Here, at the bottom, because scaffold places files by it and the
+    timeline names shots by it -- two layers apart.
+    """
+    stem_no_num = stem
+    num = None
+    m = NUM_PREFIX.match(stem.lower())
+    if m:
+        num = int(m.group(1))
+        stem_no_num = stem[m.end():]
+
+    low = stem_no_num.lower()
+    for prefix, role in (("open_close_", "open_close"), ("openclose_", "open_close"),
+                        ("open_", "open"), (CLOSE_PREFIX, "close"),
+                        ("quote_", "quote")):
+        if low.startswith(prefix):
+            return role, num, stem_no_num[len(prefix):]
+    return None, num, stem_no_num
+
+
 # What a microphone-only take (`film record --voice`) is called. Its own
 # prefix, not REC_PREFIX -- a voiceover is narration read over pictures,
 # not a talking-head clip, and REC_SPEED (scaffold's 1.2x for `rec_*`)

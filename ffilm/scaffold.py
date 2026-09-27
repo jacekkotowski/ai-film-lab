@@ -120,11 +120,9 @@ QUOTE_SECONDS = 5.0          # a quote needs to be READ, not glanced at
 # `(?!\d)` is what keeps a date or a camera counter out of this:
 # `20260917.jpg` and `IMG_0042.jpg` are not somebody asking for position
 # 202 or 42.
-# The same one `kinds.is_recording` strips, and deliberately the
-# same object: two copies of this rule is how a take could be
-# numbered for `_hint` and un-numbered for `is_recording` at the
-# same time. See kinds.NUM_PREFIX.
-_NUM_PREFIX = kinds.NUM_PREFIX
+# The rule itself is kinds.NUM_PREFIX, read by kinds.hint and
+# kinds.is_recording alike: two copies of it is how a take could be
+# numbered for one and un-numbered for the other at the same time.
 
 
 # Anything the frame cannot show is travelled. It was 0.80 -- a picture
@@ -184,28 +182,8 @@ def sweep_across(src_w: int, src_h: int, frame_w: int,
     return (lo, hi)
 
 
-def _hint(stem: str) -> tuple[str | None, int | None, str]:
-    """Returns (role, explicit_number, clean_stem). role is one of:
-    None, 'open', 'close', 'open_close', 'quote'.
-
-    A number and a role are independent -- `00_open_close_x.png` gets
-    BOTH: shown first (the number) AND treated as the opener/closer (the
-    role). Strip the number first, then look for a role in what's left.
-    """
-    stem_no_num = stem
-    num = None
-    m = _NUM_PREFIX.match(stem.lower())
-    if m:
-        num = int(m.group(1))
-        stem_no_num = stem[m.end():]
-
-    low = stem_no_num.lower()
-    for prefix, role in (("open_close_", "open_close"), ("openclose_", "open_close"),
-                        ("open_", "open"), ("close_", "close"),
-                        ("quote_", "quote")):
-        if low.startswith(prefix):
-            return role, num, stem_no_num[len(prefix):]
-    return None, num, stem_no_num
+# Moved down to kinds.hint so the timeline can name shots by the same rule.
+_hint = kinds.hint
 
 
 def _title_from_stem(stem: str) -> str:

@@ -13,6 +13,8 @@ cli.py  --  the commands you type.
     uv run film peek                ~seconds   is the ORDER right?
     uv run film draft               ~a minute  does the MOTION feel right?
     uv run film final               minutes    ship it
+                                    (also writes out/final.timeline.json --
+                                    each shot's times, for other tools)
 
     uv run film init                write a first film.yaml automatically
     uv run film edit                open the editing bench in your browser
@@ -42,6 +44,7 @@ from . import editor
 from . import guide
 from . import history
 from . import scaffold
+from . import timeline
 from .checks import (bokeh_notes, film_shape, framing_notes, library_lines,
                      caption_share_line, music_notes, narration_notes,
                      preflight_report, repeated_captions, shot_lines,
@@ -213,6 +216,11 @@ def cmd_render(args, quality_name: str) -> None:
     render(film, out, q, seed=args.seed, font=args.font)
     print(f"  done in {time.time() - t0:.1f}s")
     if quality_name == "final":
+        # From the Film just rendered, so it cannot describe another edit.
+        try:
+            print(f"  shot times -> {timeline.write(film, out, cover.card_src(project))}")
+        except OSError as e:
+            print(f"  (no timeline: {e})")     # never worth losing a render over
         auto_cover(project)
         ship(project, film, out, open_page=not getattr(args, "no_open", False))
     elif not getattr(args, "no_open", False):

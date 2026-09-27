@@ -27,8 +27,8 @@ LAYERS = {
     "library": 1, "models": 1,
     # 2  what a film IS
     "spec": 2,
-    # 3  the movement vocabulary
-    "moves": 3,
+    # 3  the movement vocabulary; where each shot sits in time
+    "moves": 3, "timeline": 3,
     # 4  getting and reading the material
     "record": 4, "ingest": 4, "segment": 4,
     # 5  sound and words, built from the analysis
