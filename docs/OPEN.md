@@ -4,19 +4,6 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
-- 2026-09-28 `film caption` silently DROPS a script line whose words
-  the transcriber heard but spelled differently. What Is Love: "A 2018
-  meta-analysis by Kathrin Karsay," (heard "Catherine Carcey") and "In
-  one study," had no caption at all; `film check` said nothing, because
-  it reads only the captions that exist. Fixed by hand in film.yaml
-  (6bdf1a7) from whisper word times on the slice. **Code fixed eec1145**
-  (cause: misheard words counted as a false start). Measured on whisper's
-  real output: What Is Love 361 -> 371/371 script words captioned; 3
-  other films unchanged, Bauhaus 4 lines extended onto speech. `film
-  check` now names half a sentence on screen. What Is Love re-captioned
-  with it (captions removed first: `--apply` ADDS to existing ones) and
-  drafted, a8cd38d: check clean, the 4 lines checked on frames of the
-  draft. **Not yet watched by Jacek.**
 - 2026-09-28 v0.2 parallax (`depth:`) built, 154cf49. **Not yet seen in
   motion by Jacek**: judged only on stills (0.5 clean, 0.8 stretches, charts
   bend: decision 0013). Costs +85 % render time at final (234 -> 433 s on
@@ -60,6 +47,14 @@ move it to the bottom section with the commit id — do not delete it.
 ---
 
 ## Fixed (with the commit, once Jacek has seen it work)
+- 2026-09-28 `film caption` dropped a script line whose names were
+  misheard ("In one study,", "A 2018 meta-analysis by Kathrin Karsay,"
+  on What Is Love); misheard words were counted as a false start —
+  eec1145. What Is Love 361 -> 371/371 script words captioned; `film
+  check` now names half a sentence on screen. Re-captioned and drafted,
+  a8cd38d. Jacek watched it: "captions look right now". Note: `film
+  caption --apply` ADDS to existing captions; remove them first.
+  Earlier films keep their old captions until re-captioned.
 - 2026-09-24 music went silent at the last word (ducking stops with the
   speech) — 878207e. Happy Birthday final: -25..-33 LUFS over the 20 s
   closing card (was -55.4). Jacek heard it: "it works". Earlier films
