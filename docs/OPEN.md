@@ -4,11 +4,6 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
-- 2026-09-28 `render.source_maps`'s float64 promotion fixed (decision
-  0013): 98.9 -> ~41 ms/call, isolated benchmark, ~2.4x. **Not yet
-  re-profiled inside a real `film final`** — the +85% / 433.1 s parallax
-  figure is not remeasured, so the effect on a real render is not known.
-  `parallax_maps` (82.5 s) and `remap` (38.6 s) untouched.
 - 2026-09-25 qmd MCP fails to connect at the start of some Claude
   sessions ("recent failure cached", 15 min), while `claude mcp list` in
   the same session says Connected. qmd itself is fine since the move out
@@ -30,6 +25,13 @@ move it to the bottom section with the commit id — do not delete it.
 ---
 
 ## Fixed (with the commit, once Jacek has seen it work)
+- 2026-09-28 `render.source_maps` widened the parallax grid to float64 —
+  231bdf0 (decision 0013): 98.9 -> ~41 ms/call, isolated benchmark.
+  Real `film final` of What Is Love with the fix (258.9 s, 11 shots,
+  depth 0.5, no profiler): **1297.5 s** wall, 550 MB. No earlier What Is
+  Love final time was recorded, so the whole-film speed-up is not known.
+  Other float math in the frame path checked: stays float32. Jacek:
+  "fast enough".
 - 2026-09-24 the check_film hook fails on a folder name with "ł" (`film
   check` itself worked run by hand) — the hook read Claude Code's event
   with Windows' own code page instead of UTF-8, so "ł" became "Å‚" and no
