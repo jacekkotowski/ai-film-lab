@@ -1099,15 +1099,33 @@ def cmd_record(args) -> None:
             except OSError as e:
                 print(f"  could not put {f.name} aside: {e}")
 
+    chosen = None
     if windowed:
+        # The window's own way to one picture (2026-09-28, "make a button
+        # in the recording pane"): the list comes from the edit, so there
+        # is none before there is one -- or while it does not load.
+        menu: list[str] = []
+        if args.voice and not picking:
+            try:
+                menu = scaffold.picture_menu(
+                    Film.load(project / "film.yaml"))
+            except Exception:
+                menu = []
         print("\nThe window is open. Everything happens in it.")
-        booth.session(script=script,
-                      script_path=words_path or booth.script_path(
-                          project, args.voice, replacing),
-                      wpm=args.wpm, title=project.name,
-                      start=new_take, finish=took, seconds=args.seconds,
-                      discard=drop_last, voice_only=args.voice,
-                      steps=steps, pair=pair)
+        chosen = booth.session(
+            script=script,
+            script_path=words_path or booth.script_path(
+                project, args.voice, replacing),
+            wpm=args.wpm, title=project.name,
+            start=new_take, finish=took, seconds=args.seconds,
+            discard=drop_last, voice_only=args.voice,
+            steps=steps, pair=pair,
+            pictures=booth.one_picture_choices(menu, args.voice,
+                                               bool(picking)))
+        if chosen and not takes:
+            # Picked before anything was recorded: straight to it.
+            args.picture = chosen
+            return cmd_record(args)
     else:
         print("\nJust talk." if args.voice else
               "\nLook at the camera, not at the screen.")
@@ -1184,6 +1202,13 @@ def cmd_record(args) -> None:
               f"drag,")
         print("  and the silences get trimmed. Both are numbers you can "
               "change.")
+    if chosen:
+        # A whole new narration was recorded before ONE picture was
+        # picked. Its pictures are not cut yet, so picture N of the old
+        # edit is not what was just said: kept, and said how.
+        print(f"\n  Picture {chosen} was not recorded: this new narration "
+              "is not cut into the\n  edit yet. After `film go --rewrite`, "
+              "pick it again with P or its menu line.")
     guide.print_next(project)
 
 

@@ -332,7 +332,7 @@ def _shape(args: list[str]) -> list[str]:
 
 
 def recording_doors(names: list[str], already: list[list[str]],
-                    windows: bool) -> list[Step]:
+                    windows: bool, has_edit: bool = False) -> list[Step]:
     """The ways back to a microphone. Pure, off the names in media/.
 
     The guide reads the next step off the disk, so a step vanishes the
@@ -381,8 +381,16 @@ def recording_doors(names: list[str], already: list[list[str]],
                 "replaces\nwhat you said before. The old take is moved to "
                 "media\\_discarded\\,\nnot deleted, and only once the new "
                 "one is saved."))
-    # One picture said again is not a numbered door: it is the key P, on
-    # the line that is always shown. See standing_keys.
+    # One picture said again: a numbered line AND the key P. The key
+    # alone (c52336d) was not seen either -- 2026-09-28, "there was no
+    # button or command to try" -- so the line is back, straight under
+    # the one above, and worded to be read as ONE, not as all of them.
+    if narration and has_edit:
+        doors.append(Step(
+            "...or redo ONE picture only (pick it from a list)",
+            ["record", "--voice", "--picture"],
+            why="Only that picture's sound and captions change. The rest "
+                "of the\nnarration stays as it is."))
     return [d for d in doors if _shape(d.args) not in already]
 
 
@@ -1128,5 +1136,6 @@ def next_steps(project: Path) -> list[Step]:
              if media.is_dir() else [])
     p = ["-p", project.name]
     doors = recording_doors(names, [_shape(x.args) for x in steps],
-                            sys.platform == "win32")
+                            sys.platform == "win32",
+                            (project / "film.yaml").exists())
     return steps + [Step(d.title, d.args + p, why=d.why) for d in doors]

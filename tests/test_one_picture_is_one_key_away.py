@@ -6,10 +6,13 @@ picture again (fd18000) was built, but offered as the eighth numbered
 line of the menu, worded like the line above it. The moment you want it
 is after watching a draft, stressed, looking for the fix for one fluffed
 sentence -- so it is a fixed letter, P, first on the line of keys that
-is always shown, and it is not also a numbered line.
+is always shown.
+
+2026-09-28: the key was not seen either, so it is a numbered line again
+as well -- see test_one_picture_is_a_numbered_line_and_a_button.py.
 """
 
-from ffilm.guide import can_redo_one_picture, recording_doors, standing_keys
+from ffilm.guide import can_redo_one_picture, standing_keys
 
 
 def test_p_is_first_on_the_key_line_when_a_picture_can_be_said_again():
@@ -50,8 +53,3 @@ def test_not_where_the_window_cannot_open():
     names = ["1_a.jpg", "voiceover_20260924-101945.wav"]
     assert not can_redo_one_picture(names, has_edit=True, windows=False)
 
-
-def test_it_is_not_also_a_numbered_line():
-    doors = recording_doors(["1_a.jpg", "voiceover_20260924-101945.wav"],
-                            [], windows=True)
-    assert not any("--picture" in d.args for d in doors)

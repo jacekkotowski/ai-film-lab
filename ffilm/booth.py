@@ -151,6 +151,17 @@ def next_label(i: int, n: int) -> str:
     return "Next picture      SPACE"
 
 
+def one_picture_choices(menu: list[str], voice_only: bool,
+                        one_already: bool) -> list[str]:
+    """The pictures the window offers to say again one at a time, or none.
+
+    Asked 2026-09-28: "make a button in the recording pane". Only when
+    reading over ALL the pictures: in front of the camera there is no
+    picture, and a window already on one picture has nothing to pick.
+    `menu` is `scaffold.picture_menu`, empty until there is an edit."""
+    return list(menu) if voice_only and not one_already else []
+
+
 def available() -> bool:
     try:
         import tkinter                                    # noqa: F401
@@ -461,7 +472,8 @@ class Take:
 def session(script: str, script_path: Path, wpm: int, title: str,
             start, finish, seconds: float | None = None,
             discard=None, voice_only: bool = False,
-            steps: list | None = None, pair=None) -> None:
+            steps: list | None = None, pair=None,
+            pictures: list[str] | None = None) -> int | None:
     """Open the window and stay in it until the person is finished.
 
     `start()`         begins one recording and returns the running Take.
@@ -470,6 +482,11 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     `pair(words)`     turns what was typed into the steps: one (picture,
                       words) each. Called on Start, so what was pasted
                       is what is shown.
+    `pictures`        one line per picture (`one_picture_choices`). When
+                      given, the first screen has a button to say ONE of
+                      them again; the window closes and returns its
+                      number, and the caller opens it again on that one.
+                      Returns None otherwise.
 
     Control is inverted -- the window owns the loop, not the caller --
     because the alternative is a window that closes and reopens between
@@ -610,6 +627,20 @@ def session(script: str, script_path: Path, wpm: int, title: str,
     mic = big(gauges, "", 15, DIM, font="Consolas")
     mic.pack(anchor="w", pady=(6, 0))
 
+    # ---- screen 5: which ONE picture ----------------------------------
+    # One button per picture, with the first words said over it -- the
+    # picture is found by what was said, not by counting.
+    pick = tk.Frame(root, bg=BG)
+    big(pick, "Which picture do you want to say again?", 30).pack(
+        anchor="w", pady=(4, 2))
+    big(pick, "Only that picture's words are recorded. The rest of the "
+              "narration stays as it is.", 15, DIM).pack(anchor="w",
+                                                         pady=(0, 14))
+    pick_list = tk.Frame(pick, bg=BG)
+    pick_list.pack(anchor="w", fill="x")
+    pick_row = tk.Frame(pick, bg=BG)
+    pick_row.pack(anchor="w", pady=(16, 4))
+
     # ---- screen 4: what you got ---------------------------------------
     review = tk.Frame(root, bg=BG)
     got = big(review, "", 34)
@@ -645,7 +676,7 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         widget.focus_set()
 
     def show(name: str) -> None:
-        for f in (compose, stage, review):
+        for f in (compose, stage, review, pick):
             f.pack_forget()
         S["stage"] = name
         # On top only while it matters. During compose you may well be
@@ -658,6 +689,9 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         elif name == "review":
             review.pack(fill="both", expand=True, padx=44, pady=20)
             grab_keyboard(review)
+        elif name == "pick":
+            pick.pack(fill="both", expand=True, padx=44, pady=30)
+            grab_keyboard(pick)
         else:
             stage.pack(fill="both", expand=True)
             grab_keyboard(canvas)
@@ -974,6 +1008,23 @@ def session(script: str, script_path: Path, wpm: int, title: str,
            primary=True).pack(side="left")
     button(row, "Close", done).pack(side="left", padx=10)
 
+    def choose(n: int) -> None:
+        """Picked: this window closes, the caller opens it on picture n.
+        Whatever was typed in the box is saved first, as on Close."""
+        S["chosen"] = n
+        done()
+
+    if pictures:
+        button(row, "Only ONE picture...",
+               lambda: show("pick")).pack(side="left", padx=10)
+        for n, line in enumerate(pictures, 1):
+            b = button(pick_list, line.strip(), lambda n=n: choose(n),
+                       small=True)
+            b.configure(anchor="w")
+            b.pack(anchor="w", fill="x", pady=2)
+        button(pick_row, "Back to all the pictures      Esc",
+               lambda: show("compose")).pack(side="left")
+
     button(review_row, "Record another      Enter", again,
            primary=True).pack(side="left")
     # Worded so it cannot be mistaken for the one next to it. These two
@@ -1004,6 +1055,8 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         # thing you just said.
         if S["stage"] == "rec":
             stop_take()
+        elif S["stage"] == "pick":
+            show("compose")
         else:
             done()
         return "break"
@@ -1036,3 +1089,4 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         root.mainloop()
     except KeyboardInterrupt:
         done()
+    return S.get("chosen")
