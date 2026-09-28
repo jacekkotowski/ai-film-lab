@@ -34,11 +34,6 @@ move it to the bottom section with the commit id — do not delete it.
   `out` 58.30 -> 59.00. Draft d93b059: last 0.3 s now -45..-69 dB (was
   -11.5 dB in the final 54 ms). **Not yet heard by Jacek.** Other films
   cut before 2881ea5 still need the same check.
-- 2026-09-24 lips drift ±0.5 s in a FINAL (camera's varying frame rate;
-  drafts hide it). Fixed 646de5c, measured on the take (−0.017 s) and in the
-  Frankfurt final (frames matched to the take at 3–23 s: −0.02–0.00 s).
-  **Not yet seen in a final by Jacek.** Every earlier final with a camera
-  take has this drift.
 - 2026-09-24 "redo one picture" was hard to find: now key P in the
   menu (c52336d). The P → pick → window path has not been walked.
 - 2026-09-24 the check_film hook fails on a folder name with "ł" (the
@@ -47,6 +42,11 @@ move it to the bottom section with the commit id — do not delete it.
 ---
 
 ## Fixed (with the commit, once Jacek has seen it work)
+- 2026-09-24 lips drift ±0.5 s in a FINAL (camera's varying frame rate;
+  drafts hide it) — 646de5c. Measured on the take (−0.017 s) and in the
+  Frankfurt final (−0.02–0.00 s). 2026-09-28 Jacek watched the What Is
+  Love final (259.1 s): "lips look fine". Every final with a camera take
+  made before 646de5c keeps the drift until re-rendered.
 - 2026-09-28 `film caption` dropped a script line whose names were
   misheard ("In one study,", "A 2018 meta-analysis by Kathrin Karsay,"
   on What Is Love); misheard words were counted as a false start —
