@@ -40,6 +40,10 @@ fill_aspect: 0.8        # used only by shots with `fill: blur` -- your talking s
 # render time. Barely shows in a vertical close-up: the crop is
 # nearly all face. Another clip can ask for it with its own `bokeh:`.
 bokeh: 1
+# Photographs with depth: as the camera moves, what is near slides past
+# what is far (parallax). 0 = flat. Photos only. 0.5 set 2026-09-28 for
+# the first look at v0.2; delete this line to go back to flat.
+depth: 0.5
 
 shots:
 
