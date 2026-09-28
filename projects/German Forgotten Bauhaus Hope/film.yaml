@@ -59,8 +59,8 @@ shots:
   - id: s01
     src: media/rec_20260919-122456.mp4
     fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
-    in: "00:00.95"
-    out: "00:31.20"
+    in: "00:01.57"
+    out: "00:31.82"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
@@ -101,7 +101,7 @@ shots:
   - id: s03
     src: media/rec_20260919-122456.mp4
     fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
-    in: "01:11.20"
+    in: "01:11.82"
     out: "01:19.63"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
@@ -315,8 +315,8 @@ shots:
   - id: s15
     src: media/rec_20260919-151406.mp4
     fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
-    in: "00:23.05"
-    out: "00:36.95"
+    in: "00:23.64"
+    out: "00:37.54"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
@@ -342,8 +342,8 @@ shots:
   - id: s16
     src: media/rec_20260919-151406.mp4
     fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
-    in: "00:38.50"
-    out: "00:41.80"
+    in: "00:39.09"
+    out: "00:42.39"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: drift_left
     amount: 0.6            # how much of the move to use. 0 = none
@@ -360,8 +360,8 @@ shots:
   - id: s17
     src: media/rec_20260919-151406.mp4
     fill: blur          # head and shoulders, not eyes-to-chin (look_compare.jpg, D)
-    in: "00:42.80"
-    out: "00:58.30"
+    in: "00:43.39"
+    out: "00:59.00"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
