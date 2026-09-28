@@ -358,11 +358,20 @@ shots:
         dur: 3.50
         pos: lower_third
         words: [0.00, 0.35, 1.28, 1.73, 2.47]
-      - text: "researchers examined 3,003 fights"
-        at: 12.14
-        dur: 0.54
+      # Dropped by `film caption`: placed on the words measured in the
+      # narration (whisper on 160-169 s: 162.04-163.30 s)
+      - text: "In one study,"
+        at: 8.24
+        dur: 1.05
         pos: lower_third
-        words: [0.00]
+        words: [0.00, 0.27, 0.47]
+      # Only "fights" was timed: placed on the words measured in the
+      # narration (163.30-167.38 s)
+      - text: "researchers examined 3,003 fights"
+        at: 9.29
+        dur: 3.40
+        pos: lower_third
+        words: [0.00, 0.68, 1.37, 2.83]
       - text: "and what happened afterwards."
         at: 12.69
         dur: 1.96
@@ -466,11 +475,20 @@ shots:
         dur: 1.90
         pos: lower_third
         words: [0.00, 0.42, 1.00, 1.47]
-      - text: "Johannes Knoll and Jörg Matthes pooled 54 papers,"
-        at: 20.42
-        dur: 1.73
+      # Names not heard ("Catherine Carcey"): the line was dropped.
+      # Placed on the words measured in the narration (233.76-240.10 s)
+      - text: "A 2018 meta-analysis by Kathrin Karsay,"
+        at: 11.47
+        dur: 5.28
         pos: lower_third
-        words: [0.00, 0.93]
+        words: [0.00, 0.27, 1.13, 2.58, 3.58, 4.18]
+      # Names not heard ("Johns Knoll and Yerke Metes"): placed on the
+      # words measured in the narration (240.10-246.90 s)
+      - text: "Johannes Knoll and Jörg Matthes pooled 54 papers,"
+        at: 16.75
+        dur: 5.67
+        pos: lower_third
+        words: [0.00, 0.38, 1.30, 1.58, 2.00, 2.68, 3.63, 4.62]
       - text: "50 independent studies and 261 effect sizes."
         at: 22.71
         dur: 4.50
