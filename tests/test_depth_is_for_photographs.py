@@ -46,6 +46,16 @@ def test_the_title_card_keeps_its_letters_straight():
     assert film.depth_for(card) == 0.0
 
 
+def test_a_png_gif_or_svg_is_a_chart_and_stays_flat():
+    """Jacek, 2026-09-28: charts are gif or png or svg, do not give those
+    depth. Photographs are jpg/jfif; parallax bends a chart's lines."""
+    film = Film(depth=0.5)
+    for name in ("media/chart.png", "media/CHART.PNG", "media/a.gif",
+                 "media/a.svg"):
+        assert film.depth_for(Shot.parse({"src": name}, 0)) == 0.0, name
+    assert film.depth_for(Shot.parse({"src": "media/a.jfif"}, 0)) == 0.5
+
+
 def test_film_yaml_says_it(tmp_path):
     (tmp_path / "a.jpg").write_bytes(b"x")
     (tmp_path / "film.yaml").write_text(

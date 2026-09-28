@@ -86,6 +86,10 @@ Drafts were not timed.
   0.7 uncertain, 0.5 kept. Without onnxruntime the photos render flat
   and it says so once (render.py), so a fresh machine does not stop.
   A film without the line still means 0 (spec.py default unchanged).
+- **2026-09-28:** a .png, .gif or .svg is a chart (Jacek: "charts are gif
+  or png or svg, do not give those depth") and the film's `depth:` does
+  not reach it (`spec.CHARTS`). A shot's own `depth:` still wins. A photo
+  saved as .png would stay flat too; that is the price of the rule.
 - Photographs only. Not clips (a per-frame map flickers), not the title
   card in analysis/ (it would bend the letters).
 - Taste constants in moves.py: PARALLAX 1.0, PARALLAX_TRAVEL 0.1 (the

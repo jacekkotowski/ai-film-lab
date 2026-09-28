@@ -193,6 +193,12 @@ def parse_time(v: Any) -> float:
 # stay where they were said.
 VOICE_TAIL = 0.4
 
+# A picture with one of these endings is a chart, never a photograph, and
+# the film's `depth:` does not reach it: parallax bends a chart's lines.
+# Jacek, 2026-09-28: "charts are gif or png or svg". A shot's own
+# `depth:` still wins.
+CHARTS = {".png", ".gif", ".svg"}
+
 
 @dataclass
 class Shot:
@@ -521,12 +527,17 @@ class Film:
         a clip gets none -- its picture changes every frame, and a depth
         map made per frame flickers. Nor does the film's setting reach a
         picture made in analysis/: the title card is the film's name over
-        a photo, and parallax would bend the letters."""
+        a photo, and parallax would bend the letters. Nor a chart: Jacek's
+        charts are .png, .gif or .svg, his photographs are not, and
+        parallax bends a chart's lines (2026-09-28)."""
         if shot.kind != "still":
             return 0.0
         if shot.depth is not None:
             return shot.depth
-        return 0.0 if Path(shot.src).parts[:1] == ("analysis",) else self.depth
+        src = Path(shot.src)
+        if src.parts[:1] == ("analysis",) or src.suffix.lower() in CHARTS:
+            return 0.0
+        return self.depth
 
     def resolve(self, src: str) -> Path:
         """Paths in film.yaml are relative to the film.yaml itself."""

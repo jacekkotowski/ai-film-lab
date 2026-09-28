@@ -602,10 +602,10 @@ def depth_lines() -> list[str]:
     0.5 to 0.8 in motion on What Is Love (2026-09-28): 0.8 smeared, 0.5
     was kept. Written on even without the optional extra: render.py then
     renders the photographs flat and says so once, so nothing stops. A
-    chart or a screenshot still needs its own `depth: 0`."""
+    .png, .gif or .svg is a chart and stays flat on its own (spec.CHARTS)."""
     return ["# Photographs with depth: as the camera moves, what is near",
             "# slides past what is far (parallax). 0 = flat. Photos only;",
-            "# a chart or a screenshot wants `depth: 0` on its own shot.",
+            "# a .png .gif .svg is a chart and stays flat by itself.",
             "# 0.8 smears. Needs `uv sync --extra depth` once, flat without",
             "# it; see docs/decisions/0013.",
             "depth: 0.5"]
