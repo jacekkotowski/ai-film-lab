@@ -13,8 +13,10 @@ move it to the bottom section with the commit id — do not delete it.
   (cause: misheard words counted as a false start). Measured on whisper's
   real output: What Is Love 361 -> 371/371 script words captioned; 3
   other films unchanged, Bauhaus 4 lines extended onto speech. `film
-  check` now names half a sentence on screen. **Not yet seen by Jacek
-  in a render made by `film caption` with the new code.**
+  check` now names half a sentence on screen. What Is Love re-captioned
+  with it (captions removed first: `--apply` ADDS to existing ones) and
+  drafted, a8cd38d: check clean, the 4 lines checked on frames of the
+  draft. **Not yet watched by Jacek.**
 - 2026-09-28 v0.2 parallax (`depth:`) built, 154cf49. **Not yet seen in
   motion by Jacek**: judged only on stills (0.5 clean, 0.8 stretches, charts
   bend: decision 0013). Costs +85 % render time at final (234 -> 433 s on
