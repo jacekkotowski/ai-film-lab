@@ -28,6 +28,12 @@ move it to the bottom section with the commit id — do not delete it.
   Frankfurt film.yaml fixed by hand. **Not yet heard in a render.**
   Films drafted between c802fcd and 2881ea5 (Turn Heat, Trade Behind War)
   keep the old cuts until their intro/closing `out:` is moved by ~0.6 s.
+  2026-09-28: Bauhaus (cut 09-19, before both) had it on all 5 camera
+  shots, 0.34-0.42 s of each last word lost ("community" at the end,
+  Jacek heard it). Every take `in`/`out` moved +lag (0.62 / 0.59 s), last
+  `out` 58.30 -> 59.00. Draft d93b059: last 0.3 s now -45..-69 dB (was
+  -11.5 dB in the final 54 ms). **Not yet heard by Jacek.** Other films
+  cut before 2881ea5 still need the same check.
 - 2026-09-24 lips drift ±0.5 s in a FINAL (camera's varying frame rate;
   drafts hide it). Fixed 646de5c, measured on the take (−0.017 s) and in the
   Frankfurt final (frames matched to the take at 3–23 s: −0.02–0.00 s).
