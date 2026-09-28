@@ -9,6 +9,8 @@ move it to the bottom section with the commit id — do not delete it.
   bend: decision 0013). Costs +85 % render time at final (234 -> 433 s on
   4 photos); `render.source_maps` is 59 ms a frame, untried to speed up.
   Not yet tagged v0.2.0: "Done when" needs Jacek's "looks like a place".
+  First film with it: Bauhaus draft, `depth: 0.5`, 2ddee70 (65.4 s render,
+  5 depth maps made). Waiting for Jacek to watch s04 s05 s06 s08 s11.
 - 2026-09-25 qmd MCP fails to connect at the start of some Claude
   sessions ("recent failure cached", 15 min), while `claude mcp list` in
   the same session says Connected. qmd itself is fine since the move out
