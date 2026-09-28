@@ -598,14 +598,17 @@ def bokeh_lines(model_present: bool) -> list[str]:
 
 
 def depth_lines() -> list[str]:
-    """Parallax on photographs, offered in every new film and left off.
-    Unlike bokeh it is never on by default: a chart or a screenshot has no
-    depth to give, and it needs an optional extra."""
+    """Parallax on photographs, on in every new film at 0.5. Jacek watched
+    0.5 to 0.8 in motion on What Is Love (2026-09-28): 0.8 smeared, 0.5
+    was kept. Written on even without the optional extra: render.py then
+    renders the photographs flat and says so once, so nothing stops. A
+    chart or a screenshot still needs its own `depth: 0`."""
     return ["# Photographs with depth: as the camera moves, what is near",
             "# slides past what is far (parallax). 0 = flat. Photos only;",
             "# a chart or a screenshot wants `depth: 0` on its own shot.",
-            "# Needs `uv sync --extra depth` once; see docs/decisions/0013.",
-            "# depth: 0.5"]
+            "# 0.8 smears. Needs `uv sync --extra depth` once, flat without",
+            "# it; see docs/decisions/0013.",
+            "depth: 0.5"]
 
 
 def title_card_block(project: Path, vertical: bool) -> list[str]:

@@ -81,6 +81,11 @@ Drafts were not timed.
 ## What was decided, and why
 - fp32 Small from onnx-community, run by onnxruntime as an optional extra.
 - Off by default (`depth: 0`); `film init` writes `# depth: 0.5` commented.
+  **Changed 2026-09-28:** `film init` now writes `depth: 0.5` ON. Jacek
+  stepped What Is Love through 0.5, 0.6, 0.7, 0.8 in motion: 0.8 smeared,
+  0.7 uncertain, 0.5 kept. Without onnxruntime the photos render flat
+  and it says so once (render.py), so a fresh machine does not stop.
+  A film without the line still means 0 (spec.py default unchanged).
 - Photographs only. Not clips (a per-frame map flickers), not the title
   card in analysis/ (it would bend the letters).
 - Taste constants in moves.py: PARALLAX 1.0, PARALLAX_TRAVEL 0.1 (the
@@ -89,4 +94,5 @@ Drafts were not timed.
 
 ## Not yet known
 Whether it "looks like a place" in motion: that is for Jacek to watch on a
-draft. Stills show position, not the feel of the slide.
+draft. Stills show position, not the feel of the slide. **Answered
+2026-09-28:** yes, at 0.5, on What Is Love; v0.2.0 tagged.

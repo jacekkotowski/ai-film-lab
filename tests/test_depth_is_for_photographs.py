@@ -56,12 +56,13 @@ def test_film_yaml_says_it(tmp_path):
     assert [film.depth_for(s) for s in film.shots] == [0.5, 0.0]
 
 
-def test_a_new_film_offers_it_commented_out():
-    """Found where bokeh is found, and off: the default stays 0."""
+def test_a_new_film_has_depth_on_at_half():
+    """Jacek watched 0.5 to 0.8 in motion on What Is Love (2026-09-28):
+    0.8 smeared, 0.5 was kept. So a new film starts with it on, at 0.5."""
     from ffilm import scaffold
     lines = scaffold.depth_lines()
-    assert "# depth: 0.5" in lines
-    assert not any(line.startswith("depth:") for line in lines)
+    assert "depth: 0.5" in lines
+    assert "# depth: 0.5" not in lines
 
 
 def test_the_bench_hands_a_shots_depth_back(tmp_path):

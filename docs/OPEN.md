@@ -4,21 +4,6 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
-- 2026-09-28 v0.2 parallax (`depth:`) built, 154cf49. **Not yet seen in
-  motion by Jacek**: judged only on stills (0.5 clean, 0.8 stretches, charts
-  bend: decision 0013). Costs +85 % render time at final (234 -> 433 s on
-  4 photos); `render.source_maps` is 59 ms a frame, untried to speed up.
-  Not yet tagged v0.2.0: "Done when" needs Jacek's "looks like a place".
-  First film with it: Bauhaus draft, `depth: 0.5`, 2ddee70 (65.4 s render,
-  5 depth maps made). Waiting for Jacek to watch s04 s05 s06 s08 s11.
-  2026-09-28: Jacek skips Bauhaus (old footage); watches What Is Love
-  instead (7 photos, s02-s08). Draft at 0.6 (3096f2b): "no smearing" --
-  first judgement in motion. 0.7 (ea53b44): "no smearing" at first.
-  0.8 (fdbaf33): "I think I see smearing" -- and Jacek then doubted 0.7
-  too. Back to 0.6 (b3819ff), then Jacek: "the initial value was good".
-  Kept at 0.5 (1a74892, film.yaml identical to 1cd1859). So in motion:
-  0.5 chosen, 0.6 probably clean, 0.7 uncertain, 0.8 smears -- the 0.5
-  default in decision 0013 holds. Which shot smeared was not named.
 - 2026-09-25 qmd MCP fails to connect at the start of some Claude
   sessions ("recent failure cached", 15 min), while `claude mcp list` in
   the same session says Connected. qmd itself is fine since the move out
@@ -51,6 +36,14 @@ move it to the bottom section with the commit id — do not delete it.
 ---
 
 ## Fixed (with the commit, once Jacek has seen it work)
+- 2026-09-28 v0.2 parallax (`depth:`), built 154cf49, tagged v0.2.0.
+  Jacek watched What Is Love (7 photos, s02-s08) in motion at 0.5, 0.6,
+  0.7, 0.8 (drafts 1cd1859, 3096f2b, ea53b44, fdbaf33): 0.8 smears
+  (shot not named), 0.7 uncertain, 0.5 kept (1a74892): "it is ok".
+  `film init` now writes `depth: 0.5` on (decision 0013). Still true:
+  +85 % final render time (234 -> 433 s on 4 photos);
+  `render.source_maps` 59 ms a frame, untried to speed up. Bauhaus
+  (2ddee70) never watched: old footage, skipped.
 - 2026-09-28 WON'T REDO (Jacek: old films are done): the clipped last
   camera word in films cut before 2881ea5 (Turn Heat, Trade Behind War
   and older) is left as it is. 17 old films removed from projects/;
