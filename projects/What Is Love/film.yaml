@@ -178,9 +178,9 @@ shots:
         words: [0.00, 0.72, 1.20, 1.70, 3.07, 3.23, 3.60, 4.17, 4.43]
       - text: "Christian agape, Buddhist karuna,"
         at: 4.98
-        dur: 2.03
+        dur: 3.18
         pos: lower_third
-        words: [0.00, 0.75, 1.37]
+        words: [0.00, 0.75, 1.37, 2.03]
       - text: "Islamic rahma and Hindu bhakti."
         at: 9.13
         dur: 3.11
@@ -290,10 +290,10 @@ shots:
         pos: lower_third
         words: [0.00, 0.27, 0.92, 1.25, 1.77, 2.28, 2.92, 3.52, 3.93, 4.42]
       - text: "favoured by evolution when the benefit to a relative,"
-        at: 11.35
-        dur: 3.08
+        at: 10.95
+        dur: 3.48
         pos: lower_third
-        words: [0.00, 0.30, 0.80, 1.72, 1.92, 2.35, 2.63, 2.72]
+        words: [0.00, 0.40, 0.70, 1.20, 2.12, 2.32, 2.75, 3.03, 3.12]
       - text: "weighted by how closely related they are,"
         at: 14.72
         dur: 2.85
@@ -305,10 +305,10 @@ shots:
         pos: lower_third
         words: [0.00, 0.58, 0.73, 1.05, 1.27, 1.42]
       - text: "His rule is rb > c:"
-        at: 23.08
-        dur: 0.39
+        at: 20.75
+        dur: 2.73
         pos: lower_third
-        words: [0.00]
+        words: [0.00, 0.28, 0.63, 0.92, 1.32, 1.70, 2.05, 2.33]
       - text: "relatedness times benefit must exceed cost."
         at: 24.23
         dur: 3.25
@@ -358,20 +358,16 @@ shots:
         dur: 3.50
         pos: lower_third
         words: [0.00, 0.35, 1.28, 1.73, 2.47]
-      # Dropped by `film caption`: placed on the words measured in the
-      # narration (whisper on 160-169 s: 162.04-163.30 s)
       - text: "In one study,"
-        at: 8.24
-        dur: 1.05
+        at: 8.11
+        dur: 0.98
         pos: lower_third
-        words: [0.00, 0.27, 0.47]
-      # Only "fights" was timed: placed on the words measured in the
-      # narration (163.30-167.38 s)
+        words: [0.00, 0.40, 0.58]
       - text: "researchers examined 3,003 fights"
-        at: 9.29
-        dur: 3.40
+        at: 9.09
+        dur: 3.59
         pos: lower_third
-        words: [0.00, 0.68, 1.37, 2.83]
+        words: [0.00, 0.65, 1.60, 2.13, 2.50, 2.75, 3.05]
       - text: "and what happened afterwards."
         at: 12.69
         dur: 1.96
@@ -475,20 +471,16 @@ shots:
         dur: 1.90
         pos: lower_third
         words: [0.00, 0.42, 1.00, 1.47]
-      # Names not heard ("Catherine Carcey"): the line was dropped.
-      # Placed on the words measured in the narration (233.76-240.10 s)
       - text: "A 2018 meta-analysis by Kathrin Karsay,"
-        at: 11.47
-        dur: 5.28
+        at: 11.34
+        dur: 4.50
         pos: lower_third
-        words: [0.00, 0.27, 1.13, 2.58, 3.58, 4.18]
-      # Names not heard ("Johns Knoll and Yerke Metes"): placed on the
-      # words measured in the narration (240.10-246.90 s)
+        words: [0.00, 0.40, 1.08, 2.00, 2.68, 3.75, 4.32]
       - text: "Johannes Knoll and Jörg Matthes pooled 54 papers,"
-        at: 16.75
-        dur: 5.67
+        at: 16.66
+        dur: 4.50
         pos: lower_third
-        words: [0.00, 0.38, 1.30, 1.58, 2.00, 2.68, 3.63, 4.62]
+        words: [0.00, 0.47, 1.35, 1.68, 2.00, 2.78, 3.77]
       - text: "50 independent studies and 261 effect sizes."
         at: 22.71
         dur: 4.50
