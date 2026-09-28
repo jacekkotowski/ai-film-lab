@@ -747,13 +747,24 @@ def _align_once(words: list, units: list[str],
         # Keep only the last run. Two runs far apart is the same
         # sentence read twice, and the good one is the one you kept
         # going after.
+        #
+        # A gap counts only for the heard words it holds BEYOND the written
+        # words it skipped. A fluff adds heard words with nothing written
+        # to go with them. A mishearing has as many of both: on What Is
+        # Love (2026-09-28) "Kathrin Karsay, Johannes" came back as
+        # "Catherine Carcey, Johns", and "3,003" as "three thousand and
+        # three". Counted raw, those gaps were false starts, and "In one
+        # study," and "A 2018 meta-analysis by Kathrin Karsay," were
+        # dropped from the screen with nothing said about it.
         run = [got[-1]]
         for pair in reversed(got[:-1]):
-            if run[0][1] - pair[1] > FALSE_START_GAP:
+            extra = (run[0][1] - pair[1]) - (run[0][0] - pair[0])
+            if extra > FALSE_START_GAP:
                 break
             run.insert(0, pair)
         if min_share and len(run) < min_share * len(_key(unit)):
             continue                      # a stumble, not a reading
+        run += _misheard(run)
         when = {pos: words[spoken_at[j]] for pos, j in run}
 
         def at(pos, _when=when):
@@ -777,6 +788,29 @@ def _align_once(words: list, units: list[str],
                 continue                  # this clause was never said
             out.append(Line(text, float(here[0].start), float(here[-1].end),
                             unit=u))
+    return out
+
+
+def _misheard(run: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    """Written words the matcher could not find, given the heard words
+    said in their place: (written position, spoken position) pairs.
+
+    Between two matched words, the written words left over and the heard
+    words left over are the same stretch of speech, spelled two ways. So
+    the script's word takes the time of the heard word in its place:
+    one for one when the counts agree ("Kathrin Karsay" / "Catherine
+    Carcey"), spread evenly over them when they do not ("3,003" / "three
+    thousand and three"). Every time used is one the model heard. None
+    is made up, and a stretch with nothing heard in it gets nothing.
+    """
+    out = []
+    for (w1, s1), (w2, s2) in zip(run, run[1:]):
+        m, n = w2 - w1 - 1, s2 - s1 - 1
+        if m <= 0 or n <= 0:
+            continue
+        for k in range(m):
+            j = round(k * (n - 1) / (m - 1)) if m > 1 else 0
+            out.append((w1 + 1 + k, s1 + 1 + j))
     return out
 
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from . import cover, kinds, library
+from . import cover, kinds, library, voice
 
 
 def voice_installed() -> bool:
@@ -533,4 +533,44 @@ def repeated_captions(film) -> list[str]:
                    "can tell the two")
         out.append("    apart, so this says where they are and decides "
                    "nothing.")
+    return out
+
+
+def half_captioned(scripts: list[str], film) -> list[str]:
+    """Sentences of the script with some clauses on screen and some not. Pure.
+
+    Found 2026-09-28 on What Is Love: "In one study," and "A 2018
+    meta-analysis by Kathrin Karsay," were said and never captioned. The
+    matcher had taken misheard names for a false start (voice._misheard
+    has the story), and `check` printed OK, because it only ever read
+    the captions that were there.
+
+    A sentence with NONE of its clauses on screen is not named: it was
+    cut whole on purpose (fit-to-length) or not recorded yet. Half a
+    sentence is never on purpose. Captions are read as one run of words,
+    so a clause broken across two captions still counts as there.
+
+    A clause under REPEAT_MIN_WORDS says nothing either way. Swept over
+    all 22 films: "kitchen," and "WC," of a Bauhaus sentence were found
+    inside another caption, and made a sentence nobody captioned look
+    half there.
+    """
+    shown = " " + " ".join(voice._key(" ".join(
+        c.text for s in film.shots for c in s.captions))) + " "
+    out = []
+    for script in scripts:
+        for unit in voice.script_units(script):
+            clauses = [a.strip() for a in voice._atoms(unit)
+                       if len(voice._key(a)) >= REPEAT_MIN_WORDS]
+            there = [f" {' '.join(voice._key(a))} " in shown for a in clauses]
+            if any(there) and not all(there):
+                gone = " / ".join(f'"{a}"' for a, ok in zip(clauses, there)
+                                  if not ok)
+                out.append(f"half a sentence on screen -- not in any "
+                           f"caption in these words: {gone}")
+    if out:
+        out.append("    The rest of the sentence is captioned, so this "
+                   "was said too.")
+        out.append("    See the fix-captions skill: place it on the "
+                   "speech measured in the audio.")
     return out

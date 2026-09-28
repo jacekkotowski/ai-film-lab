@@ -46,7 +46,8 @@ from . import history
 from . import scaffold
 from . import timeline
 from .checks import (bokeh_notes, depth_notes, film_shape, framing_notes, library_lines,
-                     caption_share_line, music_notes, narration_notes,
+                     caption_share_line, half_captioned, music_notes,
+                     narration_notes,
                      preflight_report, repeated_captions, shot_lines,
                      unreadable_captions, unused_media)
 from .moves import choose_moves
@@ -644,6 +645,18 @@ def cmd_check(args) -> None:
         print()
         for note in bad:
             print(f"  {note}" if note.startswith("[") else note)
+
+    # The script is what should be on screen: the narration, the intro
+    # and the closing, each from the file its window writes.
+    from . import booth
+    scripts = [booth.read_script(project, None, voice=True),
+               booth.read_script(project, None, part="intro"),
+               booth.read_script(project, None, part="closing")]
+    half = half_captioned(scripts, film)
+    if half:
+        print()
+        for note in half:
+            print(note if note.startswith(" ") else f"  {note}")
 
     again = repeated_captions(film)
     if again:
