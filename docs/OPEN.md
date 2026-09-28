@@ -34,8 +34,12 @@ move it to the bottom section with the commit id — do not delete it.
   `out` 58.30 -> 59.00. Draft d93b059: last 0.3 s now -45..-69 dB (was
   -11.5 dB in the final 54 ms). **Not yet heard by Jacek.** Other films
   cut before 2881ea5 still need the same check.
-- 2026-09-24 "redo one picture" was hard to find: now key P in the
-  menu (c52336d). The P → pick → window path has not been walked.
+- 2026-09-24 "redo one picture" was hard to find: key P (c52336d) was
+  not seen either (2026-09-28). Now also menu line "Redo ONE picture
+  only" (line 8 on What Is Love) and a button "Only ONE picture..." in
+  the recording window — 98c638b. Window walked by a script up to the
+  pick (returns the number); the reopened one-picture window and a real
+  take have not been tried. **Not yet used by Jacek.**
 - 2026-09-24 the check_film hook fails on a folder name with "ł" (the
   path is garbled); `film check` itself works when run by hand.
 
