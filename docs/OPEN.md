@@ -26,14 +26,11 @@ move it to the bottom section with the commit id — do not delete it.
 - 2026-09-24 last word of a camera intro/closing cut mid-vowel. Caused
   by c802fcd (sound moved by the lag, cuts not). Code fixed in 2881ea5,
   Frankfurt film.yaml fixed by hand. **Not yet heard in a render.**
-  Films drafted between c802fcd and 2881ea5 (Turn Heat, Trade Behind War)
-  keep the old cuts until their intro/closing `out:` is moved by ~0.6 s.
   2026-09-28: Bauhaus (cut 09-19, before both) had it on all 5 camera
   shots, 0.34-0.42 s of each last word lost ("community" at the end,
   Jacek heard it). Every take `in`/`out` moved +lag (0.62 / 0.59 s), last
   `out` 58.30 -> 59.00. Draft d93b059: last 0.3 s now -45..-69 dB (was
-  -11.5 dB in the final 54 ms). **Not yet heard by Jacek.** Other films
-  cut before 2881ea5 still need the same check.
+  -11.5 dB in the final 54 ms). **Not yet heard by Jacek.**
 - 2026-09-24 "redo one picture" was hard to find: key P (c52336d) was
   not seen either (2026-09-28). Now also menu line "Redo ONE picture
   only" (line 8 on What Is Love) and a button "Only ONE picture..." in
@@ -46,6 +43,10 @@ move it to the bottom section with the commit id — do not delete it.
 ---
 
 ## Fixed (with the commit, once Jacek has seen it work)
+- 2026-09-28 WON'T REDO (Jacek: old films are done): the clipped last
+  camera word in films cut before 2881ea5 (Turn Heat, Trade Behind War
+  and older) is left as it is. 17 old films removed from projects/;
+  their thumbnail and title pictures kept in archive/thumbnails/.
 - 2026-09-24 lips drift ±0.5 s in a FINAL (camera's varying frame rate;
   drafts hide it) — 646de5c. Measured on the take (−0.017 s) and in the
   Frankfurt final (−0.02–0.00 s). 2026-09-28 Jacek watched the What Is
