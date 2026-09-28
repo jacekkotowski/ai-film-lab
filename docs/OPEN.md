@@ -11,6 +11,14 @@ move it to the bottom section with the commit id — do not delete it.
   Not yet tagged v0.2.0: "Done when" needs Jacek's "looks like a place".
   First film with it: Bauhaus draft, `depth: 0.5`, 2ddee70 (65.4 s render,
   5 depth maps made). Waiting for Jacek to watch s04 s05 s06 s08 s11.
+  2026-09-28: Jacek skips Bauhaus (old footage); watches What Is Love
+  instead (7 photos, s02-s08). Draft at 0.6 (3096f2b): "no smearing" --
+  first judgement in motion. 0.7 (ea53b44): "no smearing" at first.
+  0.8 (fdbaf33): "I think I see smearing" -- and Jacek then doubted 0.7
+  too. Back to 0.6 (b3819ff), then Jacek: "the initial value was good".
+  Kept at 0.5 (1a74892, film.yaml identical to 1cd1859). So in motion:
+  0.5 chosen, 0.6 probably clean, 0.7 uncertain, 0.8 smears -- the 0.5
+  default in decision 0013 holds. Which shot smeared was not named.
 - 2026-09-25 qmd MCP fails to connect at the start of some Claude
   sessions ("recent failure cached", 15 min), while `claude mcp list` in
   the same session says Connected. qmd itself is fine since the move out
