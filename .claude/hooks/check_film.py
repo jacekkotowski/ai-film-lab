@@ -27,6 +27,13 @@ ROOT = Path(__file__).resolve().parents[2]       # the toolkit folder
 REPORT_LINES = 60                                # enough for any real film
 
 
+def read_event(raw: bytes) -> dict:
+    """Claude Code sends the event as UTF-8. Read as Windows' own code page
+    (what `json.load(sys.stdin)` did), "ł" became "Å‚" and a Polish film's
+    folder was never found: every edit reported a failed check."""
+    return json.loads(raw.decode("utf-8"))
+
+
 def edited_film(event: dict) -> Path | None:
     path = event.get("tool_input", {}).get("file_path", "")
     if not path:
@@ -40,9 +47,11 @@ def edited_film(event: dict) -> Path | None:
 
 
 def main() -> None:
-    project = edited_film(json.load(sys.stdin))
+    project = edited_film(read_event(sys.stdin.buffer.read()))
     if project is None:
         return
+    sys.stdout.reconfigure(encoding="utf-8")   # and send it back the same way
+    sys.stderr.reconfigure(encoding="utf-8")
 
     env = dict(os.environ, PYTHONIOENCODING="utf-8")   # film names can be Polish
     run = subprocess.run(

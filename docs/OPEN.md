@@ -22,12 +22,16 @@ move it to the bottom section with the commit id — do not delete it.
   the recording window — 98c638b. Window walked by a script up to the
   pick (returns the number); the reopened one-picture window and a real
   take have not been tried. **Not yet used by Jacek.**
-- 2026-09-24 the check_film hook fails on a folder name with "ł" (the
-  path is garbled); `film check` itself works when run by hand.
-
 ---
 
 ## Fixed (with the commit, once Jacek has seen it work)
+- 2026-09-24 the check_film hook fails on a folder name with "ł" (`film
+  check` itself worked run by hand) — the hook read Claude Code's event
+  with Windows' own code page instead of UTF-8, so "ł" became "Å‚" and no
+  folder matched. Proven on numbers: replayed the real hook on "Frankfurt
+  School vs Kołakowski Emancipation and Domination/film.yaml" -- before
+  the fix, "No project found"; after, `film check` reports OK, 13 shots,
+  172.9s. 928 tests pass.
 - 2026-09-24 last word of a camera intro/closing cut mid-vowel (caused
   by c802fcd) — 2881ea5. Proven on numbers, not by ear (Jacek judges
   sound by numbers): What Is Love, cut after 2881ea5, draft 1a74892,
