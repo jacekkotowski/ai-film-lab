@@ -176,9 +176,15 @@ def source_maps(H: int, W: int, win: Window, ow: int, oh: int):
         _grids[(ow, oh)] = np.meshgrid(np.arange(ow, dtype=np.float32),
                                        np.arange(oh, dtype=np.float32))
     u, v = _grids[(ow, oh)]
-    mx = inv[0, 0] * u + inv[0, 1] * v + np.float32(inv[0, 2])
-    my = inv[1, 0] * u + inv[1, 1] * v + np.float32(inv[1, 2])
-    return mx.astype(np.float32), my.astype(np.float32)
+    # cv2.invertAffineTransform returns float64 scalars. Left as they
+    # were, `inv[0,0] * u` promotes the whole cached float32 grid to
+    # float64 for the multiply -- measured ~99 ms/call; cast to float32
+    # first and the arithmetic never leaves float32 (docs/decisions/0013).
+    a, b, c = np.float32(inv[0, 0]), np.float32(inv[0, 1]), np.float32(inv[0, 2])
+    d, e, f = np.float32(inv[1, 0]), np.float32(inv[1, 1]), np.float32(inv[1, 2])
+    mx = a * u + b * v + c
+    my = d * u + e * v + f
+    return mx, my
 
 
 def parallax_maps(H: int, W: int, win: Window, ow: int, oh: int,

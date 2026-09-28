@@ -4,6 +4,11 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-09-28 `render.source_maps`'s float64 promotion fixed (decision
+  0013): 98.9 -> ~41 ms/call, isolated benchmark, ~2.4x. **Not yet
+  re-profiled inside a real `film final`** — the +85% / 433.1 s parallax
+  figure is not remeasured, so the effect on a real render is not known.
+  `parallax_maps` (82.5 s) and `remap` (38.6 s) untouched.
 - 2026-09-25 qmd MCP fails to connect at the start of some Claude
   sessions ("recent failure cached", 15 min), while `claude mcp list` in
   the same session says Connected. qmd itself is fine since the move out
@@ -44,9 +49,8 @@ move it to the bottom section with the commit id — do not delete it.
   Jacek watched What Is Love (7 photos, s02-s08) in motion at 0.5, 0.6,
   0.7, 0.8 (drafts 1cd1859, 3096f2b, ea53b44, fdbaf33): 0.8 smears
   (shot not named), 0.7 uncertain, 0.5 kept (1a74892): "it is ok".
-  `film init` now writes `depth: 0.5` on (decision 0013). Still true:
-  +85 % final render time (234 -> 433 s on 4 photos);
-  `render.source_maps` 59 ms a frame, untried to speed up. Bauhaus
+  `film init` now writes `depth: 0.5` on (decision 0013). Still true at
+  the time: +85 % final render time (234 -> 433 s on 4 photos). Bauhaus
   (2ddee70) never watched: old footage, skipped.
 - 2026-09-28 WON'T REDO (Jacek: old films are done): the clipped last
   camera word in films cut before 2881ea5 (Turn Heat, Trade Behind War

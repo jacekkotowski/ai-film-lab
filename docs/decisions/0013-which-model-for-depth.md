@@ -74,9 +74,22 @@ depth maps already cached:
 
 warpAffine's 37.8 s is gone and 229 s of map-building and remapping takes
 its place. `source_maps` alone costs 59 ms a frame: numpy arithmetic on
-two 1080x1920 grids, promoted to float64 by the matrix entries. That is
-the first place to look if parallax renders are too slow; not yet tried.
+two 1080x1920 grids, promoted to float64 by the matrix entries.
 Drafts were not timed.
+
+**Tried 2026-09-28.** `source_maps` multiplied the cached float32 pixel
+grids by `inv[0,0]` etc., float64 scalars straight out of
+`cv2.invertAffineTransform`; NumPy promotes the whole grid to float64 for
+that multiply, then narrows it back at the end. Casting the six `inv[...]`
+entries to `np.float32` first keeps the arithmetic in float32 throughout.
+Isolated benchmark (a 1968x1523 photo, 1080x1920 output, 300 calls with a
+moving window, no ffmpeg, no film): **98.9 ms/call before, ~41 ms/call
+after — about 2.4x.** Not yet re-profiled inside a real `film final`, so
+the effect on the 433.1 s / +85% figure above is not measured. Guarded by
+`tests/test_source_maps_stays_float32.py`: same numbers, still float32.
+
+`parallax_maps` (82.5 s) and `remap` (38.6 s) were not touched — worth
+the same look if more speed is wanted, not done yet.
 
 ## What was decided, and why
 - fp32 Small from onnx-community, run by onnxruntime as an optional extra.
