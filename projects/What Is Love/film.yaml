@@ -45,7 +45,7 @@ bokeh: 1
 # slides past what is far (parallax). 0 = flat. Photos only;
 # a chart or a screenshot wants `depth: 0` on its own shot.
 # Needs `uv sync --extra depth` once; see docs/decisions/0013.
-depth: 0.5
+depth: 0.6
 
 shots:
 
