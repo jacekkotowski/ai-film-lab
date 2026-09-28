@@ -91,3 +91,14 @@ The first one is **[ai-3d-studio](https://github.com/jacekkotowski/ai-3d-studio)
 It turns the finished film into a Prezi-style flight in Blender: every
 part of the film on its own screen around the title, the camera diving
 into each one as it plays, and back to the middle for your closing.
+Parts light up as the story reaches them.
+
+**To fly a finished film** (offline, no Claude needed):
+1. Get ai-3d-studio and install what it needs once: Blender, Python and
+   ffmpeg (its README has the three `winget` lines).
+2. Drag `out\final.mp4` onto ai-3d-studio's `FLY.bat`. It picks up
+   `final.timeline.json` from beside the mp4 by itself, so keep the two
+   together. Dragging the `out` folder or the film's folder works too.
+3. It renders stills for you to check, then asks: `d` for a draft, `v`
+   for the full video. The result is `out\flight_film.mp4` in the
+   studio's project folder.
