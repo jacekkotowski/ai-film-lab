@@ -9,10 +9,12 @@ move it to the bottom section with the commit id — do not delete it.
   meta-analysis by Kathrin Karsay," (heard "Catherine Carcey") and "In
   one study," had no caption at all; `film check` said nothing, because
   it reads only the captions that exist. Fixed by hand in film.yaml
-  (6bdf1a7) from whisper word times on the slice. No code change yet:
-  a fix would give an unmatched script line the unmatched heard words
-  between its neighbours, and would make `film check` name script lines
-  that have no caption. Waiting for Jacek to ask for it.
+  (6bdf1a7) from whisper word times on the slice. **Code fixed eec1145**
+  (cause: misheard words counted as a false start). Measured on whisper's
+  real output: What Is Love 361 -> 371/371 script words captioned; 3
+  other films unchanged, Bauhaus 4 lines extended onto speech. `film
+  check` now names half a sentence on screen. **Not yet seen by Jacek
+  in a render made by `film caption` with the new code.**
 - 2026-09-28 v0.2 parallax (`depth:`) built, 154cf49. **Not yet seen in
   motion by Jacek**: judged only on stills (0.5 clean, 0.8 stretches, charts
   bend: decision 0013). Costs +85 % render time at final (234 -> 433 s on

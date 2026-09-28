@@ -11,6 +11,9 @@
   Love, 2026-09-28). Whisper `small` on a 9–17 s slice gave every word
   with times that agreed with the full-take times to within 0.04 s.
   So re-transcribing just the gap is a reliable way to place the line.
+  The cause was the false-start rule. Since eec1145 a gap counts only
+  for the heard words beyond the written ones it skipped, and a misheard
+  written word takes the heard word's time (`voice._misheard`).
 - Camera-take captions move with the sound-lag fix — see [[sync]].
 - `film check` names unreadable captions (too short to read) and repeated
   ones; thresholds swept over 19 films — decision 0012.
