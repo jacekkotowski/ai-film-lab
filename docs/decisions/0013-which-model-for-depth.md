@@ -63,7 +63,20 @@ Looked at (Claude, on the stills, at full size on the tanks):
   `depth: 0` on its own shot — the film.yaml header says so.
 
 ## Render time
-RENDER_TIME_PENDING
+`render()` at FINAL quality (1080x1920, shutter 4), no sound, 4 Bauhaus
+photos (s04 s05 s06 s08, 75.7 s of film, 1816 frames), cProfile, one run each,
+depth maps already cached:
+
+| | wall | top costs (tottime) |
+|---|---:|---|
+| flat (`depth: 0`) | 234.1 s | cvtColor 40.0 s, warpAffine 37.8 s, apply_look 32.3 s |
+| `depth: 0.5` | 433.1 s (**+85 %**) | source_maps 107.8 s, parallax_maps 82.5 s, remap 38.6 s |
+
+warpAffine's 37.8 s is gone and 229 s of map-building and remapping takes
+its place. `source_maps` alone costs 59 ms a frame: numpy arithmetic on
+two 1080x1920 grids, promoted to float64 by the matrix entries. That is
+the first place to look if parallax renders are too slow; not yet tried.
+Drafts were not timed.
 
 ## What was decided, and why
 - fp32 Small from onnx-community, run by onnxruntime as an optional extra.

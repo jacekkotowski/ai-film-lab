@@ -4,6 +4,11 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-09-28 v0.2 parallax (`depth:`) built, 154cf49. **Not yet seen in
+  motion by Jacek**: judged only on stills (0.5 clean, 0.8 stretches, charts
+  bend: decision 0013). Costs +85 % render time at final (234 -> 433 s on
+  4 photos); `render.source_maps` is 59 ms a frame, untried to speed up.
+  Not yet tagged v0.2.0: "Done when" needs Jacek's "looks like a place".
 - 2026-09-25 qmd MCP fails to connect at the start of some Claude
   sessions ("recent failure cached", 15 min), while `claude mcp list` in
   the same session says Connected. qmd itself is fine since the move out
