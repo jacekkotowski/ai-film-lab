@@ -16,14 +16,6 @@ move it to the bottom section with the commit id — do not delete it.
   not found (docs/tech/qmd-bench.md). If it recurs: retry once, then
   grep. The qmd indexes (`code`, `history`) are not refreshed by
   themselves: docs/tech/qmd.md says how.
-- 2026-09-24 last word of a camera intro/closing cut mid-vowel. Caused
-  by c802fcd (sound moved by the lag, cuts not). Code fixed in 2881ea5,
-  Frankfurt film.yaml fixed by hand. **Not yet heard in a render.**
-  2026-09-28: Bauhaus (cut 09-19, before both) had it on all 5 camera
-  shots, 0.34-0.42 s of each last word lost ("community" at the end,
-  Jacek heard it). Every take `in`/`out` moved +lag (0.62 / 0.59 s), last
-  `out` 58.30 -> 59.00. Draft d93b059: last 0.3 s now -45..-69 dB (was
-  -11.5 dB in the final 54 ms). **Not yet heard by Jacek.**
 - 2026-09-24 "redo one picture" was hard to find: key P (c52336d) was
   not seen either (2026-09-28). Now also menu line "Redo ONE picture
   only" (line 8 on What Is Love) and a button "Only ONE picture..." in
@@ -36,6 +28,14 @@ move it to the bottom section with the commit id — do not delete it.
 ---
 
 ## Fixed (with the commit, once Jacek has seen it work)
+- 2026-09-24 last word of a camera intro/closing cut mid-vowel (caused
+  by c802fcd) — 2881ea5. Proven on numbers, not by ear (Jacek judges
+  sound by numbers): What Is Love, cut after 2881ea5, draft 1a74892,
+  50 ms RMS. s01 end (20.70 s): speech falls from -22 dB 0.35 s before
+  the cut to -44..-48 dB in the last 0.2 s. Film end (259.00 s): -22 dB
+  0.40 s before, -49..-57 dB in the last 0.2 s. Bauhaus before the fix
+  had -11.5 dB in the last 54 ms. Bauhaus's own hand fix (d93b059) never
+  heard: old footage, skipped.
 - 2026-09-28 v0.2 parallax (`depth:`), built 154cf49, tagged v0.2.0.
   Jacek watched What Is Love (7 photos, s02-s08) in motion at 0.5, 0.6,
   0.7, 0.8 (drafts 1cd1859, 3096f2b, ea53b44, fdbaf33): 0.8 smears
