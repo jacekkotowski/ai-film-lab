@@ -12,6 +12,7 @@ A film.yaml looks like this:
     audio: media/music.mp3
     fill: crop                 # crop | blur -- see Film.fill below
     bokeh: 0                   # the room behind a speaker blurred -- Film.bokeh
+    depth: 0                   # parallax on photographs -- Film.depth
     look:
       grain: 0.3
       vignette: 0.25
@@ -244,6 +245,9 @@ class Shot:
     # Overrides the film's `bokeh` for this one shot. 0 turns it off.
     bokeh: float | None = None       # None = whatever the film says
 
+    # Overrides the film's `depth` for this one photograph. 0 = flat.
+    depth: float | None = None       # None = whatever the film says
+
     captions: list[Caption] = field(default_factory=list)
     note: str = ""                   # for humans and for me. Never rendered.
     id: str = ""
@@ -309,6 +313,7 @@ class Shot:
             dissolve=max(0.0, float(d.get("dissolve", 0.0))),
             fill=str(d["fill"]).lower() if "fill" in d else None,
             bokeh=max(0.0, float(d["bokeh"])) if "bokeh" in d else None,
+            depth=max(0.0, float(d["depth"])) if "depth" in d else None,
             captions=[Caption.parse(c) for c in d.get("captions", [])],
             note=str(d.get("note", "")),
             id=str(d.get("id", f"s{index + 1:02d}")),
@@ -481,6 +486,13 @@ class Film:
     # that this barely shows; it is for wide films and wider takes.
     bokeh: float = 0.0
 
+    # Parallax on photographs: as the camera moves, what is near slides
+    # past what is far, and the subject (`focus`) stays put. 0 is flat --
+    # the picture exactly as before. 0.5 is the strength it was judged at.
+    # Photographs only, and it needs onnxruntime and a model -- depth.py.
+    # Off by default: a chart or a screenshot has no depth to give.
+    depth: float = 0.0
+
     look: Look = field(default_factory=Look)
     shots: list[Shot] = field(default_factory=list)
     root: Path = field(default_factory=Path)
@@ -503,6 +515,18 @@ class Film:
         if shot.bokeh is not None:
             return shot.bokeh
         return self.bokeh if kinds.is_recording(Path(shot.src).stem) else 0.0
+
+    def depth_for(self, shot: Shot) -> float:
+        """How much parallax this shot gets. The shot's own `depth:` wins;
+        a clip gets none -- its picture changes every frame, and a depth
+        map made per frame flickers. Nor does the film's setting reach a
+        picture made in analysis/: the title card is the film's name over
+        a photo, and parallax would bend the letters."""
+        if shot.kind != "still":
+            return 0.0
+        if shot.depth is not None:
+            return shot.depth
+        return 0.0 if Path(shot.src).parts[:1] == ("analysis",) else self.depth
 
     def resolve(self, src: str) -> Path:
         """Paths in film.yaml are relative to the film.yaml itself."""
@@ -561,6 +585,7 @@ class Film:
             fill=str(d.get("fill", "crop")).lower(),
             fill_aspect=float(d.get("fill_aspect", 1.0)),
             bokeh=max(0.0, float(d.get("bokeh", 0.0))),
+            depth=max(0.0, float(d.get("depth", 0.0))),
             look=Look.parse(d.get("look")),
             shots=[Shot.parse(s, i) for i, s in enumerate(d.get("shots", []))],
             root=path.parent,

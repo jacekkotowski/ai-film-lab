@@ -129,7 +129,7 @@ wheels = [
 
 [[package]]
 name = "ffilm"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
@@ -140,6 +140,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+depth = [
+    { name = "onnxruntime" },
+]
 dev = [
     { name = "pytest" },
 ]
@@ -151,12 +154,13 @@ voice = [
 requires-dist = [
     { name = "faster-whisper", marker = "extra == 'voice'", specifier = ">=1.0" },
     { name = "numpy", specifier = ">=1.26" },
+    { name = "onnxruntime", marker = "extra == 'depth'", specifier = ">=1.20" },
     { name = "opencv-python-headless", specifier = ">=4.10,<5" },
     { name = "pillow", specifier = ">=10" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "pyyaml", specifier = ">=6" },
 ]
-provides-extras = ["voice", "dev"]
+provides-extras = ["voice", "depth", "dev"]
 
 [[package]]
 name = "filelock"

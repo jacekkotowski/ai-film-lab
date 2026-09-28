@@ -1,6 +1,6 @@
 [project]
 name = "ffilm"
-version = "0.1.0"
+version = "0.2.0"
 description = "A small, readable film compiler: film.yaml in, cinema out."
 requires-python = ">=3.11"
 dependencies = [
@@ -13,6 +13,11 @@ dependencies = [
 # Optional. Only installed if you ask for it:  uv sync --extra voice
 [project.optional-dependencies]
 voice = ["faster-whisper>=1.0"]
+
+# Optional. Parallax on photographs (`depth:` in film.yaml). OpenCV's own
+# cv2.dnn cannot load the depth model -- docs/decisions/0013. Without it,
+# photographs render flat, as before:  uv sync --extra depth
+depth = ["onnxruntime>=1.20"]
 
 # Not a dependency of the film -- only of changing the code. Nobody
 # making a film ever installs this.  uv run --extra dev pytest -q

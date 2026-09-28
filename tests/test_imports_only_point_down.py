@@ -30,7 +30,7 @@ LAYERS = {
     # 3  the movement vocabulary; where each shot sits in time
     "moves": 3, "timeline": 3,
     # 4  getting and reading the material
-    "record": 4, "ingest": 4, "segment": 4,
+    "record": 4, "ingest": 4, "segment": 4, "depth": 4,
     # 5  sound and words, built from the analysis
     "audio": 5, "voice": 5, "cover": 5,
     # 6  pixels, and captions fitted to shots

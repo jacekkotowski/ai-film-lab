@@ -61,7 +61,19 @@ SPEECH_DENOISE = Model(
     what="takes the room out from under your voice (RNNoise)",
 )
 
-CATALOGUE = (SELFIE, SPEECH_DENOISE)
+# Depth Anything V2 Small, fp32, as onnx-community publishes it. fp16 was
+# 5x slower on this CPU, int8 drifted 0.07 on charts: docs/decisions/0013.
+# Run by onnxruntime (the `depth` extra), because cv2.dnn cannot load it.
+DEPTH = Model(
+    file="depth_anything_v2_small.onnx",
+    url=("https://huggingface.co/onnx-community/depth-anything-v2-small/"
+         "resolve/main/onnx/model.onnx"),
+    size=99060839,
+    sha256="afb6a5c28f3b6bf1618c6e43f02073ef9dfdc70e937502d51603e57b0a1df10c",
+    what="how near each part of a photograph is, for parallax (depth)",
+)
+
+CATALOGUE = (SELFIE, SPEECH_DENOISE, DEPTH)
 
 
 def models_dir() -> Path:

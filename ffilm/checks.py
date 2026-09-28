@@ -139,6 +139,32 @@ def bokeh_notes(film) -> list[str]:
     return msg.splitlines() if msg else []
 
 
+_ASK = object()
+
+
+def depth_notes(film, runner=_ASK, model_present=_ASK) -> list[str]:
+    """Which photographs get parallax, and whether this computer can give
+    it. `runner` is depth.missing_runner()'s answer and `model_present`
+    whether the model file is there; both are looked up when not given."""
+    from . import depth, models
+    shots = [s.id for s in film.shots if film.depth_for(s) > 0]
+    if not shots:
+        return []
+    if runner is _ASK:
+        runner = depth.missing_runner()
+    if model_present is _ASK:
+        model_present = models.is_present(models.DEPTH)
+    out = [f"depth (parallax) on {len(shots)} photo(s): {', '.join(shots)}"]
+    if runner:
+        out.append("  Not on this computer yet -- they will render flat:")
+        out += [f"  {line}" for line in runner.splitlines()]
+    elif not model_present:
+        out.append(f"  The model {models.DEPTH.file} "
+                   f"({models.DEPTH.size // 1_000_000} MB) downloads on the "
+                   f"first render, or now: uv run film models")
+    return out
+
+
 def film_shape(project: Path) -> tuple[int, int]:
     """The film's own resolution, read cheaply. Not Film.load, which
     validates every source file -- a cover should still build for a film

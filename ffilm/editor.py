@@ -468,6 +468,7 @@ def state(project: Path) -> dict:
             # windows somebody tuned by hand and does not want guessed at.
             "dissolve": s.dissolve,
             "fill": s.fill,
+            "depth": s.depth,
             # A slide's words: the voice file, and where in it they are.
             # The bench has no controls for these either, and losing them
             # would turn a narrated film back into a silent slideshow on
@@ -573,6 +574,8 @@ def dump(project: Path, data: dict) -> str:
             L.append(f"    dissolve: {float(s['dissolve'])}")
         if s.get("fill"):
             L.append(f"    fill: {s['fill']}")
+        if s.get("depth") is not None:
+            L.append(f"    depth: {float(s['depth'])}")
         for key, win in (("from", s.get("frm")), ("to", s.get("to"))):
             if win:
                 L.append(f"    {key}:")

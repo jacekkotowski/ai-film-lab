@@ -549,6 +549,8 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
     L.append("")
     L.extend(bokeh_lines(segment.missing_model() is None))
     L.append("")
+    L.extend(depth_lines())
+    L.append("")
     L.append("shots:")
     L.extend(card_block)
 
@@ -593,6 +595,17 @@ def bokeh_lines(model_present: bool) -> list[str]:
         L.append(f"# bokeh: 1   <- needs models/{segment.MODEL_FILE}, "
                  f"see models/README.md")
     return L
+
+
+def depth_lines() -> list[str]:
+    """Parallax on photographs, offered in every new film and left off.
+    Unlike bokeh it is never on by default: a chart or a screenshot has no
+    depth to give, and it needs an optional extra."""
+    return ["# Photographs with depth: as the camera moves, what is near",
+            "# slides past what is far (parallax). 0 = flat. Photos only;",
+            "# a chart or a screenshot wants `depth: 0` on its own shot.",
+            "# Needs `uv sync --extra depth` once; see docs/decisions/0013.",
+            "# depth: 0.5"]
 
 
 def title_card_block(project: Path, vertical: bool) -> list[str]:

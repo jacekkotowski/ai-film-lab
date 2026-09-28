@@ -45,7 +45,7 @@ from . import guide
 from . import history
 from . import scaffold
 from . import timeline
-from .checks import (bokeh_notes, film_shape, framing_notes, library_lines,
+from .checks import (bokeh_notes, depth_notes, film_shape, framing_notes, library_lines,
                      caption_share_line, music_notes, narration_notes,
                      preflight_report, repeated_captions, shot_lines,
                      unreadable_captions, unused_media)
@@ -673,6 +673,8 @@ def cmd_check(args) -> None:
     for note in framing_notes(film):
         print(f"  {note}" if note.startswith("[") else note)
     for note in bokeh_notes(film):
+        print(f"  {note}")
+    for note in depth_notes(film):
         print(f"  {note}")
 
     guide.print_next(project)

@@ -116,6 +116,17 @@ BASE = 1.06      # never sit at scale 1.0 -- leaves room to move without
 SUBJECT_LEAD = 1.0
 VIDEO_BASE = 1.0
 
+# Parallax on a photograph (`depth:`), see render.parallax_maps. A pixel
+# moves by the camera's travel from mid-move x PARALLAX x depth x how much
+# nearer or farther it is than the subject. At PARALLAX 1 and `depth: 1`,
+# the nearest thing moves up to half the camera's travel more than the
+# subject does.
+PARALLAX = 1.0
+# The camera's travel counted for parallax, at most this fraction of the
+# window's width. `rise` travels a tall photo's whole height; its parallax
+# would tear the picture apart at that distance.
+PARALLAX_TRAVEL = 0.1
+
 MOVES = [
     "push_in", "pull_out", "pan_left", "pan_right",
     "tilt_up", "tilt_down", "drift_left", "drift_right",
@@ -235,6 +246,14 @@ def window_at(shot: Shot, t: float, seed: int = 0) -> Window:
     f, to = windows_for(shot, seed)
     e = ease(shot.ease, t) * SETTLE
     return f.lerp(to, e)
+
+
+def window_mid(shot: Shot, seed: int = 0) -> Window:
+    """The camera halfway along the travel it actually shows (SETTLE), by
+    distance, not by time -- whatever the easing. With `depth:` this is
+    where the photo is itself: no pixel shifted against another."""
+    f, to = windows_for(shot, seed)
+    return f.lerp(to, SETTLE * 0.5)
 
 
 def window_past_end(shot: Shot, dt: float, seed: int = 0) -> Window:

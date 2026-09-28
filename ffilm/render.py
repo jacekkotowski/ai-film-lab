@@ -114,6 +114,15 @@ def warp(src: np.ndarray, win: Window, ow: int, oh: int, interp: int) -> np.ndar
     smooth instead of steppy.
     """
     H, W = src.shape[:2]
+    M, _, _, _ = window_affine(H, W, win, ow, oh)
+    return cv2.warpAffine(src, M, (ow, oh), flags=interp,
+                          borderMode=cv2.BORDER_REPLICATE)
+
+
+def window_affine(H: int, W: int, win: Window, ow: int, oh: int):
+    """The affine map from an H x W source into the ow x oh frame, and
+    where the window really is after being kept inside the picture:
+    (M, cx, cy, window width), all in source pixels. Pure."""
     aspect = ow / oh
 
     # Largest window of the output aspect that fits the source, then zoomed.
@@ -138,9 +147,75 @@ def warp(src: np.ndarray, win: Window, ow: int, oh: int, interp: int) -> np.ndar
                           corner(+w / 2, -h / 2),
                           corner(-w / 2, +h / 2)])
     dst_pts = np.float32([[0, 0], [ow, 0], [0, oh]])
-    M = cv2.getAffineTransform(src_pts, dst_pts)
-    return cv2.warpAffine(src, M, (ow, oh), flags=interp,
-                          borderMode=cv2.BORDER_REPLICATE)
+    return cv2.getAffineTransform(src_pts, dst_pts), cx, cy, w
+
+
+# --------------------------------------------------------------------------
+# The camera with depth: parallax on a photograph (`depth:`)
+# --------------------------------------------------------------------------
+
+
+@dataclass
+class Parallax:
+    depth: np.ndarray      # float32, the source's size, 0 far .. 1 near
+    at_focus: float        # the depth that stays put: the subject's
+    mid: Window            # the camera at mid-move, where nothing shifts
+    strength: float        # film.yaml's `depth:`
+
+
+_grids: dict = {}
+
+
+def source_maps(H: int, W: int, win: Window, ow: int, oh: int):
+    """For every output pixel, the source point the flat camera shows
+    there: the same map `warp` uses, written out as two arrays. Pure."""
+    M, _, _, _ = window_affine(H, W, win, ow, oh)
+    inv = cv2.invertAffineTransform(M)
+    if (ow, oh) not in _grids:
+        _grids.clear()
+        _grids[(ow, oh)] = np.meshgrid(np.arange(ow, dtype=np.float32),
+                                       np.arange(oh, dtype=np.float32))
+    u, v = _grids[(ow, oh)]
+    mx = inv[0, 0] * u + inv[0, 1] * v + np.float32(inv[0, 2])
+    my = inv[1, 0] * u + inv[1, 1] * v + np.float32(inv[1, 2])
+    return mx.astype(np.float32), my.astype(np.float32)
+
+
+def parallax_maps(H: int, W: int, win: Window, ow: int, oh: int,
+                  par: Parallax | None):
+    """source_maps, with each point moved by how near it is. Pure.
+
+    shift = the camera's travel from mid-move x strength x (its depth -
+    the subject's depth). The subject stays where the flat camera puts
+    it; nearer moves further the same way; farther moves against it. On
+    a zoom, nearer grows a little more than farther, the same way.
+    """
+    from .moves import PARALLAX, PARALLAX_TRAVEL
+    mx, my = source_maps(H, W, win, ow, oh)
+    if par is None or par.strength <= 0:
+        return mx, my
+    _, cx, cy, w = window_affine(H, W, win, ow, oh)
+    _, mcx, mcy, _ = window_affine(H, W, par.mid, ow, oh)
+    cap = PARALLAX_TRAVEL * w
+    tx = float(np.clip(cx - mcx, -cap, cap))
+    ty = float(np.clip(cy - mcy, -cap, cap))
+    zoom = win.scale / max(par.mid.scale, 0.01) - 1.0
+    d = cv2.remap(par.depth, mx, my, cv2.INTER_LINEAR,
+                  borderMode=cv2.BORDER_REPLICATE)
+    k = np.float32(PARALLAX * par.strength) * (d - np.float32(par.at_focus))
+    return (mx + k * (np.float32(tx) - (mx - np.float32(cx)) * np.float32(zoom)),
+            my + k * (np.float32(ty) - (my - np.float32(cy)) * np.float32(zoom)))
+
+
+def warp_with_depth(src: np.ndarray, win: Window, ow: int, oh: int,
+                    interp: int, par: Parallax | None) -> np.ndarray:
+    """`warp`, with parallax when there is a depth map. Without one, or at
+    `depth: 0`, it IS `warp` -- the same call, the same bytes."""
+    if par is None or par.strength <= 0:
+        return warp(src, win, ow, oh, interp)
+    H, W = src.shape[:2]
+    mx, my = parallax_maps(H, W, win, ow, oh, par)
+    return cv2.remap(src, mx, my, interp, borderMode=cv2.BORDER_REPLICATE)
 
 
 # How soft the background is, as a fraction of the frame width.
@@ -161,7 +236,8 @@ FILL_MAX_GAIN = 1.0       # and never brighten it past what was really there
 
 
 def blurred_fill(src: np.ndarray, win: Window, ow: int, oh: int,
-                 interp: int, aspect: float) -> np.ndarray:
+                 interp: int, aspect: float,
+                 par: Parallax | None = None) -> np.ndarray:
     """The picture whole, on a blurred enlargement of itself.
 
     Two passes of the same camera through the same window, into two
@@ -180,10 +256,10 @@ def blurred_fill(src: np.ndarray, win: Window, ow: int, oh: int,
     if inner_h >= oh:
         # Nothing would show around it. A film that asked for blur and
         # got a plain crop is better than one with a one-pixel halo.
-        return warp(src, win, ow, oh, interp)
+        return warp_with_depth(src, win, ow, oh, interp, par)
 
-    inner = warp(src, win, ow, inner_h, interp)
-    back = warp(src, win, ow, oh, interp)
+    inner = warp_with_depth(src, win, ow, inner_h, interp, par)
+    back = warp_with_depth(src, win, ow, oh, interp, par)
     sw, sh = max(8, ow // 8), max(8, oh // 8)
     small = cv2.resize(back, (sw, sh), interpolation=cv2.INTER_AREA)
     small = cv2.GaussianBlur(small, (0, 0), sigmaX=max(1.0, ow * FILL_BLUR / 8))
@@ -209,12 +285,13 @@ def blurred_fill(src: np.ndarray, win: Window, ow: int, oh: int,
 
 
 def compose(src: np.ndarray, win: Window, ow: int, oh: int, interp: int,
-            film, shot) -> np.ndarray:
-    """One finished picture, cropped to the frame or laid on blur."""
+            film, shot, par: Parallax | None = None) -> np.ndarray:
+    """One finished picture, cropped to the frame or laid on blur. With
+    `par`, the camera has depth (parallax); without it, the flat camera."""
     mode = shot.fill or film.fill
     if mode == "blur":
-        return blurred_fill(src, win, ow, oh, interp, film.fill_aspect)
-    return warp(src, win, ow, oh, interp)
+        return blurred_fill(src, win, ow, oh, interp, film.fill_aspect, par)
+    return warp_with_depth(src, win, ow, oh, interp, par)
 
 
 def should_memoise(shot) -> bool:
@@ -303,6 +380,8 @@ def sharpen_for(film: Film, shot: Shot) -> float:
 
 
 class StillSource:
+    parallax: Parallax | None = None     # flat unless open_source says so
+
     def __init__(self, path: Path, ow: int, oh: int, max_scale: float):
         img = pix.imread(path, cv2.IMREAD_COLOR)
         if img is None:
@@ -454,7 +533,46 @@ def open_source(film: Film, shot: Shot, ow: int, oh: int, max_scale: float):
     if shot.kind == "video":
         return VideoSource(path, shot, ow, oh, max_scale, film.bokeh_for(shot),
                            sharpen_for(film, shot))
-    return StillSource(path, ow, oh, max_scale)
+    src = StillSource(path, ow, oh, max_scale)
+    strength = film.depth_for(shot)
+    if strength > 0:
+        src.parallax = parallax_for(film, shot, path, src.img, strength)
+    return src
+
+
+_told_no_depth = False
+
+
+def focus_depth(d: np.ndarray, focus) -> float:
+    """The depth of the subject: the median of a small patch at `focus`
+    (the middle when there is none), so one stray pixel cannot pick it."""
+    fx, fy = focus if focus else (0.5, 0.5)
+    h, w = d.shape[:2]
+    r = max(1, int(0.02 * max(h, w)))
+    x = int(np.clip(fx * w, 0, w - 1))
+    y = int(np.clip(fy * h, 0, h - 1))
+    return float(np.median(d[max(0, y - r):y + r + 1, max(0, x - r):x + r + 1]))
+
+
+def parallax_for(film: Film, shot: Shot, path: Path, img: np.ndarray,
+                 strength: float) -> Parallax | None:
+    """The shot's depth, sized to its working picture -- or None, said
+    once, when there is no runner or model: the film renders flat."""
+    global _told_no_depth
+    from . import depth, ingest
+    from .moves import window_mid
+    try:
+        key = ingest.key_of(film.root, Path(shot.src).as_posix())
+        cached = film.root / "analysis" / "depth" / depth.cache_name(key, path)
+        d = depth.depth_for(path, cached)
+    except SystemExit as e:
+        if not _told_no_depth:
+            print(f"\n  depth left out: {str(e).splitlines()[0]}")
+            _told_no_depth = True
+        return None
+    h, w = img.shape[:2]
+    d = cv2.resize(d, (w, h), interpolation=cv2.INTER_LINEAR)
+    return Parallax(d, focus_depth(d, shot.focus), window_mid(shot), strength)
 
 
 # --------------------------------------------------------------------------
@@ -1002,7 +1120,8 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
                             continue
                     else:
                         img = src.frame(t * shot.duration)
-                        f = compose(img, win, rw, rh, quality.interp, film, shot)
+                        f = compose(img, win, rw, rh, quality.interp, film, shot,
+                                    getattr(src, "parallax", None))
                         memo_key, memo_val = key, f
                     acc = f.astype(np.float32) if acc is None else acc + f
                     used += 1
@@ -1017,7 +1136,8 @@ def render(film: Film, out: Path, quality: Quality, seed: int = 0,
                     out_win = window_past_end(prev_shot, dt, seed)
                     out_img = prev_src.frame(prev_shot.duration + dt)
                     out_frame = compose(out_img, out_win, rw, rh,
-                                       quality.interp, film, prev_shot)
+                                       quality.interp, film, prev_shot,
+                                       getattr(prev_src, "parallax", None))
                     a = (i + 1) / (fade_n + 1)
                     frame = cv2.addWeighted(out_frame, 1.0 - a, frame, a, 0.0)
 

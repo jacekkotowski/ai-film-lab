@@ -23,6 +23,7 @@ checks that this table agrees with it.
 |---|---:|---|---|---|---|
 | `selfie_segmenter_landscape.tflite` | 250177 | `490e9ea734313e0de10fa0cd9e3c6133e36ea4db2b7a49bde9ef019f72796b8e` | https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter_landscape/float16/latest/selfie_segmenter_landscape.tflite | bokeh: finds you in the frame (docs/decisions/0006) | Google MediaPipe; licence not yet confirmed from the model card |
 | `sh.rnnn` | 297646 | `70bb6685eb0c2a1d18e2918dca3fbfbd39317010b1802eb1b6ea73a92f3fdec0` | https://raw.githubusercontent.com/GregorR/rnnoise-models/master/somnolent-hogwash-2018-09-01/sh.rnnn | voice: takes the room out from under your words (docs/decisions/0008) | The collection's README: the models are not creative work and not subject to copyright |
+| `depth_anything_v2_small.onnx` | 99060839 | `afb6a5c28f3b6bf1618c6e43f02073ef9dfdc70e937502d51603e57b0a1df10c` | https://huggingface.co/onnx-community/depth-anything-v2-small/resolve/main/onnx/model.onnx | depth: how near each part of a photo is, for parallax; needs `uv sync --extra depth` (docs/decisions/0013) | Apache-2.0 (Depth Anything V2 Small; Base and Large are CC-BY-NC) |
 
 ## Measured, not used
 
@@ -33,3 +34,6 @@ are not fetched on a new computer.
 |---|---:|---|---|---|
 | `human_segmentation_pphumanseg_2023mar.onnx` | 6163938 | `552d8a984054e59b5d773d24b9b12022b22046ceb2bbc4c9aaeaceb36a9ddf24` | https://github.com/opencv/opencv_zoo/tree/main/models/human_segmentation_pphumanseg | kept a hanger sharp as a "person" (0006) |
 | `bd.rnnn` | 299693 | `ae3f7411e1e6a884f839a4a145c394408398f09854dbc1216ee02faafc98a17b` | https://raw.githubusercontent.com/GregorR/rnnoise-models/master/beguiling-drafter-2018-08-30/bd.rnnn | cost 1.8 dB of consonants, and one ffmpeg run failed (0008); deleted |
+| `model_fp16.onnx` (depth, fp16) | 49642442 | `2df6223f206b5164e21f664ace61dabeb9bb6a49b8b5a3e00510b4807d0f5b04` | https://huggingface.co/onnx-community/depth-anything-v2-small/resolve/main/onnx/model_fp16.onnx | 5x slower than fp32 on this CPU (7-12 s a photo) (0013); deleted |
+| `model_quantized.onnx` (depth, int8) | 27258801 | `fcf51f1b230362b28690bb9d1809bf0431f29cad20534e3f589bd7285547f20d` | https://huggingface.co/onnx-community/depth-anything-v2-small/resolve/main/onnx/model_quantized.onnx | no faster than fp32, and 0.07 off it on a chart and a screenshot (0013); deleted |
+| `depth_anything_v2_vits.onnx` (fabio-sim, fixed 518x518) | 99373606 | `d2b11a11c1d4a12b47608fa65a17ee9a4c605b55ee1730c8e3b526304f2562be` | https://github.com/fabio-sim/Depth-Anything-ONNX/releases/download/v2.0.0/depth_anything_v2_vits.onnx | tried for cv2.dnn: it cannot build its custom layers (0013); deleted |

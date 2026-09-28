@@ -1,0 +1,79 @@
+# 0013 — Which model gives a photograph depth, and what runs it?
+
+**Status:** settled 2026-09-28 (runner and file); strength judged on stills
+only, not yet on a film Jacek watched  ·  **Plan:** docs/plans/2026-09-27/PLAN-2.5d-parallax.md
+
+## The question
+v0.2 gives photographs parallax (`depth:` in film.yaml): as the camera
+moves, what is near slides past what is far. It needs a depth map per
+photo. Which model, which file, and can OpenCV run it the way it runs the
+bokeh model (0006), with no new package?
+
+## Which model
+Depth Anything V2 **Small**. Apache-2.0. Base and Large are CC-BY-NC:
+not for a toolkit anyone may use.
+
+## What was measured (this PC, CPU, 2026-09-28)
+
+**cv2.dnn cannot run it.** OpenCV 4.14.0, `cv2.dnn.readNetFromONNX`:
+
+| file | source | cv2.dnn |
+|---|---|---|
+| `model.onnx` fp32, 99 MB | onnx-community | refused: `dynamic 'zero' shapes are not supported` |
+| `model_fp16.onnx`, 50 MB | onnx-community | refused: same |
+| `model_quantized.onnx` int8, 27 MB | onnx-community | refused: a Reshape node |
+| `depth_anything_v2_vits.onnx`, fixed 518x518, 99 MB | fabio-sim v2.0.0 | refused: cannot build its custom layers |
+
+So it runs in **onnxruntime**, as the optional extra `depth`
+(`uv sync --extra depth`). Not a new package in practice: onnxruntime
+1.29.0 was already in `uv.lock`, pulled in by faster-whisper (`voice`).
+Without it photographs render flat and the render says so once.
+
+**onnxruntime, 1 run after 1 warm-up, short side 518:**
+
+| picture | model input | fp32 | fp16 | int8 | fp16 vs fp32 | int8 vs fp32 |
+|---|---|---:|---:|---:|---:|---:|
+| Bauhaus `1_.jpg` 5317x3440 | 798x518 | 1828 ms | 9124 ms | 1914 ms | 0.0014 | 0.0354 |
+| Frankfurt `5_tanks.jfif` 1920x1433 | 700x518 | 1386 ms | 6955 ms | 1465 ms | 0.0008 | 0.0055 |
+| Turn Heat `5.jpg` 450x600 | 518x686 | 1341 ms | 7272 ms | 1658 ms | 0.0006 | 0.0111 |
+| chart `1german_exports_english.png` | 854x518 | 1841 ms | 9966 ms | 1953 ms | 0.0007 | 0.0708 |
+| screenshot `2_git.png` 1920x1080 | 924x518 | 2227 ms | 11573 ms | 2227 ms | 0.0023 | 0.0781 |
+
+Differences are mean absolute difference of the depth maps, each stretched
+to 0..1. **fp32 chosen:** fp16 is 5x slower on this CPU and int8 is no faster
+and 0.07 off on the chart and the screenshot. The map is made once per
+photo and kept in `analysis/depth/`, so 1.3–2.2 s a photo is paid once.
+
+## Strength: edges, judged on stills (pan_right, both ends of the move)
+Shift of a pixel against the flat camera, in pixels of a 960-wide frame:
+
+| picture | 0.3 median / p99 | 0.5 median / p99 | 0.8 median / p99 |
+|---|---:|---:|---:|
+| Bauhaus `1_.jpg` | 3.5 / 8.8 | 5.8 / 14.7 | 9.3 / 23.5 |
+| `5_tanks.jfif` | 5.2 / 11.6 | 8.6 / 19.3 | 13.8 / 30.8 |
+| Turn Heat `5.jpg` | 0.2 / 15.9 | 0.4 / 26.6 | 0.7 / 42.5 |
+| chart | 3.3 / 12.3 | 5.4 / 20.5 | 8.7 / 32.9 |
+| screenshot | 3.2 / 11.7 | 5.3 / 19.6 | 8.5 / 31.3 |
+
+Looked at (Claude, on the stills, at full size on the tanks):
+- **0.5 is clean.** The gunner slides past the people behind him, no tear.
+- **0.8 stretches.** The standing man beside the tank is visibly widened.
+- **A chart is not flat to the model.** Its dashed "2022" line bends at 0.5
+  and plainly at 0.8; slightly at 0.3. A chart or a screenshot wants
+  `depth: 0` on its own shot — the film.yaml header says so.
+
+## Render time
+RENDER_TIME_PENDING
+
+## What was decided, and why
+- fp32 Small from onnx-community, run by onnxruntime as an optional extra.
+- Off by default (`depth: 0`); `film init` writes `# depth: 0.5` commented.
+- Photographs only. Not clips (a per-frame map flickers), not the title
+  card in analysis/ (it would bend the letters).
+- Taste constants in moves.py: PARALLAX 1.0, PARALLAX_TRAVEL 0.1 (the
+  travel counted, capped at a tenth of the window's width, so `rise`
+  over a tall photo does not tear it).
+
+## Not yet known
+Whether it "looks like a place" in motion: that is for Jacek to watch on a
+draft. Stills show position, not the feel of the slide.
