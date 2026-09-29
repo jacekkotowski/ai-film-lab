@@ -22,6 +22,10 @@ move it to the bottom section with the commit id — do not delete it.
   the recording window — 98c638b. Window walked by a script up to the
   pick (returns the number); the reopened one-picture window and a real
   take have not been tried. **Not yet used by Jacek.**
+  2026-09-29: the menu line shows once there is a narration (b601a7d);
+  the window button too — before an edit its screen says so and Continue
+  cuts the narration, then asks which picture. Both window paths walked
+  by a script; a real one-picture take still not tried.
   2026-09-29: Jacek could not use it on It Reads Us. Two faults: (a)
   after an intro retake film.yaml named the discarded take and every
   picture recording refused ("file not found") -- fixed 37f0bd6; (b) the

@@ -67,14 +67,23 @@ def test_the_window_lists_the_pictures_when_reading_over_all_of_them():
                                one_already=False) == MENU
 
 
-def test_no_list_when_the_window_is_already_on_one_picture():
-    assert one_picture_choices(MENU, voice_only=True, one_already=True) == []
+def test_no_button_when_the_window_is_already_on_one_picture():
+    assert one_picture_choices(MENU, voice_only=True,
+                               one_already=True) is None
 
 
-def test_no_list_in_front_of_the_camera():
+def test_no_button_in_front_of_the_camera():
     assert one_picture_choices(MENU, voice_only=False,
-                               one_already=False) == []
+                               one_already=False) is None
 
 
-def test_no_list_before_there_is_an_edit():
-    assert one_picture_choices([], voice_only=True, one_already=False) == []
+def test_the_button_is_there_before_the_edit_once_there_is_a_narration():
+    # 2026-09-29, It Reads Us: recorded before any edit, never saw it.
+    # [] = the button, whose screen cuts the narration first.
+    assert one_picture_choices([], voice_only=True, one_already=False,
+                               has_narration=True) == []
+
+
+def test_no_button_before_anything_was_said():
+    assert one_picture_choices([], voice_only=True,
+                               one_already=False) is None

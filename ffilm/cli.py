@@ -1136,9 +1136,11 @@ def cmd_record(args) -> None:
             start=new_take, finish=took, seconds=args.seconds,
             discard=drop_last, voice_only=args.voice,
             steps=steps, pair=pair,
-            pictures=booth.one_picture_choices(menu, args.voice,
-                                               bool(picking)))
-        if chosen and not takes:
+            pictures=booth.one_picture_choices(
+                menu, args.voice, picking is not None,
+                has_narration=any((project / "media").glob(
+                    "voiceover_*.wav"))))
+        if chosen is not None and not takes:
             # Picked before anything was recorded: straight to it.
             args.picture = chosen
             return cmd_record(args)

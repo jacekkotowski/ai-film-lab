@@ -152,14 +152,23 @@ def next_label(i: int, n: int) -> str:
 
 
 def one_picture_choices(menu: list[str], voice_only: bool,
-                        one_already: bool) -> list[str]:
-    """The pictures the window offers to say again one at a time, or none.
+                        one_already: bool,
+                        has_narration: bool = False) -> list[str] | None:
+    """The pictures the window offers to say again one at a time; [] when
+    the button is there but the list needs the edit first; None for no
+    button.
 
     Asked 2026-09-28: "make a button in the recording pane". Only when
     reading over ALL the pictures: in front of the camera there is no
     picture, and a window already on one picture has nothing to pick.
-    `menu` is `scaffold.picture_menu`, empty until there is an edit."""
-    return list(menu) if voice_only and not one_already else []
+    `menu` is `scaffold.picture_menu`, empty until there is an edit.
+    2026-09-29, It Reads Us: recorded before any edit, and the button was
+    never there -- so with a narration it shows anyway."""
+    if not voice_only or one_already:
+        return None
+    if menu:
+        return list(menu)
+    return [] if has_narration else None
 
 
 def available() -> bool:
@@ -1014,9 +1023,18 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         S["chosen"] = n
         done()
 
-    if pictures:
+    if pictures is not None:
         button(row, "Only ONE picture...",
                lambda: show("pick")).pack(side="left", padx=10)
+        if not pictures:
+            # No edit yet: 0 tells the caller to cut the narration into
+            # pictures first (`record --picture`), then ask which one.
+            big(pick_list, "The narration is not cut into pictures yet. "
+                           "Continue closes this window, cuts it (no "
+                           "render), and then asks which picture.",
+                15, DIM).pack(anchor="w", pady=(0, 10))
+            button(pick_list, "Continue", lambda: choose(0),
+                   primary=True).pack(anchor="w")
         for n, line in enumerate(pictures, 1):
             b = button(pick_list, line.strip(), lambda n=n: choose(n),
                        small=True)
