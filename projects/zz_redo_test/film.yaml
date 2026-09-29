@@ -15,6 +15,8 @@ fps: 24
 resolution: [1080, 1920]   # vertical, for YouTube Shorts
 # Each picture carries its own piece of
 # media/voiceover_20260929-135207.wav -- see `voice:` below.
+# The newest of 2 recordings in media/. The older one(s) are not used;
+# move them to media/_discarded/ to tidy up.
 # title: the words on the thumbnail. Left out, the film is
 #        called what its folder is called.
 # music: found on its own -- this project's music/ folder if it
