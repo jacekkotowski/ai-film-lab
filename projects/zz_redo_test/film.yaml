@@ -161,62 +161,22 @@ shots:
 
   - id: s03
     src: media/2_From_Ads_to_Elections.jpg
-    voice: media/voiceover_20260929-135207.wav
-    in: "00:34.50"
-    out: "01:09.50"
+    voice: media/picture2_20260929-140111.wav
+    in: "00:00.00"
+    out: "00:03.92"
     speed: 1.2              # 1.0 is the speed you actually read at
     move: push_in
     from: {cx: 0.200, cy: 0.500, scale: 1.00}
     to:   {cx: 0.800, cy: 0.500, scale: 1.00}
     ease: linear
     focus: [0.201, 0.234]
-    note: "picture 2 of 3 -- holds while these words are said. This picture is 5004x3197; the frame shows about 0.40 of its width at a time, so it is swept across instead of cropped."
+    note: "picture 2 of 3 -- said again, picture2_20260929-140111.wav"
     captions:
       - text: "Sandra Matz and Kosiński then showed 3.5 million people ads"
-        at: 0.93
-        dur: 3.38
+        at: 0.00
+        dur: 3.01
         pos: lower_third
-        words: [0.00, 0.13, 0.60, 0.95, 1.33, 1.87, 2.37, 2.62, 2.93]
-      - text: "written for different personality types,"
-        at: 4.32
-        dur: 2.25
-        pos: lower_third
-        words: [0.00, 0.47, 0.88, 1.20, 1.73]
-      - text: "and the matched ads brought up to 50% more purchases."
-        at: 7.27
-        dur: 3.61
-        pos: lower_third
-        words: [0.00, 0.18, 0.35, 0.62, 1.18, 1.53, 1.92, 2.10, 2.47, 2.85, 3.13]
-      - text: "Cambridge Analytica, run by Alexander Nix,"
-        at: 11.68
-        dur: 2.54
-        pos: lower_third
-        words: [0.00, 0.43, 1.33, 1.48, 1.68, 2.18]
-      - text: "sold this approach to election campaigns."
-        at: 14.58
-        dur: 1.86
-        pos: lower_third
-        words: [0.00, 0.20, 0.40, 0.73, 0.95, 1.28]
-      - text: "Its data came from a quiz by Aleksandr Kogan"
-        at: 17.28
-        dur: 2.71
-        pos: lower_third
-        words: [0.00, 0.23, 0.55, 0.85, 1.10, 1.33, 1.50, 1.83, 2.37]
-      - text: "that 270,000 people took,"
-        at: 20.00
-        dur: 2.50
-        pos: lower_third
-        words: [0.00, 0.48, 1.08, 1.87, 2.12]
-      - text: "and Facebook let the quiz copy their friends' profiles too,"
-        at: 23.02
-        dur: 3.36
-        pos: lower_third
-        words: [0.00, 0.30, 0.67, 0.95, 1.22, 1.58, 1.95, 2.18, 2.52, 2.97]
-      - text: "up to 87 million of them."
-        at: 26.38
-        dur: 2.43
-        pos: lower_third
-        words: [0.00, 0.77, 1.02, 1.57, 1.95, 2.22]
+        words: [0.00, 0.25, 0.70, 0.97, 1.28, 1.75, 2.13, 2.37, 2.65]
 
   - id: s04
     src: media/3_Move 37.jpg
