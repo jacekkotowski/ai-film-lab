@@ -11,7 +11,10 @@ project folder, as they are in film.yaml.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
+import unicodedata
 from pathlib import Path
 
 from . import kinds
@@ -67,7 +70,32 @@ def shot_title(film: Film, shot: Shot, role: str) -> str:
     return pretty_name(kinds.hint(stem)[2]) or role.capitalize()
 
 
-def export(film: Film, card_src: str, video_name: str) -> dict:
+def slug(name: str) -> str:
+    """The project folder's name as the next stage files it:
+    "It Reads Us - We Can't Read It" -> "it-reads-us-we-can-t-read-it".
+    Written here, once, so ai-3d-studio never guesses its own. NFKD strips
+    accents but has no decomposition for the Polish ł, which would vanish
+    ("Kołakowski" -> "koakowski"), so it is spelled out first."""
+    name = name.replace("ł", "l").replace("Ł", "L")
+    plain = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", plain.lower()).strip("-") or "film"
+
+
+def file_sha256(path: Path) -> str | None:
+    """The video's fingerprint. A later stage stores it and compares, so a
+    re-render is seen even when the length is unchanged. None when there
+    is no file: never worth losing a render over."""
+    if not path.is_file():
+        return None
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def export(film: Film, card_src: str, video_name: str,
+           video_sha256: str | None = None) -> dict:
     """The whole timeline as a JSON-able dict. Pure."""
     fps = film.fps
     frames = shot_frames(film)
@@ -94,7 +122,9 @@ def export(film: Film, card_src: str, video_name: str) -> dict:
     total = frames[-1][1] if frames else 0
     return {
         "version": VERSION,
+        "slug": slug(film.root.resolve().name),
         "video": video_name,
+        "video_sha256": video_sha256,
         "title": film.title,
         "project_dir": film.root.resolve().as_posix(),
         "fps": fps,
@@ -115,7 +145,7 @@ def write(film: Film, video: Path, card_src: str) -> Path:
     tool may be watching the folder."""
     out = path_for(video)
     part = out.with_name(out.name + ".part")
-    part.write_text(json.dumps(export(film, card_src, video.name),
+    part.write_text(json.dumps(export(film, card_src, video.name, file_sha256(video)),
                                indent=2, ensure_ascii=False),
                     encoding="utf-8")
     part.replace(out)

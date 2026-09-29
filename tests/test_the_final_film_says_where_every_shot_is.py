@@ -10,7 +10,9 @@ as seconds they drift: 5.03s at 24fps is 121 frames, 5.0417s on screen,
 and the error grows with every shot (see spec.frames_for).
 """
 
+import hashlib
 import json
+from pathlib import Path
 
 from ffilm.spec import Caption, Film, Shot, frames_for
 from ffilm.timeline import export, path_for, write
@@ -174,3 +176,48 @@ def test_it_is_written_beside_the_video_it_describes(tmp_path):
     data = json.loads(out.read_text(encoding="utf-8"))
     assert data["shots"][3]["title"] == "German Exports English"
     assert not list(video.parent.glob("*.part"))
+
+
+# --------------------------------------------------------------------------
+# The hand-off to the next stage (ai-3d-studio reads this file and nothing
+# else of ours -- docs/decisions/0014)
+# --------------------------------------------------------------------------
+
+def test_the_film_has_one_name_in_both_stages():
+    film = lesson()
+    film.root = Path("projects/It Reads Us - We Can't Read It")
+    assert export(film, CARD, "final.mp4")["slug"] == "it-reads-us-we-can-t-read-it"
+
+
+def test_a_polish_l_in_the_name_is_kept_as_an_l():
+    film = lesson()
+    film.root = Path("projects/Frankfurt School vs Kołakowski")
+    assert export(film, CARD, "final.mp4")["slug"] == "frankfurt-school-vs-kolakowski"
+
+
+def test_the_video_is_fingerprinted_so_a_later_stage_sees_a_new_render(tmp_path):
+    video = tmp_path / "out" / "final.mp4"
+    video.parent.mkdir()
+    video.write_bytes(b"first render")
+    first = json.loads(write(lesson(), video, CARD).read_text(encoding="utf-8"))
+    assert first["video_sha256"] == hashlib.sha256(b"first render").hexdigest()
+    video.write_bytes(b"second render")
+    second = json.loads(write(lesson(), video, CARD).read_text(encoding="utf-8"))
+    assert second["video_sha256"] != first["video_sha256"]
+
+
+def test_no_video_means_no_fingerprint_not_a_lost_render(tmp_path):
+    video = tmp_path / "out" / "final.mp4"
+    video.parent.mkdir()
+    data = json.loads(write(lesson(), video, CARD).read_text(encoding="utf-8"))
+    assert data["video_sha256"] is None
+
+
+def test_the_keys_the_next_stage_reads_are_all_there():
+    """ai-3d-studio's film_to_stops.py and fly.py read exactly these. Rename
+    or drop one and the flight breaks with no warning here -- so bump
+    VERSION instead."""
+    out = export(lesson(), CARD, "final.mp4")
+    assert {"version", "slug", "video", "video_sha256", "title", "fps",
+            "width", "height", "frames", "shots"} <= out.keys()
+    assert {"role", "kind", "src", "title", "start_frame", "end_frame"} <= out["shots"][0].keys()
