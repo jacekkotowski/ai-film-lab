@@ -22,6 +22,20 @@ move it to the bottom section with the commit id — do not delete it.
   the recording window — 98c638b. Window walked by a script up to the
   pick (returns the number); the reopened one-picture window and a real
   take have not been tried. **Not yet used by Jacek.**
+  2026-09-29: Jacek could not use it on It Reads Us. Two faults: (a)
+  after an intro retake film.yaml named the discarded take and every
+  picture recording refused ("file not found") -- fixed 37f0bd6; (b) the
+  line is hidden until an edit exists, and he re-recorded the narration
+  3x before the edit was made -- NOT fixed. Measured on a copy of It
+  Reads Us, `--no-window`, real Samson take of 4 s: picture 2 re-pointed,
+  only s03 changed in film.yaml, draft renders (109.6 s), and a full
+  `go --rewrite` afterwards keeps the redo. The window route (menu 6 ->
+  window on one picture) with a real take is still untried: Jacek tests
+  it the evening of 2026-09-29.
+- 2026-09-29 intro captions came out in made-up Polish (Whisper guessed
+  pl, p = 0.49, from two Polish names) -- fixed 998cd67, English unless
+  `--lang`. Rebuilt copy of It Reads Us: intro opens "Michał Kosiński,"
+  in English. Not yet seen by Jacek in a render.
 ---
 
 ## Fixed (with the commit, once Jacek has seen it work)
