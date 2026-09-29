@@ -545,7 +545,10 @@ class Film:
         return p if p.is_absolute() else (self.root / p)
 
     @staticmethod
-    def load(path: str | Path) -> "Film":
+    def load(path: str | Path, check_files: bool = True) -> "Film":
+        """`check_files=False`: for recording, which only needs the list
+        of pictures -- a retaken intro leaves film.yaml naming the old
+        take until the film is built again (2026-09-29)."""
         path = Path(path).resolve()
         raw = path.read_text(encoding="utf-8")
 
@@ -605,14 +608,14 @@ class Film:
             film.title = title_of(path.parent)
         if film.music is None:
             film.music = find_music(path.parent)
-        film.validate()
+        film.validate(check_files)
         # A caption that runs past its shot is trimmed, not refused --
         # see trim_captions. The notes ride along on the film so that
         # whoever is about to render it can say what happened.
         film.notes = film.trim_captions()
         return film
 
-    def validate(self) -> None:
+    def validate(self, check_files: bool = True) -> None:
         """Fail loudly and early, with a message that says what to fix.
 
         Only for things that cannot be rendered at all. A caption that
@@ -630,13 +633,13 @@ class Film:
             problems.append("film.yaml has no shots.")
         for s in self.shots:
             p = self.resolve(s.src)
-            if not p.exists():
+            if check_files and not p.exists():
                 problems.append(f"[{s.id}] file not found: {p}")
             if s.duration <= 0:
                 problems.append(f"[{s.id}] duration must be positive.")
             if s.voice:
                 v = self.resolve(s.voice)
-                if not v.exists():
+                if check_files and not v.exists():
                     problems.append(f"[{s.id}] voice file not found: {v}")
                 if s.tout is not None and s.tout <= s.tin:
                     problems.append(

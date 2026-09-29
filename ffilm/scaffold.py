@@ -2013,7 +2013,7 @@ def retake_picture(project: Path, n: int, take: Path, words: str,
     from .spec import Film
 
     yml = project / "film.yaml"
-    film = Film.load(yml)
+    film = Film.load(yml, check_files=False)
     shot = picture_shots(film)[n - 1]
     rel = take.relative_to(project).as_posix()
     length = record.verify_take(take, None, False)[0]
@@ -2043,12 +2043,13 @@ def retake_picture(project: Path, n: int, take: Path, words: str,
     yml.write_text(retake_text(before, cut, []), encoding="utf-8")
     try:
         placed, _ = caption_fit.fit_lines_to_shots(
-            Film.load(yml), voice.VoiceSource(take, take.name, [rel]), lines)
+            Film.load(yml, check_files=False),
+            voice.VoiceSource(take, take.name, [rel]), lines)
         caps = placed.get(shot.id, [])
         if caps:
             yml.write_text(add_captions(yml.read_text(encoding="utf-8"),
                                         {shot.id: caps}), encoding="utf-8")
-        Film.load(yml)
+        Film.load(yml, check_files=False)
     except SystemExit as e:
         yml.write_text(before, encoding="utf-8")
         raise SystemExit(f"film.yaml was put back as it was: {e}")

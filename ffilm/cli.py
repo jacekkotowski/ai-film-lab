@@ -845,7 +845,7 @@ def _which_picture(project: Path, n: int) -> int:
     if not yml.exists():
         raise SystemExit("There is no edit yet. Record the whole narration "
                          "first; then one picture can be said again.")
-    menu = scaffold.picture_menu(Film.load(yml))
+    menu = scaffold.picture_menu(Film.load(yml, check_files=False))
     if not menu:
         raise SystemExit("No picture in this film has words over it yet. "
                          "Record the narration first: film record --voice")
@@ -954,7 +954,7 @@ def cmd_record(args) -> None:
         # One picture, one step, its own words. Never saved over
         # narration.txt: the window writes back what it shows, and this
         # is one paragraph of it.
-        film_now = Film.load(project / "film.yaml")
+        film_now = Film.load(project / "film.yaml", check_files=False)
         picture = scaffold.picture_shots(film_now)[picking - 1].src
         script = scaffold.words_for_picture(project, film_now, picking,
                                             script)
@@ -1108,8 +1108,8 @@ def cmd_record(args) -> None:
         if args.voice and not picking:
             try:
                 menu = scaffold.picture_menu(
-                    Film.load(project / "film.yaml"))
-            except Exception:
+                    Film.load(project / "film.yaml", check_files=False))
+            except (Exception, SystemExit):
                 menu = []
         print("\nThe window is open. Everything happens in it.")
         chosen = booth.session(
