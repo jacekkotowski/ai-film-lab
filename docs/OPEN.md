@@ -26,7 +26,10 @@ move it to the bottom section with the commit id — do not delete it.
   after an intro retake film.yaml named the discarded take and every
   picture recording refused ("file not found") -- fixed 37f0bd6; (b) the
   line is hidden until an edit exists, and he re-recorded the narration
-  3x before the edit was made -- NOT fixed. Measured on a copy of It
+  3x before the edit was made -- fixed b601a7d (offered once there is a
+  narration; `record --picture` rewrites a missing or older edit first,
+  measured on a copy with real takes, both cases). Sandbox for Jacek's
+  test: projects/zz_redo_test (a copy of It Reads Us). Measured on a copy of It
   Reads Us, `--no-window`, real Samson take of 4 s: picture 2 re-pointed,
   only s03 changed in film.yaml, draft renders (109.6 s), and a full
   `go --rewrite` afterwards keeps the redo. The window route (menu 6 ->
