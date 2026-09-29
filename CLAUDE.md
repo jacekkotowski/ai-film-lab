@@ -103,6 +103,7 @@ writes "proof?", show the measurement or say it was not measured.
 | what we know, by area (sync, audio, video, recording, captions) and by tool | `docs/tech/` — read the area's file before working in it; add to it after |
 | how this whole Claude setup works        | `docs/HOW_CLAUDE_IS_SET_UP.md`      |
 | how a human uses the program             | `HOW_TO_USE.md`                     |
+| the next stage (`../ai-3d-studio`) and what it may read | `docs/decisions/0014` — it reads only `out/final.mp4` + `final.timeline.json`; never edit it from here |
 
 ## Searching past knowledge (qmd)
 

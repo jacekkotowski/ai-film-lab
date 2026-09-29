@@ -20,6 +20,7 @@ dead end, you need *new* measurements to reopen it, not a new argument.
 | 0010 | Should narration read over photographs be sped up too? | Yes: one film, one voice, 1.2 on everything spoken. `speed:` on a slide had been a dead key |
 | 0011 | Were the lips out of sync in the Bauhaus closing?     | **SUPERSEDED 2026-09-23: yes** — mic starts 0.4–0.9 s late; see docs/tech/sync.md |
 | 0012 | What does `film check` say about captions, and why those numbers? | Unreadable and repeated captions are named; both thresholds swept over all 19 films |
+| 0014 | How do ai-film-lab and ai-3d-studio work together?    | Two stages, one hand-off: final.mp4 + final.timeline.json, owned here |
 
 ## Writing a new one
 
