@@ -385,7 +385,9 @@ def recording_doors(names: list[str], already: list[list[str]],
     # alone (c52336d) was not seen either -- 2026-09-28, "there was no
     # button or command to try" -- so the line is back, straight under
     # the one above, and worded to be read as ONE, not as all of them.
-    if narration and has_edit:
+    # Before the edit too (2026-09-29): `record --picture` builds it
+    # first when there is none, or when it is older than the takes.
+    if narration:
         doors.append(Step(
             "...or redo ONE picture only (pick it from a list)",
             ["record", "--voice", "--picture"],
@@ -394,11 +396,21 @@ def recording_doors(names: list[str], already: list[list[str]],
     return [d for d in doors if _shape(d.args) not in already]
 
 
+def edit_is_behind(project: Path) -> bool:
+    """No film.yaml, or a take recorded after it was written -- so it may
+    name takes a retake has moved to media/_discarded/."""
+    yml = project / "film.yaml"
+    return (not yml.exists() or _newest(project / "media",
+                                        kinds.VIDEO | AUDIO_EXT) > _mtime(yml))
+
+
 def can_redo_one_picture(names: list[str], has_edit: bool,
                          windows: bool) -> bool:
     """True when `record --voice --picture` has something to work on: a
-    narration, already cut into an edit, and a window to record in."""
-    if not (windows and has_edit):
+    narration and a window to record in. An edit is not needed: it is
+    built first when missing or behind (2026-09-29); `has_edit` is kept
+    for the callers and no longer decides."""
+    if not windows:
         return False
     return any(Path(n).stem.lower().startswith(kinds.VOICEOVER_PREFIX)
                and Path(n).suffix.lower() in AUDIO_EXT for n in names)
@@ -455,7 +467,7 @@ def _best_steps(project: Path) -> list[Step]:
         # KEEPS that edit -- so it stopped on "file not found". Found
         # 2026-09-23 after retaking intro, narration and closing.
         yml = project / "film.yaml"
-        if yml.exists() and _newest(media, kinds.VIDEO | AUDIO_EXT) > _mtime(yml):
+        if yml.exists() and edit_is_behind(project):
             steps[0] = Step(
                 "Build the film from your new recordings",
                 ["go", "--rewrite"] + p,

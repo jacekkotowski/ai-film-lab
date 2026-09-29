@@ -594,6 +594,8 @@ def cmd_go(args) -> None:
             # her the film that was otherwise about to render.
             print(f"\n  skipped captions: {e}\n")
 
+    if getattr(args, "no_render", False):
+        return
     print("\n[4/4] rendering")
     q = "final" if args.final else "draft"
     render_args = argparse.Namespace(
@@ -906,6 +908,20 @@ def cmd_record(args) -> None:
     picking = getattr(args, "picture", None)
     if picking is not None:
         args.voice = True
+        # No edit yet, or one older than the takes (2026-09-29: the
+        # narration said 3 times, then an intro retake, and one picture
+        # could not be picked): the picture list comes from the edit, so
+        # write it first -- as the menu's "Build the film from your new
+        # recordings" does, without the render.
+        if guide.edit_is_behind(project):
+            print("The edit is older than your recordings -- writing it "
+                  "again first (no render; the old one is kept as "
+                  "film.yaml.bak).\n")
+            cmd_go(argparse.Namespace(
+                project=project.name, seed=0, font=None, model="small",
+                lang=None, no_captions=False, target=None, rewrite=True,
+                final=False, no_open=True, no_render=True))
+            print()
         picking = _which_picture(project, picking)
     replacing = ("intro" if getattr(args, "intro", False) else
                  "closing" if getattr(args, "closing", False) else None)

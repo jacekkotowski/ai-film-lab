@@ -43,8 +43,11 @@ def test_it_comes_straight_after_all_of_them():
     assert shapes[i + 1] == ["record", "--voice", "--picture"]
 
 
-def test_no_line_before_the_narration_is_cut_into_an_edit():
-    assert not _one(recording_doors(NAMES, [], windows=True, has_edit=False))
+def test_the_line_is_there_before_the_narration_is_cut_into_an_edit():
+    # 2026-09-29: the narration was said 3 times before any edit existed,
+    # and the line was hidden all that time. `record --picture` now
+    # builds the edit first when there is none.
+    assert _one(recording_doors(NAMES, [], windows=True, has_edit=False))
 
 
 def test_no_line_without_a_narration():

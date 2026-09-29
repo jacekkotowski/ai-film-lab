@@ -40,9 +40,9 @@ def test_a_picture_can_be_said_again_once_there_is_a_narrated_edit():
     assert can_redo_one_picture(names, has_edit=True, windows=True)
 
 
-def test_not_before_the_narration_is_cut_into_an_edit():
+def test_also_before_the_narration_is_cut_into_an_edit():
     names = ["1_a.jpg", "voiceover_20260924-101945.wav"]
-    assert not can_redo_one_picture(names, has_edit=False, windows=True)
+    assert can_redo_one_picture(names, has_edit=False, windows=True)
 
 
 def test_not_without_a_narration():
