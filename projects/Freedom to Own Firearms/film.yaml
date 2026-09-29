@@ -1,0 +1,338 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# Each picture carries its own piece of
+# media/voiceover_20260929-201459.wav -- see `voice:` below.
+# The newest of 2 recordings in media/. The older one(s) are not used;
+# move them to media/_discarded/ to tidy up.
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+# Photographs with depth: as the camera moves, what is near
+# slides past what is far (parallax). 0 = flat. Photos only;
+# a .png .gif .svg is a chart and stays flat by itself.
+# 0.8 smears. Needs `uv sync --extra depth` once, flat without
+# it; see docs/decisions/0013.
+depth: 0.5
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 2.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20260929-200936.mp4
+    in: "00:01.45"
+    out: "00:36.65"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.529, 0.321]
+    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
+    captions:
+      - text: "Can citizens leave their safety to the state?"
+        at: 0.28
+        dur: 3.55
+        pos: lower_third
+        words: [0.00, 0.55, 1.10, 1.62, 2.10, 2.60, 3.08, 3.30]
+      - text: "In 1999 Jessica Gonzales called the police for almost ten"
+        at: 4.81
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.38, 1.88, 2.35, 2.93, 3.58, 3.80, 4.17]
+      - text: "hours after her estranged husband took their three daughters"
+        at: 10.48
+        dur: 4.23
+        pos: lower_third
+        words: [0.00, 0.47, 1.12, 1.68, 2.25, 2.75, 3.27, 3.58, 3.88]
+      - text: "in breach of a court order."
+        at: 14.71
+        dur: 2.40
+        pos: lower_third
+        words: [0.00, 0.32, 0.55, 1.05, 1.78, 1.97]
+      - text: "That night he killed them."
+        at: 17.58
+        dur: 2.61
+        pos: lower_third
+        words: [0.00, 0.88, 1.32, 1.83, 2.32]
+      - text: "In 2005 the US Supreme Court ruled she had no constitutional"
+        at: 21.01
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.23, 1.17, 1.75, 2.05, 2.43, 2.92, 3.57, 4.45]
+      - text: "right to have the order enforced."
+        at: 26.35
+        dur: 2.44
+        pos: lower_third
+        words: [0.00, 0.48, 1.02, 1.22, 1.38, 1.72]
+
+  - id: s02
+    src: media/1_Switzerland.jpg
+    voice: media/voiceover_20260929-201459.wav
+    in: "00:01.15"
+    out: "00:27.80"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: tilt_up
+    from: {cx: 0.178, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.822, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.564, 0.272]
+    note: "picture 1 of 3 -- holds while these words are said. This picture is 960x540; the frame shows about 0.36 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "In Switzerland every militia soldier can keep his"
+        at: 0.00
+        dur: 3.47
+        pos: lower_third
+        words: [0.00, 0.52, 1.55, 1.75, 2.23, 2.57, 2.97, 3.25]
+      - text: "army rifle at home."
+        at: 3.47
+        dur: 1.25
+        pos: lower_third
+        words: [0.00, 0.30, 0.70, 0.92]
+      - text: "Each summer about 130,000 citizens fire army rifles for"
+        at: 5.58
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.40, 1.05, 1.18, 2.27, 2.90, 3.40, 3.98]
+      - text: "free at the Feldschiessen,"
+        at: 10.78
+        dur: 2.11
+        pos: lower_third
+        words: [0.00, 0.35, 1.08, 1.40]
+      - text: "the largest shooting competition in the world."
+        at: 13.33
+        dur: 2.31
+        pos: lower_third
+        words: [0.00, 0.20, 0.60, 0.98, 1.43, 1.78, 1.93]
+      - text: "In the canton of Appenzell"
+        at: 16.52
+        dur: 1.88
+        pos: lower_third
+        words: [0.00, 0.25, 0.38, 0.80, 1.18]
+      - text: "a man may still show his sword as a voting card."
+        at: 18.68
+        dur: 3.24
+        pos: lower_third
+        words: [0.00, 0.13, 0.37, 0.73, 1.07, 1.37, 1.62, 2.07, 2.42, 2.53, 2.78]
+
+  - id: s03
+    src: media/2_Persecution.jpg
+    voice: media/voiceover_20260929-201459.wav
+    in: "00:30.00"
+    out: "00:56.25"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.200, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.800, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.406, 0.241]
+    note: "picture 2 of 3 -- holds while these words are said. This picture is 800x512; the frame shows about 0.40 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "In occupied Poland the Germans made owning a gun a"
+        at: 0.00
+        dur: 2.90
+        pos: lower_third
+        words: [0.00, 0.80, 1.10, 1.75, 1.87, 2.08, 2.42, 2.78, 3.03, 3.17]
+      - text: "crime punished by death."
+        at: 2.90
+        dur: 1.18
+        pos: lower_third
+        words: [0.00, 0.25, 0.60, 0.78]
+      - text: "From October 1943 Warsaw police seized"
+        at: 4.60
+        dur: 3.43
+        pos: lower_third
+        words: [0.00, 0.20, 0.58, 1.33, 2.43, 2.90]
+      - text: "passers-by in street roundups,"
+        at: 8.03
+        dur: 1.73
+        pos: lower_third
+        words: [0.00, 0.67, 0.90, 1.12, 1.40]
+      - text: "and in four months about 5,000 Poles were killed,"
+        at: 10.12
+        dur: 2.76
+        pos: lower_third
+        words: [0.00, 0.28, 0.40, 0.65, 0.98, 1.22, 1.57, 1.98, 2.32, 2.43]
+      - text: "1,200 of them shot in the streets or hanged."
+        at: 13.57
+        dur: 3.48
+        pos: lower_third
+        words: [0.00, 0.15, 0.87, 1.40, 1.58, 1.82, 2.00, 2.15, 2.52, 3.12]
+      - text: "Daily posters named the hostages to be shot"
+        at: 17.92
+        dur: 2.56
+        pos: lower_third
+        words: [0.00, 0.38, 0.73, 1.27, 1.60, 2.00, 2.22, 2.33]
+      - text: "after the next attack."
+        at: 20.48
+        dur: 1.06
+        pos: lower_third
+        words: [0.00, 0.32, 0.52, 0.73]
+      - text: "On 27 July 1944"
+        at: 21.55
+        dur: 0.72
+        pos: lower_third
+        words: [0.00]
+
+  - id: s04
+    src: media/3_Uprising.jpg
+    voice: media/picture3_20260929-201754.wav
+    in: "00:00.39"
+    out: "00:33.97"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: pull_out
+    from: {cx: 0.232, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.768, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.362, 0.318]
+    note: "picture 3 of 3 -- said again, picture3_20260929-201754.wav"
+    captions:
+      - text: "On 27 July 1944"
+        at: 0.25
+        dur: 3.08
+        pos: lower_third
+        words: [0.00, 0.55, 1.80, 2.22]
+      - text: "German governor Ludwig Fischer ordered 100,000 Poles to"
+        at: 4.15
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.23, 0.75, 1.25, 1.75, 2.38, 2.98, 3.42, 4.18]
+      - text: "dig fortifications around Warsaw,"
+        at: 8.68
+        dur: 1.78
+        pos: lower_third
+        words: [0.00, 0.22, 0.92, 1.38]
+      - text: "and the city ignored him."
+        at: 11.02
+        dur: 1.93
+        pos: lower_third
+        words: [0.00, 0.45, 0.65, 0.95, 1.58]
+      - text: "On 1 August the Home Army,"
+        at: 13.77
+        dur: 1.98
+        pos: lower_third
+        words: [0.00, 0.20, 0.30, 0.53, 0.63, 0.97, 1.33, 1.57]
+      - text: "Poland's underground army, rose up."
+        at: 15.93
+        dur: 2.09
+        pos: lower_third
+        words: [0.00, 0.37, 0.75, 1.48, 1.67]
+      - text: "It had about 40,000 fighters,"
+        at: 18.65
+        dur: 1.81
+        pos: lower_third
+        words: [0.00, 0.17, 0.33, 0.58, 1.00, 1.40]
+      - text: "no more than one in ten had a weapon,"
+        at: 20.80
+        dur: 1.88
+        pos: lower_third
+        words: [0.00, 0.13, 0.35, 0.55, 0.75, 0.93, 1.20, 1.50, 1.65]
+      - text: "and there was ammunition for three days."
+        at: 23.10
+        dur: 2.11
+        pos: lower_third
+        words: [0.00, 0.45, 0.58, 0.72, 1.12, 1.42, 1.67]
+      - text: "They fought for 63 days."
+        at: 25.55
+        dur: 2.18
+        pos: lower_third
+        words: [0.00, 0.25, 0.65, 1.10, 1.62]
+
+  - id: s05
+    src: media/close_rec_20260929-211825.mp4
+    in: "00:01.92"
+    out: "00:30.22"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.554, 0.326]
+    note: "closer"
+    captions:
+      - text: "John Locke, the English philosopher,"
+        at: 0.00
+        dur: 2.36
+        pos: lower_third
+        words: [0.00, 0.57, 1.38, 1.52, 1.87]
+      - text: "argued in 1689 that rulers hold power only in trust"
+        at: 2.75
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.35, 0.82, 2.00, 3.00, 3.40, 3.83, 4.20]
+      - text: "and forfeit it when they turn on the people."
+        at: 8.20
+        dur: 2.82
+        pos: lower_third
+        words: [0.00, 0.36, 0.61, 0.91, 1.31, 1.69, 1.96, 2.23, 2.39, 2.53]
+      - text: "An armed citizen keeps that trust from resting on"
+        at: 12.00
+        dur: 3.28
+        pos: lower_third
+        words: [0.00, 0.27, 0.60, 1.27, 1.82, 2.15, 2.50, 2.73, 3.02]
+      - text: "the rulers' goodwill alone,"
+        at: 15.29
+        dur: 1.45
+        pos: lower_third
+        words: [0.00, 0.15, 0.58, 0.95]
+      - text: "and a gun lets a small woman or an elderly man"
+        at: 17.47
+        dur: 3.70
+        pos: lower_third
+        words: [0.00, 0.33, 0.48, 0.82, 1.27, 1.43, 1.67, 2.08, 2.58, 2.77, 3.12]
+      - text: "resist a stronger attacker."
+        at: 21.17
+        dur: 1.98
+        pos: lower_third
+        words: [0.00, 0.52, 1.18, 1.47]
+
+# 5 shots, about 141 seconds.
+#
+# 3 slide(s), one per picture, each holding its own piece of
+# the 92s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
