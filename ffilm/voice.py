@@ -910,10 +910,13 @@ def transcribe(audio: Path, model_size: str = "small",
             f"Everything else works without captions in the meantime."
         )
 
+    # English unless told otherwise (2026-09-29): left to guess, the
+    # model heard an English intro that opens on two Polish names as
+    # Polish (p = 0.49) and captioned all of it in made-up Polish.
     print(f"  listening to {audio.name} ...")
     segments, info = model.transcribe(str(audio), vad_filter=True,
                                       word_timestamps=True,
-                                      language=language)
+                                      language=language or "en")
 
     # Whisper hands back breath-sized segments. Chunking by ear works on
     # one of those at a time, but MATCHING A SCRIPT cannot: a sentence

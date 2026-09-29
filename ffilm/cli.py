@@ -1568,7 +1568,7 @@ def main() -> None:
     p.add_argument("--audio", default=None, help="path to the voiceover, if not in media/")
     p.add_argument("--model", default="small",
                    choices=["tiny", "base", "small", "medium", "large-v3"])
-    p.add_argument("--lang", default=None, help="e.g. en, pl -- auto-detected if omitted")
+    p.add_argument("--lang", default=None, help="e.g. en, pl -- English if omitted")
     p.add_argument("--apply", action="store_true", help="write captions into film.yaml")
     p.add_argument("--transcript-only", action="store_true",
                    help="just transcribe, don't touch film.yaml")
