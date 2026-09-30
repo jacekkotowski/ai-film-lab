@@ -1,0 +1,552 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# Each picture carries its own piece of
+# media/voiceover_20260930-194919.wav -- see `voice:` below.
+# The newest of 2 recordings in media/. The older one(s) are not used;
+# move them to media/_discarded/ to tidy up.
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+# Photographs with depth: as the camera moves, what is near
+# slides past what is far (parallax). 0 = flat. Photos only;
+# a .png .gif .svg is a chart and stays flat by itself.
+# 0.8 smears. Needs `uv sync --extra depth` once, flat without
+# it; see docs/decisions/0013.
+depth: 0.5
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 2.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20260930-193245.mp4
+    in: "00:02.45"
+    out: "00:24.55"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.542, 0.364]
+    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
+    captions:
+      - text: "Generalized additive models are a Swiss army knife"
+        at: 0.01
+        dur: 4.01
+        pos: lower_third
+        words: [0.00, 1.03, 1.43, 1.92, 2.53, 2.83, 3.07, 3.58]
+      - text: "for exploratory data analysis."
+        at: 4.03
+        dur: 2.11
+        pos: lower_third
+        words: [0.00, 0.48, 1.23, 1.48]
+      - text: "They keep the transparency of a regression model"
+        at: 6.86
+        dur: 2.86
+        pos: lower_third
+        words: [0.00, 0.32, 0.62, 1.38, 1.87, 2.00, 2.33]
+      - text: "but let the data decide the shape of each relationship."
+        at: 9.98
+        dur: 3.51
+        pos: lower_third
+        words: [0.00, 0.17, 0.42, 0.63, 0.92, 1.43, 1.72, 2.12, 2.40, 2.77]
+
+  - id: s02
+    src: media/rec_20260930-193436.mp4
+    in: "00:00.97"
+    out: "00:03.02"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.558, 0.377]
+    note: "part 1 of 2 -- one take with the long pauses cut out. Every word is kept"
+
+  - id: s03
+    src: media/rec_20260930-193436.mp4
+    in: "00:04.82"
+    out: "00:07.93"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.558, 0.377]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "part 2 of 2 -- one take with the long pauses cut out. Every word is kept"
+    captions:
+      - text: "They keep the transparency of a regression model but let the"
+        at: 1.06
+        dur: 0.18
+        pos: lower_third
+        words: [0.00]
+
+  - id: s04
+    src: media/rec_20260930-193641.mp4
+    in: "00:01.97"
+    out: "00:18.28"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.513, 0.325]
+    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
+    captions:
+      - text: "Generalized additive models are a Swiss army knife"
+        at: 0.09
+        dur: 3.76
+        pos: lower_third
+        words: [0.00, 0.97, 1.38, 1.82, 2.38, 2.72, 2.93, 3.35]
+      - text: "for exploratory data analysis."
+        at: 3.85
+        dur: 1.81
+        pos: lower_third
+        words: [0.00, 0.38, 1.07, 1.25]
+      - text: "They keep the transparency of a regression model"
+        at: 6.19
+        dur: 2.38
+        pos: lower_third
+        words: [0.00, 0.22, 0.47, 0.65, 1.12, 1.42, 1.53, 1.88]
+      - text: "but let the data decide the shape of each relationship."
+        at: 8.84
+        dur: 3.36
+        pos: lower_third
+        words: [0.00, 0.13, 0.37, 0.57, 0.80, 1.25, 1.45, 1.92, 2.27, 2.58]
+
+  - id: s05
+    src: media/01_prediction_explanation.png
+    voice: media/voiceover_20260930-194919.wav
+    in: "00:01.25"
+    out: "00:32.00"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.114, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.886, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.422, 0.355]
+    note: "picture 1 of 7 -- holds while these words are said. This picture is 5760x1920; the frame shows about 0.23 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "A GAM replaces each straight-line coefficient"
+        at: 0.00
+        dur: 2.65
+        pos: lower_third
+        words: [0.00, 0.45, 0.75, 1.50, 1.82, 2.17, 2.42]
+      - text: "with a smooth curve,"
+        at: 2.65
+        dur: 1.36
+        pos: lower_third
+        words: [0.00, 0.57, 0.73, 0.90]
+      - text: "so it captures non-linear effects that simple linear"
+        at: 4.38
+        dur: 3.66
+        pos: lower_third
+        words: [0.00, 0.33, 0.80, 1.17, 1.75, 2.32, 2.98, 3.32]
+      - text: "regression misses and often predicts better."
+        at: 8.05
+        dur: 2.80
+        pos: lower_third
+        words: [0.00, 0.45, 1.30, 1.73, 2.08, 2.58]
+      - text: "It stays explainable:"
+        at: 11.55
+        dur: 1.28
+        pos: lower_third
+        words: [0.00, 0.22, 0.48]
+      - text: "you get a plot of each variable's effect,"
+        at: 13.12
+        dur: 2.10
+        pos: lower_third
+        words: [0.00, 0.13, 0.30, 0.47, 0.65, 0.93, 1.13, 1.65]
+      - text: "a number saying how far from linear each effect is,"
+        at: 15.67
+        dur: 2.81
+        pos: lower_third
+        words: [0.00, 0.12, 0.37, 0.72, 0.97, 1.22, 1.42, 1.73, 2.13, 2.43]
+      - text: "and a significance test for each curve."
+        at: 19.05
+        dur: 2.01
+        pos: lower_third
+        words: [0.00, 0.33, 0.47, 0.83, 1.23, 1.48, 1.67]
+      - text: "You can even break a single prediction into the"
+        at: 21.07
+        dur: 2.65
+        pos: lower_third
+        words: [0.00, 0.77, 0.93, 1.10, 1.35, 1.57, 1.72, 2.15, 2.47]
+      - text: "contribution of every variable."
+        at: 23.72
+        dur: 1.46
+        pos: lower_third
+        words: [0.00, 0.42, 0.85, 1.05]
+
+  - id: s06
+    src: media/02_interactions_selection.png
+    voice: media/voiceover_20260930-194919.wav
+    in: "00:32.75"
+    out: "00:57.85"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_right
+    from: {cx: 0.145, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.855, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.469, 0.400]
+    note: "picture 2 of 7 -- holds while these words are said. This picture is 4320x1920; the frame shows about 0.29 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Interactions are built in:"
+        at: 0.15
+        dur: 1.58
+        pos: lower_third
+        words: [0.00, 0.60, 1.02, 1.27]
+      - text: "surfaces for variables on the same scale,"
+        at: 2.25
+        dur: 2.03
+        pos: lower_third
+        words: [0.00, 0.38, 0.70, 1.08, 1.37, 1.47, 1.67]
+      - text: "tensor smooths for variables on different scales,"
+        at: 4.68
+        dur: 2.51
+        pos: lower_third
+        words: [0.00, 0.25, 0.90, 1.15, 1.55, 1.85, 2.08]
+      - text: "and separate curves per group."
+        at: 7.78
+        dur: 1.49
+        pos: lower_third
+        words: [0.00, 0.22, 0.55, 1.00, 1.23]
+      - text: "The interaction can be split from the main effects,"
+        at: 10.12
+        dur: 2.78
+        pos: lower_third
+        words: [0.00, 0.23, 0.70, 1.02, 1.18, 1.48, 1.97, 2.15, 2.35]
+      - text: "so you can test whether it adds anything."
+        at: 13.17
+        dur: 2.11
+        pos: lower_third
+        words: [0.00, 0.27, 0.43, 0.55, 0.85, 1.08, 1.37, 1.65]
+      - text: "For selection,"
+        at: 15.28
+        dur: 1.29
+        pos: lower_third
+        words: [0.00, 0.90]
+      - text: "a lasso-style penalty can shrink useless terms to zero."
+        at: 17.15
+        dur: 3.36
+        pos: lower_third
+        words: [0.00, 0.20, 0.58, 0.92, 1.42, 1.67, 1.97, 2.35, 2.77, 3.02]
+
+  - id: s07
+    src: media/03_time.png
+    voice: media/voiceover_20260930-194919.wav
+    in: "00:59.15"
+    out: "01:27.05"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.114, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.886, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.278, 0.344]
+    note: "picture 3 of 7 -- holds while these words are said. This picture is 5760x1920; the frame shows about 0.23 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "For time series the GAM does not find the calendar by itself,"
+        at: 0.00
+        dur: 3.66
+        pos: lower_third
+        words: [0.00, 0.63, 0.90, 1.48, 1.58, 1.77, 2.12, 2.28, 2.58, 2.75, 3.03, 3.28]
+      - text: "so you give it features such as hour of day and day of week."
+        at: 3.72
+        dur: 4.21
+        pos: lower_third
+        words: [0.00, 0.45, 0.92, 1.20, 1.37, 1.73, 2.12, 2.33, 2.98, 3.18, 3.45, 3.67, 3.87, 3.98]
+      - text: "It then learns smooth daily and weekly profiles"
+        at: 8.73
+        dur: 3.36
+        pos: lower_third
+        words: [0.00, 0.30, 0.72, 1.30, 1.75, 2.22, 2.50, 2.73]
+      - text: "and how they interact,"
+        at: 12.77
+        dur: 1.33
+        pos: lower_third
+        words: [0.00, 0.28, 0.52, 0.73]
+      - text: "and cyclic splines join midnight smoothly to the next day."
+        at: 14.10
+        dur: 4.08
+        pos: lower_third
+        words: [0.00, 0.70, 1.38, 1.80, 2.17, 2.48, 3.00, 3.43, 3.57, 3.75]
+      - text: "Autocorrelated errors can be modelled with an ARMA structure."
+        at: 19.03
+        dur: 3.31
+        pos: lower_third
+        words: [0.00, 0.73, 1.20, 1.52, 1.70, 1.98, 2.37, 2.52, 2.88]
+
+  - id: s08
+    src: media/04_space.png
+    voice: media/voiceover_20260930-194919.wav
+    in: "01:27.45"
+    out: "01:48.05"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: pull_out
+    from: {cx: 0.114, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.886, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.385, 0.343]
+    note: "picture 4 of 7 -- holds while these words are said. This picture is 5760x1920; the frame shows about 0.23 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "Space works in two ways."
+        at: 0.00
+        dur: 1.98
+        pos: lower_third
+        words: [0.00, 0.58, 1.15, 1.52, 1.65]
+      - text: "With coordinates,"
+        at: 2.23
+        dur: 0.73
+        pos: lower_third
+        words: [0.00, 0.23]
+      - text: "a two-dimensional smooth draws a surface over the map."
+        at: 3.40
+        dur: 3.48
+        pos: lower_third
+        words: [0.00, 0.15, 0.30, 0.67, 1.17, 1.87, 2.18, 2.57, 2.98, 3.20]
+      - text: "For regions such as counties"
+        at: 7.52
+        dur: 1.83
+        pos: lower_third
+        words: [0.00, 0.33, 0.83, 1.27, 1.43]
+      - text: "you must supply the neighbourhood list"
+        at: 9.72
+        dur: 1.76
+        pos: lower_third
+        words: [0.00, 0.15, 0.35, 0.75, 0.97, 1.30]
+      - text: "of which polygons touch,"
+        at: 11.68
+        dur: 1.48
+        pos: lower_third
+        words: [0.00, 0.25, 0.55, 1.08]
+      - text: "and neighbouring areas then borrow strength from each other."
+        at: 13.17
+        dur: 3.64
+        pos: lower_third
+        words: [0.00, 0.62, 1.53, 2.00, 2.27, 2.50, 2.88, 3.12, 3.35]
+
+  - id: s09
+    src: media/05_hierarchical.png
+    voice: media/voiceover_20260930-194919.wav
+    in: "01:49.10"
+    out: "02:14.00"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_right
+    from: {cx: 0.145, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.855, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.539, 0.439]
+    note: "picture 5 of 7 -- holds while these words are said. This picture is 4320x1920; the frame shows about 0.29 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "GAMs are also mixed models."
+        at: 0.59
+        dur: 1.30
+        pos: lower_third
+        words: [0.00, 0.30, 0.65, 0.87]
+      - text: "Take CO2 uptake measured on several plants:"
+        at: 2.49
+        dur: 3.06
+        pos: lower_third
+        words: [0.00, 0.22, 0.85, 1.33, 1.72, 2.20, 2.58]
+      - text: "one formula fits a global curve against CO2 concentration"
+        at: 6.21
+        dur: 3.91
+        pos: lower_third
+        words: [0.00, 0.32, 0.83, 1.30, 1.53, 1.75, 2.25, 2.67, 3.23]
+      - text: "plus a deviation curve for each plant."
+        at: 10.49
+        dur: 2.44
+        pos: lower_third
+        words: [0.00, 0.53, 0.93, 1.18, 1.70, 1.98, 2.15]
+      - text: "You see the common pattern and how each plant differs,"
+        at: 13.69
+        dur: 2.91
+        pos: lower_third
+        words: [0.00, 0.25, 0.48, 0.65, 0.88, 1.37, 1.75, 2.03, 2.27, 2.52]
+      - text: "with the individual curves shrunk toward the average."
+        at: 17.03
+        dur: 3.28
+        pos: lower_third
+        words: [0.00, 0.28, 0.43, 0.80, 1.33, 1.87, 2.30, 2.92]
+
+  - id: s10
+    src: media/06_big_data.png
+    voice: media/voiceover_20260930-194919.wav
+    in: "02:14.90"
+    out: "02:37.90"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: push_in
+    from: {cx: 0.207, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.792, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.482, 0.483]
+    note: "picture 6 of 7 -- holds while these words are said. This picture is 2880x1920; the frame shows about 0.42 of its width at a time, so it is swept across instead of cropped."
+    captions:
+      - text: "For big data the bam function fits the same formulas"
+        at: 0.00
+        dur: 3.48
+        pos: lower_third
+        words: [0.00, 0.47, 0.68, 1.25, 1.37, 1.58, 2.03, 2.53, 2.82, 3.00]
+      - text: "but scales to large datasets."
+        at: 3.59
+        dur: 1.56
+        pos: lower_third
+        words: [0.00, 0.12, 0.53, 0.77, 1.03]
+      - text: "Discretising covariates and using several"
+        at: 6.67
+        dur: 1.73
+        pos: lower_third
+        words: [0.00, 0.73, 1.07, 1.35]
+      - text: "threads cut fitting time,"
+        at: 8.41
+        dur: 2.04
+        pos: lower_third
+        words: [0.00, 0.57, 1.20, 1.62]
+      - text: "and a random sample can supply starting values."
+        at: 10.91
+        dur: 2.34
+        pos: lower_third
+        words: [0.00, 0.23, 0.37, 0.57, 0.97, 1.17, 1.52, 1.95]
+      - text: "A practical workflow is to explore on a sample and confirm"
+        at: 13.96
+        dur: 3.66
+        pos: lower_third
+        words: [0.00, 0.22, 0.53, 1.08, 1.58, 1.72, 2.08, 2.33, 2.47, 2.78, 3.22]
+      - text: "on the full data."
+        at: 17.63
+        dur: 1.08
+        pos: lower_third
+        words: [0.00, 0.37, 0.52, 0.75]
+
+  - id: s11
+    src: media/07_families_diagnostics.png
+    voice: media/picture7_20260930-195435.wav
+    in: "00:04.29"
+    out: "00:26.21"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: drift_left
+    from: {cx: 0.145, cy: 0.500, scale: 1.00}
+    to:   {cx: 0.855, cy: 0.500, scale: 1.00}
+    ease: linear
+    focus: [0.637, 0.393]
+    note: "picture 7 of 7 -- said again, picture7_20260930-195435.wav"
+    captions:
+      - text: "There is more in the box."
+        at: 0.25
+        dur: 1.51
+        pos: lower_third
+        words: [0.00, 0.45, 0.60, 0.87, 1.10, 1.25]
+      - text: "Logistic and other families handle classification,"
+        at: 2.28
+        dur: 2.65
+        pos: lower_third
+        words: [0.00, 0.43, 0.72, 1.00, 1.53, 2.03]
+      - text: "counts and proportions,"
+        at: 4.93
+        dur: 1.76
+        pos: lower_third
+        words: [0.00, 0.78, 1.20]
+      - text: "with effects shown as probabilities."
+        at: 7.50
+        dur: 2.45
+        pos: lower_third
+        words: [0.00, 0.28, 0.87, 1.42, 1.78]
+      - text: "Built-in diagnostics check whether each curve is flexible"
+        at: 10.80
+        dur: 3.61
+        pos: lower_third
+        words: [0.00, 0.23, 0.40, 1.13, 1.47, 2.28, 2.77, 3.07, 3.27]
+      - text: "enough and warn when two smooths duplicate each other."
+        at: 14.42
+        dur: 3.60
+        pos: lower_third
+        words: [0.00, 0.40, 0.98, 1.35, 1.73, 2.00, 2.63, 2.98, 3.33]
+
+  - id: s12
+    src: media/close_rec_20260930-195559.mp4
+    in: "00:02.56"
+    out: "00:26.53"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.511, 0.389]
+    note: "closer"
+    captions:
+      - text: "So one framework covers prediction,"
+        at: 0.07
+        dur: 2.51
+        pos: lower_third
+        words: [0.00, 0.67, 0.82, 1.23, 1.97]
+      - text: "explanation, interactions, selection, time,"
+        at: 3.00
+        dur: 3.23
+        pos: lower_third
+        words: [0.00, 1.15, 2.13, 3.00]
+      - text: "space, groups and big data."
+        at: 6.62
+        dur: 2.29
+        pos: lower_third
+        words: [0.00, 0.93, 1.63, 1.73, 1.92]
+      - text: "The price is that you must tell it"
+        at: 10.02
+        dur: 2.05
+        pos: lower_third
+        words: [0.00, 0.13, 0.52, 1.23, 1.40, 1.58, 1.85]
+      - text: "which features and structures matter."
+        at: 12.24
+        dur: 1.63
+        pos: lower_third
+        words: [0.00, 0.17, 0.57, 0.78, 1.17]
+      - text: "In return you get a model you can both trust and explain."
+        at: 14.87
+        dur: 3.90
+        pos: lower_third
+        words: [0.00, 0.32, 1.00, 1.07, 1.23, 1.37, 1.63, 1.83, 1.98, 2.22, 2.70, 3.37]
+
+# 12 shots, about 233 seconds.
+#
+# 7 slide(s), one per picture, each holding its own piece of
+# the 181s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
