@@ -62,35 +62,35 @@ shots:
       block if you would rather open on yourself talking."
 
   - id: s01
-    src: media/0_rec_20260930-200204.mp4
-    in: "00:02.47"
-    out: "00:16.68"
+    src: media/0_rec_20260930-213940.mp4
+    in: "00:00.81"
+    out: "00:16.11"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.505, 0.378]
+    focus: [0.531, 0.391]
     note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
     captions:
       - text: "Generalized additive models are a Swiss army knife"
         at: 0.00
-        dur: 3.31
+        dur: 3.25
         pos: lower_third
-        words: [0.00, 0.98, 1.30, 1.70, 2.23, 2.50, 2.67, 3.02]
+        words: [0.00, 0.90, 1.18, 1.60, 2.10, 2.35, 2.48, 2.87]
       - text: "for exploratory data analysis."
-        at: 3.31
-        dur: 1.68
+        at: 3.25
+        dur: 1.98
         pos: lower_third
-        words: [0.00, 0.32, 0.98, 1.18]
+        words: [0.00, 0.42, 1.12, 1.33]
       - text: "They keep the transparency of a regression model"
-        at: 5.64
-        dur: 2.43
+        at: 5.95
+        dur: 2.90
         pos: lower_third
-        words: [0.00, 0.22, 0.48, 0.65, 1.13, 1.45, 1.57, 1.95]
+        words: [0.00, 0.43, 0.68, 0.85, 1.35, 1.97, 2.10, 2.43]
       - text: "but let the data decide the shape of each relationship."
-        at: 8.32
-        dur: 3.31
+        at: 9.15
+        dur: 3.33
         pos: lower_third
-        words: [0.00, 0.22, 0.62, 0.78, 1.08, 1.63, 1.90, 2.22, 2.45, 2.67]
+        words: [0.00, 0.15, 0.38, 0.58, 0.85, 1.25, 1.52, 1.98, 2.27, 2.52]
 
   - id: s02
     src: media/01_prediction_explanation.png
@@ -481,8 +481,8 @@ shots:
         pos: lower_third
         words: [0.00, 0.15, 0.62, 0.65, 0.80, 0.93, 1.18, 1.40, 1.57, 1.75, 2.08, 2.27]
 
-# 9 shots, about 203 seconds.
-# You talk for 203s, which is already past the 180s target -- so the pictures were cut to the bone and nothing you said was touched.
+# 9 shots, about 204 seconds.
+# You talk for 204s, which is already past the 180s target -- so the pictures were cut to the bone and nothing you said was touched.
 #
 # 7 slide(s), one per picture, each holding its own piece of
 # the 181s narration. Each `in:`/`out:` is that picture's words, on
