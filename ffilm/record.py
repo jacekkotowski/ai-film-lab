@@ -72,6 +72,14 @@ FILM_FPS = 24
 # you only find later. Memory is cheaper than a retake.
 RTBUFSIZE = "512M"
 
+# The microphone's own buffer, in ms. Left at the device default it hands
+# sound over in ~0.5 s chunks, and `q` loses the chunk still filling: the
+# GAM Curves intro ended "relationshi-" (2026-09-30). Measured with
+# -copyts on the Facecam Pro + Samson: default, sound ends 0.3-0.9 s short
+# and its start is stamped a chunk late (+0.72 s); at 50, it starts
+# +0.28 s after the picture and ends within 0.012 s of it.
+MIC_BUFFER_MS = 50
+
 
 def take_name(when: datetime | None = None, audio_only: bool = False) -> str:
     """Sorts chronologically as plain text, which is what `scaffold`
@@ -476,6 +484,8 @@ def record_command(out: Path, video: str | None, audio: str | None,
             # the choice that was ever really being made.
             w, h, _fps = mode
             part += ["-video_size", f"{w}x{h}"]
+        if not is_video:
+            part += ["-audio_buffer_size", str(MIC_BUFFER_MS)]
         # Stamp packets when they ARRIVE, not by whatever clock the
         # device claims to be on. Measured, and the nastiest bug in here:
         #

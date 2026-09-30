@@ -151,6 +151,18 @@ def next_label(i: int, n: int) -> str:
     return "Next picture      SPACE"
 
 
+def the_next_take_replaces_this_one(chose: str) -> bool:
+    """After a take: does the next one replace it? "another" keeps it;
+    "again" (Fluffed it) and "words" (Change the words) replace it.
+
+    Jacek, 2026-09-30: changing the words means retaking. It used to keep
+    the take, and every kept camera take is a shot -- GAM Curves' first
+    draft had three intros. The take goes when the next one STARTS, so
+    changing the words and then closing the window loses nothing.
+    """
+    return chose in ("again", "words")
+
+
 def one_picture_choices(menu: list[str], voice_only: bool,
                         one_already: bool,
                         has_narration: bool = False) -> list[str] | None:
@@ -819,6 +831,9 @@ def session(script: str, script_path: Path, wpm: int, title: str,
 
     # ---- moving between screens ---------------------------------------
     def begin(_=None):
+        if the_next_take_replaces_this_one(S.pop("after", "another")) \
+                and discard is not None:
+            discard()
         S["script"] = reflow(editor.get("1.0", "end"))
         save_script(script_path, S["script"])
         # The pictures were paired with the words once, before the window
@@ -965,11 +980,11 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         """
         if S["stage"] != "review":
             return
-        if discard is not None:
-            discard()
+        S["after"] = "again"
         begin()
 
     def edit_words(_=None):
+        S["after"] = "words"
         show("compose")
 
     def done(_=None):

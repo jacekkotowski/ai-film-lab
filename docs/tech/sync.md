@@ -14,6 +14,17 @@ Read before any "the lips are out of sync" work. Add to it after.
 - **Proof on Turn Heat draft:** intro +40 ms (r 0.97), closing −80 ms
   (r 0.78); before −483 / −314 ms. Visible from ~80 ms.
 - **Not measured:** that picture and sound really stop together.
+  **2026-09-30: they do not.** GAM Curves intro (v 16.68, a 16.01,
+  v − a = 0.67): sound onset 2.10 s vs lips opening ~2.25–2.3 s, last
+  "sh" in sound 15.80 vs lips ~16.0 → true start offset ≈ 0.2 s; the
+  other ~0.45 s is sound missing at the end (speech at −26 dB on the
+  last sample). v − a over 5 takes that day: 0.27–0.90 s. Lips read by
+  eye at 6–10 fps (±0.1 s); not cross-correlated.
+  **Cause, measured (-copyts, 5 s takes, `q`):** dshow mic default buffer
+  (~0.5 s chunks). Default: audio start stamped +0.72 s, end lost. With
+  `-audio_buffer_size 50` (record.MIC_BUFFER_MS): start +0.281/+0.282 s,
+  end +0.003/+0.012 s. Real `record_command` afterwards: v − a 0.266 /
+  0.237 s — so `sound_lag` = v − a is the true start delay again.
 
 ## 2026-09-24 — two more faults from the same lost clock
 - **The webcam's frame rate varies** (Frankfurt intro: 1423 frames in

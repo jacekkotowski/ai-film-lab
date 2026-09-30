@@ -4,6 +4,27 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-09-30 last syllable of a camera take is never recorded when SPACE
+  comes soon after the last word. GAM Curves intro `0_rec_20260930-200204`:
+  video 16.68 s, audio 16.01 s; sound still −26..−28 dB at its last sample
+  (no "-p" of "relationship"); lips close for the "p" at ~16.23 s and stay
+  closed to 16.68. Start offset by lips vs sound onset ≈ 0.2 s (not the
+  0.67 s `sound_lag` assumes), so ~0.45 s of sound is lost at the END
+  (lips read by eye at 6–10 fps, ±0.1 s). `film.yaml` out 16.68 is the
+  last frame already: no edit brings it back. fit-to-length did not cause
+  it. Inferred also: this take's voice plays ~0.45 s before the lips.
+  Older takes ended in ≥0.5 s silence, so the loss was hidden. Cause,
+  measured with -copyts: the mic's default ~0.5 s buffer; `q` drops the
+  chunk still filling. FIXED (this commit, "A take keeps its last
+  syllable"): `-audio_buffer_size 50` → sound ends within 0.012 s of the
+  picture; v − a now 0.24–0.27 s = the real start delay (0.28 s). Not yet
+  seen by Jacek in a real take. The existing GAM intro cannot be repaired.
+- 2026-09-30 "Change the words" in the recording window KEEPS the take
+  just made (booth.py `edit_words` does not call `discard`); every kept
+  camera take becomes a shot (GAM Curves first draft 1e9d354: three intro
+  takes). Jacek: changing the words or reading again = replace the take.
+  FIXED (same commit): the take is dropped to media/_discarded when the
+  next take starts. Unit-tested only; the window not yet walked by Jacek.
 - 2026-09-25 qmd MCP fails to connect at the start of some Claude
   sessions ("recent failure cached", 15 min), while `claude mcp list` in
   the same session says Connected. qmd itself is fine since the move out
