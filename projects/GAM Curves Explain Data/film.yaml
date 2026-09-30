@@ -441,47 +441,48 @@ shots:
         words: [0.00, 0.40, 0.98, 1.35, 1.73, 2.00, 2.63, 2.98, 3.33]
 
   - id: s09
-    src: media/close_rec_20260930-195559.mp4
-    in: "00:02.56"
-    out: "00:26.53"
+    src: media/close_rec_20260930-200847.mp4
+    in: "00:01.77"
+    out: "00:19.78"
     speed: 1.2              # 1.0 is the speed you actually spoke at
     move: static
     amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.511, 0.389]
+    focus: [0.512, 0.427]
     note: "closer"
     captions:
-      - text: "So one framework covers prediction,"
-        at: 0.07
-        dur: 2.51
+      - text: "So one framework covers prediction, explanation,"
+        at: 0.02
+        dur: 2.83
         pos: lower_third
-        words: [0.00, 0.67, 0.82, 1.23, 1.97]
-      - text: "explanation, interactions, selection, time,"
-        at: 3.00
-        dur: 3.23
-        pos: lower_third
-        words: [0.00, 1.15, 2.13, 3.00]
-      - text: "space, groups and big data."
-        at: 6.62
+        words: [0.00, 0.58, 0.75, 1.25, 1.68, 2.43]
+      - text: "interactions, selection, time, space,"
+        at: 3.32
         dur: 2.29
         pos: lower_third
-        words: [0.00, 0.93, 1.63, 1.73, 1.92]
-      - text: "The price is that you must tell it"
-        at: 10.02
-        dur: 2.05
+        words: [0.00, 0.83, 1.58, 1.98]
+      - text: "groups and big data."
+        at: 5.98
+        dur: 1.26
         pos: lower_third
-        words: [0.00, 0.13, 0.52, 1.23, 1.40, 1.58, 1.85]
-      - text: "which features and structures matter."
-        at: 12.24
-        dur: 1.63
+        words: [0.00, 0.30, 0.70, 0.95]
+      - text: "The price is that you must tell it which"
+        at: 7.98
+        dur: 1.69
         pos: lower_third
-        words: [0.00, 0.17, 0.57, 0.78, 1.17]
+        words: [0.00, 0.12, 0.47, 0.83, 0.97, 1.12, 1.38, 1.52]
+      - text: "features and structures matter."
+        at: 9.68
+        dur: 1.53
+        pos: lower_third
+        words: [0.00, 0.50, 0.72, 1.08]
       - text: "In return you get a model you can both trust and explain."
-        at: 14.87
-        dur: 3.90
+        at: 11.95
+        dur: 2.65
         pos: lower_third
-        words: [0.00, 0.32, 1.00, 1.07, 1.23, 1.37, 1.63, 1.83, 1.98, 2.22, 2.70, 3.37]
+        words: [0.00, 0.15, 0.62, 0.65, 0.80, 0.93, 1.18, 1.40, 1.57, 1.75, 2.08, 2.27]
 
-# 9 shots, about 208 seconds.
+# 9 shots, about 203 seconds.
+# You talk for 203s, which is already past the 180s target -- so the pictures were cut to the bone and nothing you said was touched.
 #
 # 7 slide(s), one per picture, each holding its own piece of
 # the 181s narration. Each `in:`/`out:` is that picture's words, on
