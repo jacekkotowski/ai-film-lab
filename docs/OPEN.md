@@ -17,8 +17,11 @@ move it to the bottom section with the commit id — do not delete it.
   measured with -copyts: the mic's default ~0.5 s buffer; `q` drops the
   chunk still filling. FIXED (this commit, "A take keeps its last
   syllable"): `-audio_buffer_size 50` → sound ends within 0.012 s of the
-  picture; v − a now 0.24–0.27 s = the real start delay (0.28 s). Not yet
-  seen by Jacek in a real take. The existing GAM intro cannot be repaired.
+  picture; v − a now 0.24–0.27 s = the real start delay (0.28 s). Real
+  take 0_rec_20260930-213940 (Jacek, 21:39): speech ends 15.51 s, then
+  2.0 s at −55..−62 dB to the end; v − a 0.306. Draft c0923fb (177.7 s):
+  voice ends 14.50 s, intro cut 14.75 s, music only between. Not yet
+  heard by Jacek.
 - 2026-09-30 "Change the words" in the recording window KEEPS the take
   just made (booth.py `edit_words` does not call `discard`); every kept
   camera take becomes a shot (GAM Curves first draft 1e9d354: three intro
