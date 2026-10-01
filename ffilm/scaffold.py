@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass, replace
 from pathlib import Path
 
-from . import kinds, segment
+from . import kinds, pix, segment
 from .moves import choose_moves
 from .record import REC_SPEED, is_recording, read_cues
 from .spec import VOICE_TAIL, Caption, Shot, Window, pretty_name
@@ -180,6 +180,59 @@ def sweep_across(src_w: int, src_h: int, frame_w: int,
     # you want to ARRIVE there, in reading order. Jacek asked for
     # left-to-right twice.
     return (lo, hi)
+
+
+# How far from exactly two frames wide a picture may be and still count.
+TWO_COLUMNS_TOLERANCE = 0.03
+
+
+def is_two_columns(src_w: int, src_h: int, frame_w: int, frame_h: int) -> bool:
+    """A picture twice as wide as the frame: two frames side by side.
+
+    Excel Tutorial - Use tables, 2026-10-01: 2160x1920 slides, each
+    half the shape of a 1080x1920 frame. Nothing is read from the pixels
+    and no model is asked -- the file's own size says it. It would also
+    take a photograph that happens to be 9:8; there is no way to tell
+    one from a slide by shape alone, and `move:` on the shot undoes it.
+    """
+    if src_w <= 0 or src_h <= 0 or frame_w <= 0 or frame_h <= 0:
+        return False
+    two = 2.0 * frame_w / frame_h
+    return abs((src_w / src_h) / two - 1.0) <= TWO_COLUMNS_TOLERANCE
+
+
+# Beside the middle line, how wide a strip is looked at (share of the
+# width, each side), and how much of the line itself is skipped.
+GUTTER = 0.03
+SEAM = 0.006
+# A table across both halves covers half the height or more; two panels
+# with an arrow between them, 4.8% -- measured on the seven slides of
+# Excel Tutorial - Use tables. Between the two, nothing measured: this is
+# a guess until a real spanning slide has been seen.
+SPANS_WHEN = 0.20
+
+
+def spans_the_middle(img) -> bool:
+    """Does one piece of content run across the middle of the picture?
+
+    Two columns have an empty gutter between them (a divider line and,
+    on these slides, an arrow, are tolerated: they are a few percent of
+    the rows). A table spanning both halves has content on both sides of
+    the middle in a large share of the rows. Pure; pixels in, yes/no out.
+    """
+    import numpy as np
+    h, w = img.shape[:2]
+    if h == 0 or w < 40:
+        return False
+    c = w // 2
+    seam = max(2, int(w * SEAM))
+    reach = max(seam + 2, int(w * GUTTER))
+    edge = max(1, w // 100)
+    bg = np.median(img[:, :edge].reshape(-1, img.shape[2]), axis=0)
+    ink = np.abs(img.astype(np.int16) - bg).max(axis=2) > 30
+    both = (ink[:, c - reach:c - seam].any(axis=1)
+            & ink[:, c + seam:c + reach].any(axis=1))
+    return float(both.mean()) > SPANS_WHEN
 
 
 # Moved down to kinds.hint so the timeline can name shots by the same rule.
@@ -489,6 +542,16 @@ def build(project: Path, seed: int = 0, target: float | None = None) -> str:
             continue
         e = m.get("entry") or {}
         w, h = e.get("width") or 0, e.get("height") or 0
+        # Two columns are shown in turn (moves.columns). If one table runs
+        # across both, it falls through to the sweep below: a slow
+        # left-to-right pan over the whole shot, which is what it needs.
+        # `move` was already rotated by choose_moves, so it is not "auto"
+        # here -- this is a fresh film, nothing in it is hand-set.
+        if is_two_columns(w, h, frame[0], frame[1]):
+            img = pix.imread(project / s.src)
+            if img is not None and not spans_the_middle(img):
+                s.move = "columns"
+                continue
         got = sweep_across(w, h, frame[0], frame[1])
         if got is None:
             continue

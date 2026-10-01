@@ -127,10 +127,23 @@ PARALLAX = 1.0
 # would tear the picture apart at that distance.
 PARALLAX_TRAVEL = 0.1
 
+# `columns`: a horizontal slide of two columns in a vertical film (asked
+# for 2026-10-01, PNG 2160x1920, each column the frame's own shape). Hold
+# on the left column, pan across exactly mid-shot, hold on the right. No
+# SETTLE: the right column has to be reached, not nearly reached.
+# COLUMNS_HOLD -- the fraction of the shot held on EACH column; the pan
+#   takes what is left over (0.375 each -> the middle 25%).
+# COLUMNS_BREATH -- how much tighter than a whole column the holds sit.
+#   Mid-pan the camera opens out to exactly one column and closes in
+#   again. It cannot open further: past a whole column the window runs
+#   off the top and bottom of the slide.
+COLUMNS_HOLD = 0.375
+COLUMNS_BREATH = 0.04
+
 MOVES = [
     "push_in", "pull_out", "pan_left", "pan_right",
     "tilt_up", "tilt_down", "drift_left", "drift_right",
-    "punch_in", "reveal", "static", "rise",
+    "punch_in", "reveal", "static", "rise", "columns",
 ]
 
 # A picture narrower than the frame by more than this cannot be shown
@@ -145,7 +158,7 @@ FAMILY = {
     "pan_left": "lateral", "pan_right": "lateral",
     "drift_left": "lateral", "drift_right": "lateral",
     "tilt_up": "vertical", "tilt_down": "vertical", "rise": "vertical",
-    "static": "static",
+    "static": "static", "columns": "lateral",
 }
 
 
@@ -228,6 +241,11 @@ def windows_for(shot: Shot, seed: int = 0) -> tuple[Window, Window]:
     elif m == "static":
         f = Window(mid_x, mid_y, base, 0.0)
         t = Window(mid_x, mid_y, base, 0.0)
+    elif m == "columns":
+        # The centres of the two halves; the focus point is not used.
+        s = 1.0 + COLUMNS_BREATH * a
+        f = Window(0.25, 0.5, s, 0.0)
+        t = Window(0.75, 0.5, s, 0.0)
     else:
         raise SystemExit(
             f"Unknown move {m!r} in shot {shot.id}. Known moves: {', '.join(MOVES)}"
@@ -243,15 +261,32 @@ def windows_for(shot: Shot, seed: int = 0) -> tuple[Window, Window]:
 
 def window_at(shot: Shot, t: float, seed: int = 0) -> Window:
     """The camera position at normalised time t within this shot."""
+    if shot.move == "columns":
+        return _columns_at(shot, t, seed)
     f, to = windows_for(shot, seed)
     e = ease(shot.ease, t) * SETTLE
     return f.lerp(to, e)
+
+
+def _columns_at(shot: Shot, t: float, seed: int = 0) -> Window:
+    """`columns`: hold, pan mid-shot, hold -- see COLUMNS_HOLD. Always
+    sine_in_out whatever `ease:` says; the pan is meant to be mild."""
+    f, to = windows_for(shot, seed)
+    u = (t - COLUMNS_HOLD) / max(1.0 - 2 * COLUMNS_HOLD, 1e-6)
+    u = max(0.0, min(1.0, u))
+    w = f.lerp(to, _sine_in_out(u))
+    if 0.0 < u < 1.0:
+        # Open out to a whole column (scale 1.0) and back.
+        w.scale += (1.0 - w.scale) * math.sin(math.pi * u)
+    return w
 
 
 def window_mid(shot: Shot, seed: int = 0) -> Window:
     """The camera halfway along the travel it actually shows (SETTLE), by
     distance, not by time -- whatever the easing. With `depth:` this is
     where the photo is itself: no pixel shifted against another."""
+    if shot.move == "columns":
+        return _columns_at(shot, 0.5, seed)
     f, to = windows_for(shot, seed)
     return f.lerp(to, SETTLE * 0.5)
 
@@ -267,6 +302,8 @@ def window_past_end(shot: Shot, dt: float, seed: int = 0) -> Window:
     SETTLE means we normally stop short of the full move (see the note at
     the top of this file), so there is always some travel left to spend.
     """
+    if shot.move == "columns":
+        return _columns_at(shot, 1.0, seed)      # it is holding by then
     f, to = windows_for(shot, seed)
     over = SETTLE * (1.0 + dt / max(shot.duration, 0.1))
     return f.lerp(to, min(1.0, over))

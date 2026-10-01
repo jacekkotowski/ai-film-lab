@@ -4,6 +4,18 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-10-01 `columns` (a 2-column slide held, panned mid-shot, held;
+  found by shape: width = 2x the frame's) is built and drafted on Excel
+  Tutorial - Use tables: 7 of 7 slides got it, draft 34.5 s. Not yet
+  seen by Jacek. Open: (1) `spans_the_middle` (a table across both
+  halves -> slow sweep over the whole shot instead) has threshold
+  SPANS_WHEN 0.20 chosen between the 4.8% measured on these slides
+  (divider + arrow) and a synthetic table; no real spanning slide has
+  been measured. (2) `film go`/`append_new` adds shots through
+  `shots_for`, which does not look for columns: a slide dropped in
+  later gets the ordinary move. (3) a 9:8 photograph would be taken
+  for a slide; `move:` on the shot undoes it. (4) two faint thin
+  columns at x=44,50 in a draft frame at 10.5 s, cause not found.
 - 2026-09-30 last syllable of a camera take is never recorded when SPACE
   comes soon after the last word. GAM Curves intro `0_rec_20260930-200204`:
   video 16.68 s, audio 16.01 s; sound still −26..−28 dB at its last sample
