@@ -1,0 +1,419 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# Each picture carries its own piece of
+# media/voiceover_20261001-224228.wav -- see `voice:` below.
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+# Photographs with depth: as the camera moves, what is near
+# slides past what is far (parallax). 0 = flat. Photos only;
+# a .png .gif .svg is a chart and stays flat by itself.
+# 0.8 smears. Needs `uv sync --extra depth` once, flat without
+# it; see docs/decisions/0013.
+depth: 0.5
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 2.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20261001-223429.mp4
+    in: "00:01.68"
+    out: "00:14.73"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.585, 0.314]
+    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
+    captions:
+      - text: "How much does an average rep sell?"
+        at: 0.00
+        dur: 2.29
+        pos: lower_third
+        words: [0.00, 0.42, 0.70, 0.95, 1.18, 1.53, 1.88]
+      - text: "A PivotTable answers a different question without warning you."
+        at: 2.90
+        dur: 3.56
+        pos: lower_third
+        words: [0.00, 0.10, 0.30, 0.72, 1.18, 1.53, 1.77, 2.23, 2.82, 3.27]
+      - text: "One measure answers the right one at every level."
+        at: 7.13
+        dur: 3.28
+        pos: lower_third
+        words: [0.00, 0.25, 0.55, 1.15, 1.55, 1.77, 2.05, 2.57, 2.95]
+
+  - id: s02
+    src: media/01_Average_of_rows.png
+    voice: media/voiceover_20261001-224228.wav
+    in: "00:05.05"
+    out: "00:36.65"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.354, 0.366]
+    note: "picture 1 of 5 -- holds while these words are said"
+    captions:
+      - text: "The data has one row per rep per month."
+        at: 0.00
+        dur: 2.90
+        pos: lower_third
+        words: [0.00, 0.42, 0.68, 1.10, 1.35, 1.60, 1.92, 2.17, 2.47]
+      - text: "Put Region in Rows and Average of qty in Values,"
+        at: 3.36
+        dur: 3.55
+        pos: lower_third
+        words: [0.00, 0.32, 0.82, 1.05, 1.37, 1.97, 2.33, 2.62, 3.00, 3.20]
+      - text: "and East shows 8.8."
+        at: 6.91
+        dur: 2.33
+        pos: lower_third
+        words: [0.00, 0.47, 0.87, 1.30, 1.80]
+      - text: "East sold 291 units."
+        at: 9.99
+        dur: 2.45
+        pos: lower_third
+        words: [0.00, 0.53, 0.97, 2.05]
+      - text: "The pivot divided them by 33 month rows."
+        at: 12.98
+        dur: 3.34
+        pos: lower_third
+        words: [0.00, 0.08, 0.35, 0.97, 1.25, 1.43, 1.82, 2.33]
+      - text: "Divide by the 3 reps instead,"
+        at: 17.29
+        dur: 2.14
+        pos: lower_third
+        words: [0.00, 0.80, 1.00, 1.15, 1.38, 1.65]
+      - text: "and a rep sells 97."
+        at: 19.44
+        dur: 2.20
+        pos: lower_third
+        words: [0.00, 0.55, 0.78, 1.15, 1.67]
+      - text: "There is no error,"
+        at: 21.64
+        dur: 2.15
+        pos: lower_third
+        words: [0.00, 0.82, 1.70, 1.85]
+      - text: "just the wrong question answered."
+        at: 24.01
+        dur: 1.96
+        pos: lower_third
+        words: [0.00, 0.20, 0.43, 0.67, 1.17]
+
+  - id: s03
+    src: media/02_The_pivot_workaround.png
+    voice: media/voiceover_20261001-224228.wav
+    in: "00:38.05"
+    out: "01:09.45"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.349, 0.329]
+    note: "picture 2 of 5 -- holds while these words are said"
+    captions:
+      - text: "Add a helper column:"
+        at: 0.00
+        dur: 1.59
+        pos: lower_third
+        words: [0.00, 0.67, 0.92, 1.17]
+      - text: "one divided by the number of rows for that rep."
+        at: 2.41
+        dur: 2.73
+        pos: lower_third
+        words: [0.00, 0.18, 0.55, 0.80, 0.93, 1.17, 1.40, 1.77, 2.22, 2.45]
+      - text: "Summed per rep, it gives exactly one."
+        at: 5.71
+        dur: 2.53
+        pos: lower_third
+        words: [0.00, 0.53, 0.95, 1.45, 1.55, 1.78, 2.20]
+      - text: "A calculated field divides quantity by that sum,"
+        at: 9.16
+        dur: 2.93
+        pos: lower_third
+        words: [0.00, 0.18, 0.50, 1.08, 1.50, 2.05, 2.38, 2.57]
+      - text: "and East shows 97,"
+        at: 12.09
+        dur: 2.11
+        pos: lower_third
+        words: [0.00, 0.52, 0.90, 1.33]
+      - text: "correct for the full year."
+        at: 14.53
+        dur: 1.43
+        pos: lower_third
+        words: [0.00, 0.68, 0.83, 0.95, 1.15]
+      - text: "Now filter the months to Q1."
+        at: 15.96
+        dur: 3.33
+        pos: lower_third
+        words: [0.00, 1.25, 1.80, 2.08, 2.45, 2.75]
+      - text: "East jumps to 73, and the true answer is 20."
+        at: 20.01
+        dur: 3.20
+        pos: lower_third
+        words: [0.00, 0.40, 0.87, 1.10, 1.58, 2.05, 2.20, 2.38, 2.62, 2.78]
+      - text: "The helper was fixed for the whole year."
+        at: 23.76
+        dur: 2.01
+        pos: lower_third
+        words: [0.00, 0.13, 0.40, 0.70, 1.00, 1.28, 1.42, 1.63]
+
+  - id: s04
+    src: media/03_One_measure.png
+    voice: media/voiceover_20261001-224228.wav
+    in: "01:11.45"
+    out: "01:42.25"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.400, 0.345]
+    note: "picture 3 of 5 -- holds while these words are said"
+    captions:
+      - text: "In Power Pivot, choose Calculated Fields,"
+        at: 0.20
+        dur: 2.93
+        pos: lower_third
+        words: [0.00, 0.25, 0.68, 0.98, 1.80, 2.35]
+      - text: "New Calculated Field."
+        at: 3.45
+        dur: 1.31
+        pos: lower_third
+        words: [0.00, 0.25, 0.73]
+      - text: "The measure divides units sold by the distinct count of reps."
+        at: 5.68
+        dur: 3.91
+        pos: lower_third
+        words: [0.00, 0.15, 0.37, 0.88, 1.25, 1.77, 2.23, 2.42, 2.85, 3.28, 3.60]
+      - text: "You need no helper column."
+        at: 10.27
+        dur: 1.40
+        pos: lower_third
+        words: [0.00, 0.38, 0.57, 0.75, 1.02]
+      - text: "Every level is right,"
+        at: 11.67
+        dur: 1.79
+        pos: lower_third
+        words: [0.00, 1.00, 1.27, 1.50]
+      - text: "from the grand total to each region and each rep."
+        at: 13.47
+        dur: 3.28
+        pos: lower_third
+        words: [0.00, 0.60, 0.80, 0.97, 1.28, 1.60, 1.92, 2.28, 2.72, 3.02]
+      - text: "Filter to Q1,"
+        at: 17.23
+        dur: 1.70
+        pos: lower_third
+        words: [0.00, 0.68, 1.07]
+      - text: "and East says 20."
+        at: 18.93
+        dur: 1.68
+        pos: lower_third
+        words: [0.00, 0.38, 0.78, 1.17]
+      - text: "The same measure recalculates in every cell,"
+        at: 21.17
+        dur: 2.75
+        pos: lower_third
+        words: [0.00, 0.25, 0.48, 0.88, 1.82, 2.10, 2.38]
+      - text: "under any filter."
+        at: 23.92
+        dur: 1.26
+        pos: lower_third
+        words: [0.00, 0.53, 0.88]
+
+  - id: s05
+    src: media/04_CALCULATE_compare_to_the_team.png
+    voice: media/voiceover_20261001-224228.wav
+    in: "01:43.85"
+    out: "02:15.00"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.387, 0.372]
+    note: "picture 4 of 5 -- holds while these words are said"
+    captions:
+      - text: "CALCULATE runs a measure again with the filters you change."
+        at: 0.11
+        dur: 3.58
+        pos: lower_third
+        words: [0.00, 0.73, 1.00, 1.25, 1.50, 1.90, 2.28, 2.47, 2.77, 3.05]
+      - text: "Team Avg removes the region filter,"
+        at: 4.41
+        dur: 2.81
+        pos: lower_third
+        words: [0.00, 0.72, 1.30, 1.85, 2.15, 2.48]
+      - text: "so every row sees the whole team:"
+        at: 7.23
+        dur: 2.26
+        pos: lower_third
+        words: [0.00, 0.50, 0.90, 1.17, 1.45, 1.73, 1.95]
+      - text: "91.4."
+        at: 9.83
+        dur: 1.16
+        pos: lower_third
+        words: [0.00, 0.48]
+      - text: "Subtract one measure from the other."
+        at: 11.39
+        dur: 1.73
+        pos: lower_third
+        words: [0.00, 0.58, 0.82, 1.07, 1.30, 1.50]
+      - text: "East is 5.6 above the team and West 8.4 below."
+        at: 13.78
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.43, 0.83, 1.22, 1.90, 2.27, 2.55, 2.85, 3.15, 3.42, 3.78, 4.17]
+      - text: "In Q1 you get plus 2 and minus 3,"
+        at: 19.58
+        dur: 3.01
+        pos: lower_third
+        words: [0.00, 0.18, 0.73, 1.08, 1.33, 1.65, 1.97, 2.20, 2.47]
+      - text: "because the month filter still applies."
+        at: 22.59
+        dur: 2.84
+        pos: lower_third
+        words: [0.00, 0.53, 0.92, 1.23, 1.73, 2.18]
+
+  - id: s06
+    src: media/05_SUMX_row_by_row.png
+    voice: media/voiceover_20261001-224228.wav
+    in: "02:16.30"
+    out: "02:49.85"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.408, 0.385]
+    note: "picture 5 of 5 -- holds while these words are said"
+    captions:
+      - text: "Units over a target of 90 per rep sounds easy."
+        at: 0.00
+        dur: 3.55
+        pos: lower_third
+        words: [0.00, 0.77, 1.13, 1.37, 1.60, 1.83, 2.17, 2.48, 2.77, 3.07]
+      - text: "Subtract on the totals,"
+        at: 4.12
+        dur: 1.54
+        pos: lower_third
+        words: [0.00, 0.67, 0.87, 1.00]
+      - text: "and West shows minus 14 and the grand total only 7."
+        at: 5.67
+        dur: 4.46
+        pos: lower_third
+        words: [0.00, 0.45, 0.80, 1.12, 1.50, 2.15, 2.97, 3.15, 3.38, 3.75, 4.08]
+      - text: "Helmut's shortfall cancels the bonus."
+        at: 10.87
+        dur: 2.61
+        pos: lower_third
+        words: [0.00, 0.77, 1.52, 2.18, 2.35]
+      - text: "SUMX iterates over the reps instead."
+        at: 14.90
+        dur: 1.93
+        pos: lower_third
+        words: [0.00, 0.78, 1.03, 1.27, 1.47]
+      - text: "It computes each rep's units over 90,"
+        at: 17.42
+        dur: 2.58
+        pos: lower_third
+        words: [0.00, 0.22, 0.67, 0.93, 1.40, 1.65, 2.03]
+      - text: "or zero, then adds them."
+        at: 20.00
+        dur: 2.73
+        pos: lower_third
+        words: [0.00, 0.42, 1.28, 1.68, 2.32]
+      - text: "Johnson gives 20, Paul 1,"
+        at: 22.73
+        dur: 2.48
+        pos: lower_third
+        words: [0.00, 0.70, 1.07, 1.83, 2.02]
+      - text: "and the total is 21."
+        at: 25.22
+        dur: 2.18
+        pos: lower_third
+        words: [0.00, 0.87, 1.00, 1.30, 1.67]
+
+  - id: s07
+    src: media/close_rec_20261001-224711.mp4
+    in: "00:01.71"
+    out: "00:20.92"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.588, 0.346]
+    note: "closer"
+    captions:
+      - text: "A pivot averages rows,"
+        at: 0.00
+        dur: 1.76
+        pos: lower_third
+        words: [0.00, 0.45, 0.68, 1.37]
+      - text: "and a helper column freezes one answer."
+        at: 1.76
+        dur: 2.65
+        pos: lower_third
+        words: [0.00, 0.67, 1.03, 1.47, 2.05, 2.23]
+      - text: "A measure computes the question you ask:"
+        at: 5.14
+        dur: 2.14
+        pos: lower_third
+        words: [0.00, 0.15, 0.45, 1.13, 1.37, 1.63, 1.85]
+      - text: "CALCULATE changes the filter,"
+        at: 7.67
+        dur: 1.73
+        pos: lower_third
+        words: [0.00, 0.73, 1.08, 1.38]
+      - text: "SUMX goes row by row."
+        at: 9.84
+        dur: 1.91
+        pos: lower_third
+        words: [0.00, 0.17, 0.58, 1.10, 1.42, 1.60]
+      - text: "Compute per rep, then aggregate."
+        at: 12.27
+        dur: 2.54
+        pos: lower_third
+        words: [0.00, 0.45, 0.93, 1.68, 1.95]
+
+# 7 shots, about 187 seconds.
+#
+# 5 slide(s), one per picture, each holding its own piece of
+# the 170s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
