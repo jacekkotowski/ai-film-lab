@@ -13,7 +13,10 @@
 
 fps: 24
 resolution: [1080, 1920]   # vertical, for YouTube Shorts
-# audio: media/voiceover.mp3   # optional separate narration
+# Each picture carries its own piece of
+# media/voiceover_20261001-180307.wav -- see `voice:` below.
+# The newest of 2 recordings in media/. The older one(s) are not used;
+# move them to media/_discarded/ to tidy up.
 # title: the words on the thumbnail. Left out, the film is
 #        called what its folder is called.
 # music: found on its own -- this project's music/ folder if it
@@ -59,49 +62,412 @@ shots:
       block if you would rather open on yourself talking."
 
   - id: s01
-    src: media/01_Prepare_the_data.png
-    duration: 4.5
-    move: columns
-    focus: [0.407, 0.368]
+    src: media/rec_20261001-173028.mp4
+    in: "00:01.62"
+    out: "00:14.73"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.583, 0.374]
+    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
+    captions:
+      - text: "A plain range breaks when data grows:"
+        at: 0.00
+        dur: 3.01
+        pos: lower_third
+        words: [0.00, 0.40, 0.60, 1.08, 1.60, 2.20, 2.50]
+      - text: "you add a row and the formula misses it."
+        at: 3.49
+        dur: 2.98
+        pos: lower_third
+        words: [0.00, 0.25, 0.68, 0.83, 1.10, 1.50, 1.67, 2.07, 2.67]
+      - text: "A table moves its edges with the data."
+        at: 7.46
+        dur: 2.43
+        pos: lower_third
+        words: [0.00, 0.23, 0.47, 0.85, 1.08, 1.48, 1.98, 2.15]
 
   - id: s02
-    src: media/02_Ctrl_T_and_name_it.png
-    duration: 4.5
+    src: media/01_Prepare_the_data.png
+    voice: media/voiceover_20261001-180307.wav
+    in: "00:03.95"
+    out: "00:24.35"
+    speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
-    focus: [0.415, 0.411]
+    focus: [0.407, 0.368]
+    note: "picture 1 of 7 -- holds while these words are said"
+    captions:
+      - text: "Excel stops at the first empty row or column,"
+        at: 0.00
+        dur: 2.95
+        pos: lower_third
+        words: [0.00, 0.60, 0.97, 1.30, 1.45, 1.68, 2.03, 2.35, 2.58]
+      - text: "so a title or a blank row cuts the table short."
+        at: 3.35
+        dur: 3.20
+        pos: lower_third
+        words: [0.00, 0.35, 0.68, 0.97, 1.30, 1.42, 1.60, 2.00, 2.35, 2.58, 2.82]
+      - text: "Keep one header row, one record per row,"
+        at: 7.35
+        dur: 2.70
+        pos: lower_third
+        words: [0.00, 0.28, 0.63, 0.95, 1.62, 1.82, 2.08, 2.35]
+      - text: "no gaps."
+        at: 10.33
+        dur: 0.44
+        pos: lower_third
+        words: [0.00, 0.10]
+      - text: "Press Ctrl+A inside the data."
+        at: 11.53
+        dur: 1.76
+        pos: lower_third
+        words: [0.00, 0.27, 0.58, 0.90, 1.25, 1.47]
+      - text: "If the selection stops early, remove the gap."
+        at: 14.17
+        dur: 2.58
+        pos: lower_third
+        words: [0.00, 0.20, 0.33, 0.67, 0.97, 1.83, 2.08, 2.32]
 
   - id: s03
-    src: media/03_Naming_conventions_for_autocomplete.png
-    duration: 4.5
+    src: media/02_Ctrl_T_and_name_it.png
+    voice: media/voiceover_20261001-180307.wav
+    in: "00:25.95"
+    out: "00:41.90"
+    speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
-    focus: [0.546, 0.475]
+    focus: [0.415, 0.411]
+    note: "picture 2 of 7 -- holds while these words are said"
+    captions:
+      - text: "Click inside the data and press Ctrl+T, or Insert,"
+        at: 0.09
+        dur: 3.18
+        pos: lower_third
+        words: [0.00, 0.30, 0.63, 0.85, 1.10, 1.33, 1.58, 1.95, 2.27, 2.73]
+      - text: "Table."
+        at: 3.27
+        dur: 0.46
+        pos: lower_third
+        words: [0.00]
+      - text: "Check the range and tick My table has headers."
+        at: 3.74
+        dur: 3.44
+        pos: lower_third
+        words: [0.00, 0.92, 1.12, 1.47, 1.75, 2.33, 2.47, 2.73, 3.07]
+      - text: "Before any formula, name it in Table Tools, Design,"
+        at: 7.99
+        dur: 3.13
+        pos: lower_third
+        words: [0.00, 0.27, 0.53, 1.35, 1.57, 1.78, 1.93, 2.20, 2.75]
+      - text: "Table Name, and press Enter."
+        at: 11.34
+        dur: 1.59
+        pos: lower_third
+        words: [0.00, 0.18, 0.48, 0.90, 1.13]
 
   - id: s04
-    src: media/04_Appended_rows_and_calculated_columns.png
-    duration: 4.5
+    src: media/03_Naming_conventions_for_autocomplete.png
+    voice: media/voiceover_20261001-180307.wav
+    in: "00:43.30"
+    out: "01:26.35"
+    speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
-    focus: [0.436, 0.379]
+    focus: [0.546, 0.475]
+    note: "picture 3 of 7 -- holds while these words are said"
+    captions:
+      - text: "Prefixes make the formula autocomplete narrow the list."
+        at: 0.07
+        dur: 3.49
+        pos: lower_third
+        words: [0.00, 0.63, 0.93, 1.10, 1.45, 2.23, 2.88, 3.13]
+      - text: "Default names fail:"
+        at: 4.25
+        dur: 1.18
+        pos: lower_third
+        words: [0.00, 0.35, 0.65]
+      - text: "equals T mixes functions with Table1, Table2,"
+        at: 6.27
+        dur: 3.04
+        pos: lower_third
+        words: [0.00, 0.43, 0.70, 1.28, 1.67, 2.05, 2.37, 2.92]
+      - text: "Table3, and columns 1, 2,"
+        at: 9.98
+        dur: 3.04
+        pos: lower_third
+        words: [0.00, 0.50, 1.45, 1.78, 2.85]
+      - text: "3 say nothing."
+        at: 13.18
+        dur: 1.33
+        pos: lower_third
+        words: [0.00, 0.37, 0.87]
+      - text: "Start table names with tbl,"
+        at: 15.38
+        dur: 1.75
+        pos: lower_third
+        words: [0.00, 0.58, 0.92, 1.15, 1.42]
+      - text: "then go from general to specific: subject,"
+        at: 18.45
+        dur: 2.96
+        pos: lower_third
+        words: [0.00, 0.32, 0.60, 1.05, 1.52, 1.73, 2.55]
+      - text: "grain, scope."
+        at: 21.75
+        dur: 0.63
+        pos: lower_third
+        words: [0.00, 0.42]
+      - text: "Start column names with what they hold: name,"
+        at: 23.25
+        dur: 3.01
+        pos: lower_third
+        words: [0.00, 0.37, 0.70, 1.00, 1.30, 1.50, 1.68, 2.70]
+      - text: "date, quantity, price, KPI."
+        at: 26.57
+        dur: 2.08
+        pos: lower_third
+        words: [0.00, 0.47, 1.12, 1.73]
+      - text: "Type a prefix and the list shows only matching tables,"
+        at: 29.47
+        dur: 2.88
+        pos: lower_third
+        words: [0.00, 0.38, 0.57, 0.82, 1.20, 1.37, 1.57, 1.80, 2.15, 2.47]
+      - text: "or after the bracket, only matching columns."
+        at: 32.35
+        dur: 3.09
+        pos: lower_third
+        words: [0.00, 0.67, 1.15, 1.37, 1.70, 2.30, 2.65]
 
   - id: s05
-    src: media/05_Total_row.png
-    duration: 4.5
+    src: media/04_Appended_rows_and_calculated_columns.png
+    voice: media/voiceover_20261001-180307.wav
+    in: "01:27.90"
+    out: "01:46.05"
+    speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
-    focus: [0.503, 0.386]
+    focus: [0.436, 0.379]
+    note: "picture 4 of 7 -- holds while these words are said"
+    captions:
+      - text: "Type a row under the table and it is appended;"
+        at: 0.13
+        dur: 2.90
+        pos: lower_third
+        words: [0.00, 0.28, 0.52, 0.75, 1.08, 1.27, 1.57, 2.12, 2.38, 2.48]
+      - text: "every formula counts it."
+        at: 3.57
+        dur: 1.33
+        pos: lower_third
+        words: [0.00, 0.23, 0.58, 1.08]
+      - text: "In a new column, write the formula once."
+        at: 5.45
+        dur: 2.41
+        pos: lower_third
+        words: [0.00, 0.22, 0.37, 0.50, 1.17, 1.47, 1.67, 1.95]
+      - text: "The at sign means this row,"
+        at: 8.62
+        dur: 2.31
+        pos: lower_third
+        words: [0.00, 0.18, 0.67, 1.08, 1.57, 2.02]
+      - text: "and Excel fills the whole column, new rows included."
+        at: 11.73
+        dur: 3.03
+        pos: lower_third
+        words: [0.00, 0.33, 0.73, 1.08, 1.35, 1.50, 2.17, 2.40, 2.52]
 
   - id: s06
-    src: media/06_Structured_references.png
-    duration: 5.5
+    src: media/05_Total_row.png
+    voice: media/voiceover_20261001-180307.wav
+    in: "01:47.30"
+    out: "02:13.85"
+    speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
-    focus: [0.619, 0.594]
-    note: "face detected -- given longer screen time"
+    focus: [0.503, 0.386]
+    note: "picture 5 of 7 -- holds while these words are said"
+    captions:
+      - text: "Tick Total Row in Table Tools, Design,"
+        at: 0.00
+        dur: 2.83
+        pos: lower_third
+        words: [0.00, 0.68, 1.03, 1.40, 1.60, 1.87, 2.62]
+      - text: "and pick SUM."
+        at: 2.83
+        dur: 1.34
+        pos: lower_third
+        words: [0.00, 0.55, 0.87]
+      - text: "Excel uses SUBTOTAL with function 109,"
+        at: 4.18
+        dur: 3.61
+        pos: lower_third
+        words: [0.00, 0.97, 1.38, 2.08, 2.37, 2.70]
+      - text: "which sums only visible rows,"
+        at: 7.95
+        dur: 1.69
+        pos: lower_third
+        words: [0.00, 0.27, 0.57, 0.97, 1.27]
+      - text: "so the total follows your filter."
+        at: 10.33
+        dur: 1.84
+        pos: lower_third
+        words: [0.00, 0.22, 0.42, 0.70, 1.32, 1.57]
+      - text: "The Totals keyword lets formulas use it,"
+        at: 13.15
+        dur: 2.98
+        pos: lower_third
+        words: [0.00, 0.27, 0.77, 1.22, 1.65, 2.08, 2.72]
+      - text: "here for each rep's share."
+        at: 16.57
+        dur: 1.79
+        pos: lower_third
+        words: [0.00, 0.35, 0.75, 1.03, 1.33]
+      - text: "Outside the table, add the table name."
+        at: 19.10
+        dur: 2.71
+        pos: lower_third
+        words: [0.00, 0.38, 0.67, 1.42, 1.82, 2.12, 2.38]
 
   - id: s07
+    src: media/06_Structured_references.png
+    voice: media/voiceover_20261001-180307.wav
+    in: "02:15.55"
+    out: "02:42.25"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.619, 0.594]
+    note: "picture 6 of 7 -- holds while these words are said"
+    captions:
+      - text: "Start a SUM, type tbl,"
+        at: 0.00
+        dur: 3.08
+        pos: lower_third
+        words: [0.00, 0.90, 1.15, 1.83, 2.27]
+      - text: "and autocomplete lists every table;"
+        at: 3.49
+        dur: 3.15
+        pos: lower_third
+        words: [0.00, 0.72, 1.57, 2.37, 2.78]
+      - text: "pick yours with Tab."
+        at: 7.37
+        dur: 1.59
+        pos: lower_third
+        words: [0.00, 0.57, 0.85, 1.13, 1.32]
+      - text: "A square bracket lists its columns, plus All,"
+        at: 9.76
+        dur: 3.23
+        pos: lower_third
+        words: [0.00, 0.18, 0.43, 0.77, 1.15, 1.38, 2.18, 2.58]
+      - text: "Headers and Totals."
+        at: 12.99
+        dur: 1.48
+        pos: lower_third
+        words: [0.00, 0.52, 0.97]
+      - text: "Pick a column and close the bracket."
+        at: 15.27
+        dur: 2.56
+        pos: lower_third
+        words: [0.00, 0.53, 0.68, 0.97, 1.38, 2.02, 2.28]
+      - text: "The formula grows with the table"
+        at: 18.26
+        dur: 1.63
+        pos: lower_third
+        words: [0.00, 0.12, 0.43, 0.87, 1.18, 1.30]
+      - text: "and survives inserted columns."
+        at: 19.89
+        dur: 1.90
+        pos: lower_third
+        words: [0.00, 0.42, 0.85, 1.43]
+      - text: "Fill-drag a column reference to the right and it silently"
+        at: 21.79
+        dur: 0.85
+        pos: lower_third
+        words: [0.00]
+
+  - id: s08
     src: media/07_The_trap_locking_a_column.png
-    duration: 4.5
+    voice: media/picture7_20261001-180756.wav
+    in: "00:04.61"
+    out: "00:26.05"
+    speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
     focus: [0.407, 0.384]
+    note: "picture 7 of 7 -- said again, picture7_20261001-180756.wav"
+    captions:
+      - text: "Fill-drag a column reference to the right"
+        at: 0.25
+        dur: 2.11
+        pos: lower_third
+        words: [0.00, 0.43, 0.68, 0.87, 1.10, 1.47, 1.73, 1.90]
+      - text: "and it silently moves to the next column,"
+        at: 2.80
+        dur: 2.21
+        pos: lower_third
+        words: [0.00, 0.18, 0.35, 0.72, 1.17, 1.40, 1.58, 1.77]
+      - text: "then the next."
+        at: 5.28
+        dur: 0.85
+        pos: lower_third
+        words: [0.00, 0.37, 0.53]
+      - text: "To lock it, write the column as a range of one:"
+        at: 6.88
+        dur: 2.95
+        pos: lower_third
+        words: [0.00, 0.22, 0.47, 1.05, 1.13, 1.32, 1.67, 1.98, 2.18, 2.38, 2.58]
+      - text: "the same name twice, in double brackets."
+        at: 10.43
+        dur: 2.26
+        pos: lower_third
+        words: [0.00, 0.13, 0.33, 0.52, 1.28, 1.40, 1.80]
+      - text: "Copy and paste never shifts it;"
+        at: 13.68
+        dur: 2.03
+        pos: lower_third
+        words: [0.00, 0.45, 0.62, 1.00, 1.40, 1.73]
+      - text: "only fill-drag does."
+        at: 16.08
+        dur: 1.53
+        pos: lower_third
+        words: [0.00, 0.18, 0.83, 1.18]
 
-# 7 shots, about 32 seconds.
-# Speech captions are left out on purpose -- run
-# `uv run film caption` once you're happy with the shots,
-# or watch it once and add what actually needs saying.
+  - id: s09
+    src: media/close_rec_20261001-181019.mp4
+    in: "00:01.90"
+    out: "00:16.95"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.529, 0.359]
+    note: "closer"
+    captions:
+      - text: "First the data becomes a table,"
+        at: 0.00
+        dur: 2.54
+        pos: lower_third
+        words: [0.00, 1.02, 1.17, 1.42, 1.87, 2.23]
+      - text: "then it gets a name,"
+        at: 2.83
+        dur: 1.33
+        pos: lower_third
+        words: [0.00, 0.33, 0.60, 0.82, 1.02]
+      - text: "and only then do I write formulas."
+        at: 4.60
+        dur: 2.01
+        pos: lower_third
+        words: [0.00, 0.18, 0.48, 0.83, 1.22, 1.32, 1.57]
+      - text: "Next:"
+        at: 7.48
+        dur: 0.33
+        pos: lower_third
+        words: [0.00]
+      - text: "INDEX and MATCH or XLOOKUP on this table."
+        at: 8.30
+        dur: 3.21
+        pos: lower_third
+        words: [0.00, 0.38, 0.60, 1.03, 1.43, 2.13, 2.47, 2.88]
+
+# 9 shots, about 199 seconds.
+#
+# 7 slide(s), one per picture, each holding its own piece of
+# the 187s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
