@@ -4,6 +4,19 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-10-02 Excel Time Logic pictures 6 and 7 (s07, s08) have no
+  narration: the whole-narration take (162.45 s) is silent where they were
+  cued (158.8-161.4 s mean -53 dB, 161.4-end -62.6 dB), and retakes exist
+  only for pictures 1-5. They hold 4.5 s each with no voice, no captions.
+  Not fixed: needs Jacek to say them (`record --voice --picture 6`, `7`).
+  The final.mp4 rendered 20:3x predates the caption rebuild below.
+- 2026-10-02 FIXED (0842bcf, e794d44; Jacek has not yet seen the new
+  final): doubled captions (46 overlapping pairs -> 0) and intro captions
+  that were picture 1's words. Cause: with every picture said again, no
+  shot quoted the old narration, so voice_sources used it as a global
+  track and never listened to the clips. Measured on Excel Time Logic.
+  Note: `film caption --apply` still ADDS to existing captions; clear a
+  shot's captions first.
 - 2026-10-02 intro take could not be stopped (Excel Time Logic,
   `media/rec_20261002-191354.mp4`, started 19:13:54): file stops growing
   19:13:58 at 3.4 MB (~3.7 s), no moov atom = ffmpeg was killed, not
