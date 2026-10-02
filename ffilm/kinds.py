@@ -41,8 +41,13 @@ UNREADABLE_DIRNAME = "_unreadable"
 # rather than deleted, so pressing the wrong button costs nothing.
 DISCARDED_DIRNAME = "_discarded"
 
+# Slides recorded one at a time, until the last is kept and they are
+# joined into the narration. A sitting stopped halfway must not look like
+# a narration, so they wait here, skipped by everything that scans media/.
+SLIDES_DIRNAME = "_slides"
+
 # Everything inside media/ that is NOT material.
-ASIDE_DIRNAMES = (UNREADABLE_DIRNAME, DISCARDED_DIRNAME)
+ASIDE_DIRNAMES = (UNREADABLE_DIRNAME, DISCARDED_DIRNAME, SLIDES_DIRNAME)
 
 
 def is_aside(path: str | Path, media: str | Path) -> bool:

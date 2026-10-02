@@ -143,9 +143,18 @@ def step_caption(i: int, n: int) -> str:
     return f"picture {i + 1} of {n}"
 
 
-def next_label(i: int, n: int) -> str:
+def after_slide(step: int, n: int) -> int | None:
+    """Enter on the review screen of slide `step`: the next slide, or
+    None when that was the last and the narration is finished. Pure."""
+    return step + 1 if step + 1 < n else None
+
+
+def next_label(i: int, n: int, per_slide: bool = False) -> str:
     """The big button, which is also what SPACE does. On the last
-    picture it ends the take, and says so before it is pressed."""
+    picture it ends the take, and says so before it is pressed. Recording
+    slide by slide, SPACE always ends THIS slide's take."""
+    if per_slide:
+        return "Done with this slide      SPACE"
     if i + 1 >= n:
         return "Finish      SPACE"
     return "Next picture      SPACE"
@@ -494,7 +503,8 @@ def session(script: str, script_path: Path, wpm: int, title: str,
             start, finish, seconds: float | None = None,
             discard=None, voice_only: bool = False,
             steps: list | None = None, pair=None,
-            pictures: list[str] | None = None) -> int | None:
+            pictures: list[str] | None = None,
+            per_slide: bool = False) -> int | None:
     """Open the window and stay in it until the person is finished.
 
     `start()`         begins one recording and returns the running Take.
@@ -608,12 +618,13 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         # One picture at a time: the big button moves on, and on the
         # last picture it finishes. Stop is still there for giving up on
         # a take, and is deliberately the smaller of the two.
-        next_btn = button(controls, next_label(0, len(steps)),
+        next_btn = button(controls, next_label(0, len(steps), per_slide),
                           lambda: next_step(), primary=True)
         next_btn.pack(anchor="e", pady=(0, 10))
         button(controls, "Stop this take", lambda: stop_take(),
                small=True).pack(anchor="e")
-        big(strip, "SPACE  next picture\n"
+        big(strip, ("SPACE  done with this slide\n" if per_slide
+                    else "SPACE  next picture\n") +
                    "Esc  stop this take",
             13, DIM, justify="right").pack(side="right", anchor="n")
     else:
@@ -822,7 +833,7 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         take = S["take"]
         if take is None or S["stage"] != "rec":
             return
-        if S["step"] + 1 >= len(steps):
+        if per_slide or S["step"] + 1 >= len(steps):
             stop_take()
             return
         take.presses.append((take.clock, time.time()))
@@ -843,7 +854,9 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         if pair is not None:
             steps[:] = pair(S["script"])
         lay_out_words()
-        S["count"] = COUNT_FROM
+        # Slide by slide, the second take on is a moment, not three
+        # seconds: saying one slide again must be immediate.
+        S["count"] = 1 if per_slide and S.get("rolled") else COUNT_FROM
         show("count")
         canvas.delete("count")
         tick_count()
@@ -866,8 +879,12 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         S["rolling"] = False
         show("rec")
         reset_words()
+        S["rolled"] = True
         if steps:
-            S["step"] = 0
+            # One whole narration starts at the first picture. Slide by
+            # slide, the window stays on the slide being recorded.
+            S["step"] = (min(S["step"], len(steps) - 1) if per_slide
+                         else 0)
             draw_step()
         root.after(TICK_MS, tick_rec)
 
@@ -960,6 +977,10 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         def upper(s: str) -> str:
             return s[:1].upper() + s[1:]
 
+        if per_slide:
+            last = after_slide(S["step"], len(steps)) is None
+            again_btn.configure(text="Finish      Enter" if last
+                                else "Next slide      Enter")
         got.configure(text=lines[0] if lines else "Got it.")
         trouble.configure(text="\n".join(upper(x) for x in lines[1:-1])
                           if len(lines) > 2 else "")
@@ -967,6 +988,12 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         show("review")
 
     def again(_=None):
+        if per_slide and S["stage"] == "review":
+            nxt = after_slide(S["step"], len(steps))
+            if nxt is None:
+                done()                  # the last slide is kept: finished
+                return
+            S["step"] = nxt
         begin()
 
     def redo(_=None):
@@ -1058,12 +1085,14 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         button(pick_row, "Back to all the pictures      Esc",
                lambda: show("compose")).pack(side="left")
 
-    button(review_row, "Record another      Enter", again,
-           primary=True).pack(side="left")
+    again_btn = button(review_row, "Next slide      Enter" if per_slide
+                       else "Record another      Enter", again, primary=True)
+    again_btn.pack(side="left")
     # Worded so it cannot be mistaken for the one next to it. These two
     # buttons differ only in whether the take you just made survives,
     # and that is not a thing to find out afterwards.
-    button(review_row, "Fluffed it -- do that one again      R",
+    button(review_row, "Fluffed it -- this slide again      R" if per_slide
+           else "Fluffed it -- do that one again      R",
            redo).pack(side="left", padx=10)
     button(review_row, "Change the words", edit_words).pack(side="left",
                                                             padx=10)

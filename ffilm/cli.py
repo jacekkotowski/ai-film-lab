@@ -1015,6 +1015,9 @@ def cmd_record(args) -> None:
         print(f"             ({n})")
 
     takes: list[Path] = []
+    # Narrating pictures in the window: one take per picture, so a fluff
+    # or a crash costs one slide and not the whole narration (2026-10-02).
+    per_slide = bool(windowed and args.voice and steps and not picking)
 
     def new_take():
         """One recording, started. Handed to the window as a callback so
@@ -1022,8 +1025,10 @@ def cmd_record(args) -> None:
         close and reopen between every take, and something blinking in
         and out of existence is the last thing you want in front of
         somebody who is already rattled."""
-        (project / "media").mkdir(parents=True, exist_ok=True)
-        out = rec.next_take_path(project / "media", audio_only=args.voice)
+        where = (project / "media" / kinds.SLIDES_DIRNAME if per_slide
+                 else project / "media")
+        where.mkdir(parents=True, exist_ok=True)
+        out = rec.next_take_path(where, audio_only=args.voice)
         cmd = rec.record_command(out, video, audio, mode, args.seconds,
                                  ffmpeg=ffmpeg_bin(), window=True)
         return booth.Take(cmd, out).start()
@@ -1047,6 +1052,17 @@ def cmd_record(args) -> None:
                 ["Something else may have grabbed the camera."]) + [
                 "Nothing you had already recorded is lost -- try again.", ""]
         length, warnings = rec.verify_take(out, mode, bool(audio), take.heard)
+        if per_slide:
+            takes.append(out)
+            k, n = len(takes), len(shown)
+            print(f"  Slide {k} of {n}: {_secs(length)}")
+            for w in warnings:
+                print(f"    Careful: {w}")
+            return ([f"Slide {k} of {n}: {_secs(length)}."] + warnings +
+                    ["That was the last slide. Enter finishes; R says it "
+                     "again." if k >= n else
+                     "Enter keeps it and goes to the next slide; R says "
+                     "this slide again."])
         # Stopped before the last picture: not the narration. Kept, just
         # out of the way -- see rec.narration_finished.
         if shown and not rec.narration_finished(len(take.presses),
@@ -1135,7 +1151,7 @@ def cmd_record(args) -> None:
             wpm=args.wpm, title=project.name,
             start=new_take, finish=took, seconds=args.seconds,
             discard=drop_last, voice_only=args.voice,
-            steps=steps, pair=pair,
+            steps=steps, pair=pair, per_slide=per_slide,
             pictures=booth.one_picture_choices(
                 menu, args.voice, picking is not None,
                 has_narration=any((project / "media").glob(
@@ -1178,6 +1194,26 @@ def cmd_record(args) -> None:
 
     if not takes:
         raise SystemExit("\nNothing was recorded. Nothing has changed.")
+    if per_slide:
+        if len(takes) < len(shown):
+            raise SystemExit(
+                f"\n  {len(takes)} of {len(shown)} slides were recorded. "
+                f"They wait in media\\{kinds.SLIDES_DIRNAME}\\ and the film "
+                "has not changed. Record again to make the narration.")
+        # All slides kept: one narration, cut where each slide ends.
+        media = project / "media"
+        joined = rec.next_take_path(media, audio_only=True)
+        lengths = [rec.verify_take(t, None, False)[0] for t in takes]
+        try:
+            rec.join_takes(ffmpeg_bin(), takes, joined)
+        except OSError as e:
+            raise SystemExit(f"\n  Could not join the slides: {e}\n  They "
+                             f"are still in media\\{kinds.SLIDES_DIRNAME}\\.")
+        rec.write_cues(joined, rec.slide_cues(lengths), shown)
+        for t in takes:
+            ingest_mod.quarantine(t, media, where=kinds.DISCARDED_DIRNAME)
+        print(f"  {len(shown)} slides joined: {_secs(sum(lengths))}")
+        takes[:] = [joined]
     if replacing:
         takes[:] = _replace_takes(project, replacing, old_takes, takes)
     if picking:

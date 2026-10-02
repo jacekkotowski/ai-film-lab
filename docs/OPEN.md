@@ -4,6 +4,21 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-10-02 intro take could not be stopped (Excel Time Logic,
+  `media/rec_20261002-191354.mp4`, started 19:13:54): file stops growing
+  19:13:58 at 3.4 MB (~3.7 s), no moov atom = ffmpeg was killed, not
+  stopped. Windows event log: AUDIODG.EXE APPCRASH 0xc0000005 at 19:13:55
+  and kernel LiveKernelEvent 141 at 19:13:58. Inferred (not reproduced):
+  ffmpeg's dshow mic input hung when the audio engine died, so it never
+  read the `q` that SPACE/Stop/Esc send. Cause of the AUDIODG crash not
+  measured. The window has no timeout for a take that stops writing
+  (`booth.Take.wait` only kills 30 s after `q`). Not fixed.
+  2026-10-02 later: narration over pictures is now recorded ONE SLIDE PER
+  TAKE (window: SPACE ends the slide, Enter next, R this slide again,
+  shown after every slide; takes wait in media/_slides, joined into one
+  voiceover + cues when the last is kept). A hang still cannot be stopped
+  from the window. Window not yet walked by Jacek; join proved on three
+  synthetic wavs (3.0+4.5+2.0 s -> 9.5 s, cues 3.0, 7.5).
 - 2026-10-01 `columns` (a 2-column slide held, panned mid-shot, held;
   found by shape: width = 2x the frame's) is built and drafted on Excel
   Tutorial - Use tables: 7 of 7 slides got it, draft 34.5 s. Not yet

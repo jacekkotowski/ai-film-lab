@@ -219,6 +219,34 @@ def write_cues(take: Path, cues: list[float], pictures: list[str]) -> Path:
     return out
 
 
+def slide_cues(lengths: list[float]) -> list[float]:
+    """Where each slide ends once the slides' own takes are joined, one
+    after another. Pure. One fewer than there are slides: the first
+    starts at zero. These are the cues Next used to write, so everything
+    after the recording cuts the narration as it always did."""
+    out: list[float] = []
+    at = 0.0
+    for n in lengths[:-1]:
+        at += float(n)
+        out.append(round(at, 2))
+    return out
+
+
+def join_takes(ffmpeg: str, takes: list[Path], out: Path) -> None:
+    """The slides' takes as one wav, in order. Raises OSError when it
+    cannot, with what ffmpeg said -- the takes are still where they were."""
+    cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", "error"]
+    for t in takes:
+        cmd += ["-i", str(t)]
+    ins = "".join(f"[{i}:a]" for i in range(len(takes)))
+    cmd += ["-filter_complex", f"{ins}concat=n={len(takes)}:v=0:a=1[a]",
+            "-map", "[a]", str(out)]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode or not out.exists():
+        raise OSError(r.stderr.strip()[-300:]
+                      or "ffmpeg could not join the takes")
+
+
 RETAKE_SUFFIX = ".picture.json"
 
 
