@@ -395,38 +395,6 @@ shots:
         pos: lower_third
         words: [0.00, 0.57, 1.00, 1.35, 1.98]
 
-  - id: s10
-    src: media/close_rec_20261002-201728.mp4
-    in: "00:16.33"
-    out: "00:28.23"
-    speed: 1.2              # 1.0 is the speed you actually spoke at
-    move: drift_right
-    amount: 0.6            # how much of the move to use. 0 = none
-    focus: [0.478, 0.275]
-    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
-    note: "closer"
-    captions:
-      - text: "A measure on a calendar table asks the same"
-        at: 0.09
-        dur: 2.86
-        pos: lower_third
-        words: [0.00, 0.27, 0.55, 0.78, 0.90, 1.20, 1.70, 2.17, 2.67]
-      - text: "question under any filter."
-        at: 2.95
-        dur: 1.65
-        pos: lower_third
-        words: [0.00, 0.45, 1.02, 1.27]
-      - text: "Next:"
-        at: 4.60
-        dur: 1.25
-        pos: lower_third
-        words: [0.00]
-      - text: "SUMIFS and SUMPRODUCT against DAX"
-        at: 6.20
-        dur: 2.60
-        pos: lower_third
-        words: [0.00, 0.40, 0.93, 1.28, 1.63, 2.05]
-
 # 10 shots, about 192 seconds.
 #
 # 5 slide(s), one per picture, each holding its own piece of
