@@ -1924,10 +1924,17 @@ RETAKE_PAD = 0.3
 
 
 def picture_shots(film) -> list:
-    """The shots with words over a photograph, in film order. Picture N
-    is the Nth of these, the same count the notes use ("picture 4 of
-    6"), so a talking head before the pictures is not picture 1."""
-    return [s for s in film.shots if s.voice and s.kind == "still"]
+    """The photographs of the film, in film order. Picture N is the Nth
+    of these, the same count the notes use ("picture 4 of 6"), so a
+    talking head before the pictures is not picture 1.
+
+    A photograph from media/ counts with or without words yet (found
+    2026-10-02, Excel Time Logic: pictures 6 and 7 were never narrated
+    and `--picture 6` was out of range, so the only way to give them a
+    voice was to read all seven again). The opening card, which lives in
+    analysis/, is not a picture."""
+    return [s for s in film.shots if s.kind == "still"
+            and (s.voice or s.src.replace("\\", "/").startswith("media/"))]
 
 
 def retake_cut(film, n: int, voice_rel: str, tin: float,
