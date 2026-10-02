@@ -97,36 +97,6 @@ shots:
     focus: [0.386, 0.355]
     note: "picture 1 of 5 -- said again, picture1_20261002-200616.wav"
     captions:
-      - text: "That is right for one period."
-        at: 3.79
-        dur: 2.41
-        pos: lower_third
-        words: [0.00, 0.88, 1.04, 1.40, 1.80, 2.02]
-      - text: "The second and third quarters each need their own formula,"
-        at: 6.89
-        dur: 3.80
-        pos: lower_third
-        words: [0.00, 0.42, 0.80, 1.06, 1.36, 1.92, 2.32, 2.64, 2.92, 3.24]
-      - text: "130 against 110 and 117 against 120."
-        at: 11.71
-        dur: 4.50
-        pos: lower_third
-        words: [0.00, 0.88, 1.36, 2.14, 2.96, 4.04]
-      - text: "A slicer on East or West cannot reach those cells."
-        at: 17.47
-        dur: 4.50
-        pos: lower_third
-        words: [0.00, 1.66, 2.22, 2.44, 2.82, 3.12, 3.52, 3.94]
-      - text: "The sales table ends at 2025-11-01,"
-        at: 24.11
-        dur: 4.50
-        pos: lower_third
-        words: [0.00, 0.84, 1.18, 1.64, 2.08, 2.48, 4.14, 4.34]
-      - text: "because December has no rows."
-        at: 29.91
-        dur: 1.45
-        pos: lower_third
-        words: [0.00, 0.34, 0.82, 1.18, 1.40]
       - text: "SUMIFS answers it in one cell."
         at: 0.25
         dur: 2.66
@@ -173,36 +143,6 @@ shots:
     focus: [0.373, 0.346]
     note: "picture 2 of 5 -- said again, picture2_20261002-200842.wav"
     captions:
-      - text: "A PivotTable lists only the months it finds:"
-        at: 1.29
-        dur: 3.74
-        pos: lower_third
-        words: [0.00, 0.24, 0.50, 1.06, 1.60, 2.08, 2.32, 2.74, 3.32]
-      - text: "September 11, October 60, November 60,"
-        at: 5.61
-        dur: 3.85
-        pos: lower_third
-        words: [0.00, 0.34, 1.42, 1.70, 2.92, 3.10]
-      - text: "grand total 457."
-        at: 9.97
-        dur: 2.42
-        pos: lower_third
-        words: [0.00, 0.28, 0.74]
-      - text: "December is missing."
-        at: 12.39
-        dur: 1.46
-        pos: lower_third
-        words: [0.00, 0.86, 1.14]
-      - text: "No row, no month."
-        at: 14.53
-        dur: 1.60
-        pos: lower_third
-        words: [0.00, 0.24, 1.00, 1.20]
-      - text: "Build the calendar in Power Query:"
-        at: 17.57
-        dur: 2.64
-        pos: lower_third
-        words: [0.00, 0.92, 1.56, 2.02, 2.44]
       - text: "The sales table ends at 2025-11-01,"
         at: 0.25
         dur: 4.50
@@ -249,56 +189,6 @@ shots:
     focus: [0.409, 0.335]
     note: "picture 3 of 5 -- said again, picture3_20261002-201008.wav"
     captions:
-      - text: "Data, Get Data, From Other Sources,"
-        at: 0.97
-        dur: 2.93
-        pos: lower_third
-        words: [0.00, 0.94, 1.12, 1.52, 2.06, 2.46]
-      - text: "Blank Query, Advanced Editor."
-        at: 4.45
-        dur: 2.14
-        pos: lower_third
-        words: [0.00, 0.22, 1.20, 1.64]
-      - text: "The code starts at 2024-01-01 and runs 731 days,"
-        at: 7.85
-        dur: 4.50
-        pos: lower_third
-        words: [0.00, 0.56, 0.94, 1.90, 2.28, 3.24, 4.04, 4.34]
-      - text: "all of 2024 and 2025."
-        at: 16.65
-        dur: 3.25
-        pos: lower_third
-        words: [0.00, 0.24, 0.38, 1.30, 2.10]
-      - text: "Then add year,"
-        at: 21.11
-        dur: 2.00
-        pos: lower_third
-        words: [0.00, 0.96, 1.58]
-      - text: "month number and month name with Add Column,"
-        at: 23.59
-        dur: 3.81
-        pos: lower_third
-        words: [0.00, 0.18, 0.66, 1.38, 1.78, 2.16, 2.80, 3.44]
-      - text: "Date, and rename the columns."
-        at: 27.79
-        dur: 2.71
-        pos: lower_third
-        words: [0.00, 1.44, 1.70, 2.02, 2.26]
-      - text: "Close & Load To,"
-        at: 31.31
-        dur: 2.00
-        pos: lower_third
-        words: [0.00, 0.64, 1.30, 1.62]
-      - text: "Only Create Connection,"
-        at: 33.99
-        dur: 1.55
-        pos: lower_third
-        words: [0.00, 0.30, 0.68]
-      - text: "Add to Data Model."
-        at: 36.35
-        dur: 0.93
-        pos: lower_third
-        words: [0.00, 0.46, 0.84]
       - text: "Build the calendar in Power Query: Data,"
         at: 0.25
         dur: 3.33
@@ -366,31 +256,6 @@ shots:
     note: "picture 4 of 5 -- said again, picture4_20261002-201146.wav"
     captions:
       - text: "No dates are typed in."
-        at: 3.66
-        dur: 1.71
-        pos: lower_third
-        words: [0.00, 0.24, 0.66, 0.98, 1.34]
-      - text: "The first and last year come from the sales query:"
-        at: 6.12
-        dur: 3.53
-        pos: lower_third
-        words: [0.00, 0.18, 0.54, 0.78, 1.06, 1.38, 1.68, 2.04, 2.44, 2.86]
-      - text: "the start of the earliest year, the end of the latest."
-        at: 10.80
-        dur: 3.56
-        pos: lower_third
-        words: [0.00, 0.28, 0.54, 0.86, 1.04, 1.48, 2.34, 2.48, 2.80, 3.06, 3.22]
-      - text: "Add 2026 rows to the sales table and press Ctrl+Alt+F5,"
-        at: 14.98
-        dur: 4.50
-        pos: lower_third
-        words: [0.00, 0.58, 2.26, 2.74, 3.06, 3.26, 3.56, 3.98]
-      - text: "Refresh All."
-        at: 23.00
-        dur: 1.05
-        pos: lower_third
-        words: [0.00, 0.72]
-      - text: "No dates are typed in."
         at: 0.25
         dur: 1.89
         pos: lower_third
@@ -441,26 +306,6 @@ shots:
     focus: [0.438, 0.326]
     note: "picture 5 of 5 -- said again, picture5_20261002-201348.wav"
     captions:
-      - text: "The calendar grows from 731 days to 1096"
-        at: 0.00
-        dur: 3.66
-        pos: lower_third
-        words: [0.00, 0.36, 0.72, 1.14, 1.70, 2.90, 3.52, 3.96]
-      - text: "and ends at 2026-12-31."
-        at: 3.66
-        dur: 4.50
-        pos: lower_third
-        words: [0.00, 0.66, 1.16, 1.56, 3.94, 4.38]
-      - text: "In Power Pivot, sort txt_month by num_month."
-        at: 13.60
-        dur: 3.21
-        pos: lower_third
-        words: [0.00, 0.40, 0.62, 1.08, 1.24, 1.70, 2.16, 2.72]
-      - text: "Then Design, Mark as Date Table, and pick date: unique values,"
-        at: 18.98
-        dur: 0.86
-        pos: lower_third
-        words: [0.00, 0.34]
       - text: "In Power Pivot,"
         at: 0.25
         dur: 1.33

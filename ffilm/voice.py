@@ -176,6 +176,14 @@ def voice_sources(project: Path, film=None) -> list[VoiceSource]:
                 narration.append(VoiceSource(p, p.name,
                                              slides_using(film, p)))
         if not quoted:
+            # Slides that carry `voice:` and none of them quote this
+            # narration: every picture was said again, and the narration
+            # is no longer in the film. Listened to anyway it was taken
+            # for one track under the whole film and put 34 lines of
+            # old words on top of each retake's own captions (Excel Time
+            # Logic, 2026-10-02).
+            if film is not None and any(s.voice for s in film.shots):
+                return narration[1:]
             return narration
         # The narration is cut across the pictures, and every clip keeps
         # its own sound -- so the clips are listened to as well. Only the
