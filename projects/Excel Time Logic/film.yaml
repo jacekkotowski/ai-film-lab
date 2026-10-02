@@ -1,0 +1,554 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# Each picture carries its own piece of
+# media/voiceover_20261002-194127.wav -- see `voice:` below.
+# The newest of 6 recordings in media/. The older one(s) are not used;
+# move them to media/_discarded/ to tidy up.
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+# Photographs with depth: as the camera moves, what is near
+# slides past what is far (parallax). 0 = flat. Photos only;
+# a .png .gif .svg is a chart and stays flat by itself.
+# 0.8 smears. Needs `uv sync --extra depth` once, flat without
+# it; see docs/decisions/0013.
+depth: 0.5
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 2.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20261002-191807.mp4
+    in: "00:02.76"
+    out: "00:18.92"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.513, 0.307]
+    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
+    captions:
+      - text: "SUMIFS answers it in one cell."
+        at: 4.14
+        dur: 1.80
+        pos: lower_third
+        words: [0.00, 0.58, 1.00, 1.18, 1.38]
+      - text: "Both dates move back twelve months,"
+        at: 6.48
+        dur: 2.32
+        pos: lower_third
+        words: [0.00, 0.28, 0.86, 1.16, 1.48, 1.78]
+      - text: "and the first quarter of 2024 returns 75 against 90 in 2025."
+        at: 9.08
+        dur: 4.38
+        pos: lower_third
+        words: [0.00, 0.48, 0.64, 0.86, 1.32, 1.60, 2.60, 3.32, 4.36]
+
+  - id: s02
+    src: media/01_SUMIFS_with_dates.png
+    voice: media/picture1_20261002-200616.wav
+    in: "00:04.07"
+    out: "00:41.23"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.386, 0.355]
+    note: "picture 1 of 5 -- said again, picture1_20261002-200616.wav"
+    captions:
+      - text: "That is right for one period."
+        at: 3.79
+        dur: 2.41
+        pos: lower_third
+        words: [0.00, 0.88, 1.04, 1.40, 1.80, 2.02]
+      - text: "The second and third quarters each need their own formula,"
+        at: 6.89
+        dur: 3.80
+        pos: lower_third
+        words: [0.00, 0.42, 0.80, 1.06, 1.36, 1.92, 2.32, 2.64, 2.92, 3.24]
+      - text: "130 against 110 and 117 against 120."
+        at: 11.71
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.88, 1.36, 2.14, 2.96, 4.04]
+      - text: "A slicer on East or West cannot reach those cells."
+        at: 17.47
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 1.66, 2.22, 2.44, 2.82, 3.12, 3.52, 3.94]
+      - text: "The sales table ends at 2025-11-01,"
+        at: 24.11
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.84, 1.18, 1.64, 2.08, 2.48, 4.14, 4.34]
+      - text: "because December has no rows."
+        at: 29.91
+        dur: 1.45
+        pos: lower_third
+        words: [0.00, 0.34, 0.82, 1.18, 1.40]
+      - text: "SUMIFS answers it in one cell."
+        at: 0.25
+        dur: 2.66
+        pos: lower_third
+        words: [0.00, 1.05, 1.52, 1.88, 2.08, 2.28]
+      - text: "Both dates move back twelve months,"
+        at: 3.65
+        dur: 2.31
+        pos: lower_third
+        words: [0.00, 0.32, 1.10, 1.40, 1.68, 1.95]
+      - text: "and the first quarter of 2024 returns 75 against 90 in 2025."
+        at: 6.32
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.33, 0.50, 0.72, 1.13, 1.47, 2.33, 2.93, 3.77]
+      - text: "That is right for one period."
+        at: 14.13
+        dur: 1.65
+        pos: lower_third
+        words: [0.00, 0.37, 0.53, 0.82, 1.08, 1.28]
+      - text: "The second and third quarters each need their own formula,"
+        at: 16.28
+        dur: 3.66
+        pos: lower_third
+        words: [0.00, 0.20, 0.52, 0.83, 1.12, 1.67, 2.15, 2.57, 2.87, 3.15]
+      - text: "130 against 110 and 117 against 120."
+        at: 20.78
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.62, 1.42, 2.15, 3.03, 4.03]
+      - text: "A slicer on East or West cannot reach those cells."
+        at: 26.98
+        dur: 3.73
+        pos: lower_third
+        words: [0.00, 0.27, 0.70, 0.90, 1.23, 1.48, 1.87, 2.33, 2.90, 3.30]
+
+  - id: s03
+    src: media/02_Missing_months.png
+    voice: media/picture2_20261002-200842.wav
+    in: "00:04.04"
+    out: "00:27.82"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.373, 0.346]
+    note: "picture 2 of 5 -- said again, picture2_20261002-200842.wav"
+    captions:
+      - text: "A PivotTable lists only the months it finds:"
+        at: 1.29
+        dur: 3.74
+        pos: lower_third
+        words: [0.00, 0.24, 0.50, 1.06, 1.60, 2.08, 2.32, 2.74, 3.32]
+      - text: "September 11, October 60, November 60,"
+        at: 5.61
+        dur: 3.85
+        pos: lower_third
+        words: [0.00, 0.34, 1.42, 1.70, 2.92, 3.10]
+      - text: "grand total 457."
+        at: 9.97
+        dur: 2.42
+        pos: lower_third
+        words: [0.00, 0.28, 0.74]
+      - text: "December is missing."
+        at: 12.39
+        dur: 1.46
+        pos: lower_third
+        words: [0.00, 0.86, 1.14]
+      - text: "No row, no month."
+        at: 14.53
+        dur: 1.60
+        pos: lower_third
+        words: [0.00, 0.24, 1.00, 1.20]
+      - text: "Build the calendar in Power Query:"
+        at: 17.57
+        dur: 2.64
+        pos: lower_third
+        words: [0.00, 0.92, 1.56, 2.02, 2.44]
+      - text: "The sales table ends at 2025-11-01,"
+        at: 0.25
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.45, 0.88, 1.23, 1.82, 2.45, 3.82, 3.93, 4.18, 4.28]
+      - text: "because December has no rows."
+        at: 5.28
+        dur: 1.64
+        pos: lower_third
+        words: [0.00, 0.28, 0.70, 1.08, 1.32]
+      - text: "A PivotTable lists only the months it finds:"
+        at: 7.88
+        dur: 2.83
+        pos: lower_third
+        words: [0.00, 0.30, 0.45, 0.82, 1.22, 1.53, 1.72, 2.10, 2.47]
+      - text: "September 11, October 60, November 60,"
+        at: 11.10
+        dur: 2.81
+        pos: lower_third
+        words: [0.00, 0.20, 0.95, 1.17, 2.03, 2.20]
+      - text: "grand total 457."
+        at: 14.27
+        dur: 2.05
+        pos: lower_third
+        words: [0.00, 0.15, 0.60]
+      - text: "December is missing."
+        at: 16.82
+        dur: 0.86
+        pos: lower_third
+        words: [0.00, 0.33, 0.62]
+      - text: "No row, no month."
+        at: 18.27
+        dur: 1.29
+        pos: lower_third
+        words: [0.00, 0.20, 0.83, 1.00]
+
+  - id: s04
+    src: media/03_Calendar_table_in_M.png
+    voice: media/picture3_20261002-201008.wav
+    in: "00:04.04"
+    out: "00:48.30"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.409, 0.335]
+    note: "picture 3 of 5 -- said again, picture3_20261002-201008.wav"
+    captions:
+      - text: "Data, Get Data, From Other Sources,"
+        at: 0.97
+        dur: 2.93
+        pos: lower_third
+        words: [0.00, 0.94, 1.12, 1.52, 2.06, 2.46]
+      - text: "Blank Query, Advanced Editor."
+        at: 4.45
+        dur: 2.14
+        pos: lower_third
+        words: [0.00, 0.22, 1.20, 1.64]
+      - text: "The code starts at 2024-01-01 and runs 731 days,"
+        at: 7.85
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.56, 0.94, 1.90, 2.28, 3.24, 4.04, 4.34]
+      - text: "all of 2024 and 2025."
+        at: 16.65
+        dur: 3.25
+        pos: lower_third
+        words: [0.00, 0.24, 0.38, 1.30, 2.10]
+      - text: "Then add year,"
+        at: 21.11
+        dur: 2.00
+        pos: lower_third
+        words: [0.00, 0.96, 1.58]
+      - text: "month number and month name with Add Column,"
+        at: 23.59
+        dur: 3.81
+        pos: lower_third
+        words: [0.00, 0.18, 0.66, 1.38, 1.78, 2.16, 2.80, 3.44]
+      - text: "Date, and rename the columns."
+        at: 27.79
+        dur: 2.71
+        pos: lower_third
+        words: [0.00, 1.44, 1.70, 2.02, 2.26]
+      - text: "Close & Load To,"
+        at: 31.31
+        dur: 2.00
+        pos: lower_third
+        words: [0.00, 0.64, 1.30, 1.62]
+      - text: "Only Create Connection,"
+        at: 33.99
+        dur: 1.55
+        pos: lower_third
+        words: [0.00, 0.30, 0.68]
+      - text: "Add to Data Model."
+        at: 36.35
+        dur: 0.93
+        pos: lower_third
+        words: [0.00, 0.46, 0.84]
+      - text: "Build the calendar in Power Query: Data,"
+        at: 0.25
+        dur: 3.33
+        pos: lower_third
+        words: [0.00, 0.50, 0.98, 1.35, 1.65, 1.85, 2.75]
+      - text: "Get Data, From Other Sources,"
+        at: 4.18
+        dur: 2.06
+        pos: lower_third
+        words: [0.00, 0.15, 1.20, 1.28, 1.62]
+      - text: "Blank Query, Advanced Editor."
+        at: 6.90
+        dur: 1.98
+        pos: lower_third
+        words: [0.00, 0.23, 1.18, 1.52]
+      - text: "The code starts at 2024-01-01 and runs 731 days,"
+        at: 10.28
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.43, 0.78, 1.38, 1.73, 3.13, 3.28, 3.63, 3.72, 4.45]
+      - text: "all of 2024 and 2025."
+        at: 17.72
+        dur: 2.90
+        pos: lower_third
+        words: [0.00, 0.33, 0.53, 1.57, 1.87]
+      - text: "Then add year,"
+        at: 20.62
+        dur: 2.71
+        pos: lower_third
+        words: [0.00, 1.32, 2.02]
+      - text: "month number and month name with Add Column,"
+        at: 23.67
+        dur: 3.48
+        pos: lower_third
+        words: [0.00, 0.18, 0.92, 1.20, 1.60, 2.03, 2.55, 3.12]
+      - text: "Date, and rename the columns."
+        at: 27.65
+        dur: 2.25
+        pos: lower_third
+        words: [0.00, 1.05, 1.25, 1.65, 1.87]
+      - text: "Close & Load To,"
+        at: 30.57
+        dur: 1.78
+        pos: lower_third
+        words: [0.00, 0.40, 1.13, 1.50]
+      - text: "Only Create Connection,"
+        at: 33.13
+        dur: 1.18
+        pos: lower_third
+        words: [0.00, 0.40, 0.73]
+      - text: "Add to Data Model."
+        at: 35.12
+        dur: 1.51
+        pos: lower_third
+        words: [0.00, 0.42, 0.82, 1.18]
+
+  - id: s05
+    src: media/04_Self_updating_calendar.png
+    voice: media/picture4_20261002-201146.wav
+    in: "00:04.10"
+    out: "00:35.94"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.441, 0.353]
+    note: "picture 4 of 5 -- said again, picture4_20261002-201146.wav"
+    captions:
+      - text: "No dates are typed in."
+        at: 3.66
+        dur: 1.71
+        pos: lower_third
+        words: [0.00, 0.24, 0.66, 0.98, 1.34]
+      - text: "The first and last year come from the sales query:"
+        at: 6.12
+        dur: 3.53
+        pos: lower_third
+        words: [0.00, 0.18, 0.54, 0.78, 1.06, 1.38, 1.68, 2.04, 2.44, 2.86]
+      - text: "the start of the earliest year, the end of the latest."
+        at: 10.80
+        dur: 3.56
+        pos: lower_third
+        words: [0.00, 0.28, 0.54, 0.86, 1.04, 1.48, 2.34, 2.48, 2.80, 3.06, 3.22]
+      - text: "Add 2026 rows to the sales table and press Ctrl+Alt+F5,"
+        at: 14.98
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.58, 2.26, 2.74, 3.06, 3.26, 3.56, 3.98]
+      - text: "Refresh All."
+        at: 23.00
+        dur: 1.05
+        pos: lower_third
+        words: [0.00, 0.72]
+      - text: "No dates are typed in."
+        at: 0.25
+        dur: 1.89
+        pos: lower_third
+        words: [0.00, 0.55, 0.93, 1.25, 1.58]
+      - text: "The first and last year come from the sales query:"
+        at: 2.72
+        dur: 2.73
+        pos: lower_third
+        words: [0.00, 0.18, 0.48, 0.73, 1.00, 1.30, 1.57, 1.85, 2.08, 2.37]
+      - text: "the start of the earliest year,"
+        at: 6.25
+        dur: 1.91
+        pos: lower_third
+        words: [0.00, 0.20, 0.48, 0.90, 1.10, 1.47]
+      - text: "the end of the latest."
+        at: 8.83
+        dur: 0.95
+        pos: lower_third
+        words: [0.00, 0.22, 0.43, 0.57, 0.67]
+      - text: "Add 2026 rows to the sales table and press Ctrl+Alt+F5,"
+        at: 11.13
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.65, 1.30, 1.68, 2.08, 2.27, 2.50, 2.83, 3.37, 3.67, 4.03, 4.48]
+      - text: "Refresh All."
+        at: 16.58
+        dur: 0.96
+        pos: lower_third
+        words: [0.00, 0.65]
+      - text: "The calendar grows from 731 days to 1096"
+        at: 18.55
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.13, 0.47, 0.87, 1.18, 2.28, 2.83, 3.25]
+      - text: "and ends at 2026-12-31."
+        at: 23.33
+        dur: 2.94
+        pos: lower_third
+        words: [0.00, 0.77, 1.33, 1.70]
+
+  - id: s06
+    src: media/05_Calendar_relationship.png
+    voice: media/picture5_20261002-201348.wav
+    in: "00:03.97"
+    out: "00:34.81"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.438, 0.326]
+    note: "picture 5 of 5 -- said again, picture5_20261002-201348.wav"
+    captions:
+      - text: "The calendar grows from 731 days to 1096"
+        at: 0.00
+        dur: 3.66
+        pos: lower_third
+        words: [0.00, 0.36, 0.72, 1.14, 1.70, 2.90, 3.52, 3.96]
+      - text: "and ends at 2026-12-31."
+        at: 3.66
+        dur: 4.50
+        pos: lower_third
+        words: [0.00, 0.66, 1.16, 1.56, 3.94, 4.38]
+      - text: "In Power Pivot, sort txt_month by num_month."
+        at: 13.60
+        dur: 3.21
+        pos: lower_third
+        words: [0.00, 0.40, 0.62, 1.08, 1.24, 1.70, 2.16, 2.72]
+      - text: "Then Design, Mark as Date Table, and pick date: unique values,"
+        at: 18.98
+        dur: 0.86
+        pos: lower_third
+        words: [0.00, 0.34]
+      - text: "In Power Pivot,"
+        at: 0.25
+        dur: 1.33
+        pos: lower_third
+        words: [0.00, 0.55]
+      - text: "sort the column txt_month by num_month."
+        at: 1.87
+        dur: 3.01
+        pos: lower_third
+        words: [0.00, 0.35, 0.60, 1.07, 2.08, 2.48]
+      - text: "Then Design,"
+        at: 6.37
+        dur: 1.48
+        pos: lower_third
+        words: [0.00, 0.97]
+      - text: "Mark as Date Table, and pick date:"
+        at: 8.35
+        dur: 2.51
+        pos: lower_third
+        words: [0.00, 0.35, 0.68, 0.97, 1.43, 1.97, 2.23]
+      - text: "unique values, no blanks."
+        at: 11.30
+        dur: 2.36
+        pos: lower_third
+        words: [0.00, 0.33, 1.25, 1.47]
+      - text: "In Diagram View, drag date onto date_sale,"
+        at: 14.37
+        dur: 3.18
+        pos: lower_third
+        words: [0.00, 0.32, 0.80, 1.52, 1.73, 2.10, 2.55]
+      - text: "one calendar day to many sales rows."
+        at: 18.87
+        dur: 2.30
+        pos: lower_third
+        words: [0.00, 0.23, 0.55, 0.98, 1.22, 1.50, 2.00]
+      - text: "The sales column must be type Date,"
+        at: 21.97
+        dur: 2.58
+        pos: lower_third
+        words: [0.00, 0.67, 1.00, 1.37, 1.60, 1.77, 2.07]
+      - text: "not text."
+        at: 24.88
+        dur: 0.56
+        pos: lower_third
+        words: [0.00, 0.22]
+
+  - id: s07
+    src: media/06_Previous_year_measure.png
+    duration: 4.5
+    move: columns
+    focus: [0.460, 0.313]
+
+  - id: s08
+    src: media/07_PivotChart.png
+    duration: 4.5
+    move: columns
+    focus: [0.466, 0.351]
+
+  - id: s09
+    src: media/close_rec_20261002-201728.mp4
+    in: "00:01.68"
+    out: "00:15.43"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.478, 0.275]
+    note: "closer"
+
+  - id: s10
+    src: media/close_rec_20261002-201728.mp4
+    in: "00:16.33"
+    out: "00:28.23"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_right
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.478, 0.275]
+    dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
+    note: "closer"
+
+# 10 shots, about 192 seconds.
+#
+# 5 slide(s), one per picture, each holding its own piece of
+# the 162s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+# 2 picture(s) had nothing said over them and are held silent.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
