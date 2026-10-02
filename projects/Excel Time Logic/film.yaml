@@ -71,21 +71,21 @@ shots:
     focus: [0.513, 0.307]
     note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
     captions:
-      - text: "SUMIFS answers it in one cell."
-        at: 4.14
-        dur: 1.80
+      - text: "Same period last year is the comparison everyone asks for."
+        at: 0.02
+        dur: 4.39
         pos: lower_third
-        words: [0.00, 0.58, 1.00, 1.18, 1.38]
-      - text: "Both dates move back twelve months,"
-        at: 6.48
-        dur: 2.32
+        words: [0.00, 0.47, 0.87, 1.17, 1.62, 2.15, 2.48, 3.00, 3.63, 4.05]
+      - text: "A formula answers it once."
+        at: 5.01
+        dur: 2.04
         pos: lower_third
-        words: [0.00, 0.28, 0.86, 1.16, 1.48, 1.78]
-      - text: "and the first quarter of 2024 returns 75 against 90 in 2025."
-        at: 9.08
-        dur: 4.38
+        words: [0.00, 0.35, 0.68, 1.37, 1.67]
+      - text: "A calendar table and one measure answer it under every filter."
+        at: 7.97
+        dur: 4.28
         pos: lower_third
-        words: [0.00, 0.48, 0.64, 0.86, 1.32, 1.60, 2.60, 3.32, 4.36]
+        words: [0.00, 0.17, 0.37, 0.87, 1.37, 1.68, 2.12, 2.73, 3.00, 3.43, 3.93]
 
   - id: s02
     src: media/01_SUMIFS_with_dates.png
@@ -373,6 +373,27 @@ shots:
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.478, 0.275]
     note: "closer"
+    captions:
+      - text: "A formula answers one period."
+        at: 0.11
+        dur: 2.19
+        pos: lower_third
+        words: [0.00, 0.53, 0.90, 1.52, 1.87]
+      - text: "A calendar table, marked and related on date,"
+        at: 2.81
+        dur: 2.69
+        pos: lower_third
+        words: [0.00, 0.20, 0.43, 0.83, 1.55, 1.75, 2.08, 2.35]
+      - text: "lets one measure answer every period,"
+        at: 5.51
+        dur: 3.43
+        pos: lower_third
+        words: [0.00, 0.78, 1.35, 1.77, 2.45, 2.98]
+      - text: "and the Timeline drives it."
+        at: 8.95
+        dur: 2.28
+        pos: lower_third
+        words: [0.00, 0.57, 1.00, 1.35, 1.98]
 
   - id: s10
     src: media/close_rec_20261002-201728.mp4
@@ -384,6 +405,27 @@ shots:
     focus: [0.478, 0.275]
     dissolve: 0.3      # blends in from the shot before. 0 = a hard cut
     note: "closer"
+    captions:
+      - text: "A measure on a calendar table asks the same"
+        at: 0.09
+        dur: 2.86
+        pos: lower_third
+        words: [0.00, 0.27, 0.55, 0.78, 0.90, 1.20, 1.70, 2.17, 2.67]
+      - text: "question under any filter."
+        at: 2.95
+        dur: 1.65
+        pos: lower_third
+        words: [0.00, 0.45, 1.02, 1.27]
+      - text: "Next:"
+        at: 4.60
+        dur: 1.25
+        pos: lower_third
+        words: [0.00]
+      - text: "SUMIFS and SUMPRODUCT against DAX"
+        at: 6.20
+        dur: 2.60
+        pos: lower_third
+        words: [0.00, 0.40, 0.93, 1.28, 1.63, 2.05]
 
 # 10 shots, about 192 seconds.
 #

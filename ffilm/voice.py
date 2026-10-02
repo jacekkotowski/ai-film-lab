@@ -182,9 +182,12 @@ def voice_sources(project: Path, film=None) -> list[VoiceSource]:
             # for one track under the whole film and put 34 lines of
             # old words on top of each retake's own captions (Excel Time
             # Logic, 2026-10-02).
-            if film is not None and any(s.voice for s in film.shots):
-                return narration[1:]
-            return narration
+            # The clips are still listened to, below: the intro and the
+            # closing are camera takes with their own words, and the old
+            # narration had been captioning them by film time.
+            if not (film is not None and any(s.voice for s in film.shots)):
+                return narration
+            narration = narration[1:]
         # The narration is cut across the pictures, and every clip keeps
         # its own sound -- so the clips are listened to as well. Only the
         # ones the film uses: listening takes minutes, and a clip no shot
