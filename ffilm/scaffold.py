@@ -1826,6 +1826,59 @@ def _shot_blocks(lines: list[str]) -> list[tuple[str, int, int, str]]:
     return out
 
 
+def refit_speed(text: str, film, speed: float) -> str:
+    """film.yaml AS TEXT with every sped-up shot moved to `speed`, and
+    its captions moved with it. For `film fit`.
+
+    A caption's `at`, `dur` and `words` are in FILM seconds, already
+    divided by the shot's speed when `film caption` wrote them. Changing
+    only `speed:` moves the voice and leaves the captions behind (about
+    0.9 s late, 28 s into a shot, at 1.2 -> 1.24). Going from speed a to b
+    multiplies every film time inside the shot by a / b: exact, and no
+    new transcription.
+
+    Only shots that already have a `speed` other than 1.0 are touched
+    (the takes and the narrated pictures), and nothing else in the file
+    is read or rewritten, so comments and notes survive. A shot whose
+    captions are not written the way `film caption` writes them -- one
+    `at:`, `dur:` and `words:` per line -- raises ValueError instead of
+    being guessed at.
+    """
+    lines = text.splitlines()
+    shots = {s.id: s for s in film.shots}
+    for sid, first, end, _dash in _shot_blocks(lines):
+        shot = shots.get(sid)
+        if shot is None or abs(shot.speed - 1.0) < 1e-3:
+            continue
+        k = shot.speed / speed
+        found = {"at": 0, "dur": 0, "words": 0}
+        for i in range(first + 1, end):
+            line = lines[i]
+            m = re.match(r"^(\s*speed:\s*)[0-9.]+(.*)$", line)
+            if m:
+                lines[i] = f"{m.group(1)}{speed:g}{m.group(2)}"
+                continue
+            m = re.match(r"^(\s+(?:at|dur):\s*)([0-9.]+)\s*$", line)
+            if m:
+                key = "at" if "at:" in m.group(1) else "dur"
+                found[key] += 1
+                lines[i] = f"{m.group(1)}{float(m.group(2)) * k:.2f}"
+                continue
+            m = re.match(r"^(\s+words:\s*)\[(.*)\]\s*$", line)
+            if m:
+                found["words"] += 1
+                nums = [float(x) * k for x in m.group(2).split(",") if x.strip()]
+                lines[i] = (m.group(1) + "["
+                            + ", ".join(f"{n:.2f}" for n in nums) + "]")
+        want = len(shot.captions)
+        if (found["at"], found["dur"]) != (want, want) or \
+                found["words"] != sum(1 for c in shot.captions if c.words):
+            raise ValueError(
+                f"shot {sid}: its captions are not written one value per "
+                f"line, so their times cannot be moved safely.")
+    return "\n".join(lines) + "\n"
+
+
 def add_captions(text: str, by_shot: dict[str, list]) -> str:
     """Write captions into film.yaml AS TEXT, leaving everything else
     exactly as it was found.

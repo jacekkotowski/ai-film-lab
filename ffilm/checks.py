@@ -9,10 +9,12 @@ how every one of them is tested.
 
 from __future__ import annotations
 
+import math
 import re
 from pathlib import Path
 
 from . import cover, kinds, library, voice
+from .spec import VOICE_TAIL
 
 
 def voice_installed() -> bool:
@@ -22,6 +24,42 @@ def voice_installed() -> bool:
         return find_spec("faster_whisper") is not None
     except (ImportError, ValueError):
         return False
+
+
+def speed_to_fit(film, target: float, max_speed: float) -> float | None:
+    """The one `speed:` for every sped-up shot that brings the film to
+    `target` seconds, rounded UP to two decimals. Pure. For `film fit`.
+
+    The shots whose length comes from their speed (a take, a narrated
+    picture) are the part that scales: (out - in) / speed. Everything
+    else is fixed -- the opening card, silent photographs, a `duration:`
+    hold, and the breath after a narrated picture (VOICE_TAIL). Then
+    spoken / (target - fixed) is the speed.
+
+    A film that already fits gets its current speed back. None means it
+    cannot be done by speed: nothing to speed up, the fixed part alone
+    overruns the target, or the answer is above `max_speed`.
+    """
+    fixed = spoken = 0.0
+    current = 1.0
+    for s in film.shots:
+        tail = VOICE_TAIL if s.voice else 0.0
+        if (abs(s.speed - 1.0) > 1e-3 and s.tout is not None
+                and abs(s.duration - ((s.tout - s.tin) / s.speed + tail)) < 1e-6):
+            spoken += s.tout - s.tin
+            fixed += tail
+            current = max(current, s.speed)
+        else:
+            fixed += s.duration
+    if not spoken:
+        return None
+    if film.duration <= target:
+        return current
+    room = target - fixed
+    if room <= 0:
+        return None
+    needed = math.ceil(spoken / room * 100 - 1e-9) / 100
+    return needed if needed <= max_speed else None
 
 
 def shot_lines(film) -> list[str]:

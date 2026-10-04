@@ -50,7 +50,9 @@ from .checks import (bokeh_notes, depth_notes, film_shape, framing_notes, librar
                      narration_notes,
                      preflight_report, repeated_captions, shot_lines,
                      unreadable_captions, unused_media)
+from .checks import speed_to_fit
 from .moves import choose_moves
+from .record import MAX_SPEED
 from .paths import toolkit_root
 from .render import QUALITIES, render
 from .spec import Film
@@ -1375,6 +1377,54 @@ def cmd_pack(args) -> None:
           "FILM.bat.")
 
 
+def cmd_fit(args) -> None:
+    """Fit a film that is a little over its length by raising `speed:`
+    on every sped-up shot, with the captions moved along. The sums are
+    checks.speed_to_fit and scaffold.refit_speed; this only prints."""
+    import tempfile
+
+    project = find_project(args.project)
+    yml = project / "film.yaml"
+    film = load(project, "final")
+    target = args.target
+    if film.duration <= target:
+        print(f"Already fits: {film.duration:.1f}s, target {target:.1f}s. "
+              f"Nothing changed.")
+        return
+    s = speed_to_fit(film, target, MAX_SPEED)
+    if s is None:
+        raise SystemExit(
+            f"Cannot fit {target:.1f}s by speed: the film is "
+            f"{film.duration:.1f}s and no speed up to {MAX_SPEED} reaches "
+            f"it (or nothing in it is sped up). Cut instead: the "
+            f"fit-to-length skill.")
+    before = yml.read_text(encoding="utf-8")
+    try:
+        after = scaffold.refit_speed(before, film, s)
+    except ValueError as e:
+        raise SystemExit(f"{e}\nNothing changed.")
+    probe = Path(tempfile.mkdtemp()) / "film.yaml"
+    probe.write_text(after, encoding="utf-8")
+    new_total = Film.load(probe, check_files=False).duration
+    was = max(sh.speed for sh in film.shots)
+    print(f"speed {was:g} -> {s:g} on every sped-up shot: "
+          f"{film.duration:.1f}s -> {new_total:.1f}s (target {target:.1f}s)")
+    print(f"  (the ceiling, {MAX_SPEED}, is a placeholder: not yet measured)")
+    if args.dry_run:
+        print("  --dry-run: film.yaml not touched.")
+        return
+    bak = keep_a_copy(project)
+    yml.write_text(after, encoding="utf-8")
+    try:
+        Film.load(yml)
+    except SystemExit:
+        yml.write_text(before, encoding="utf-8")
+        raise
+    print("  captions moved with the voice.")
+    if bak is not None:
+        print(f"  the film you had is kept as {bak.name}")
+
+
 def cmd_undo(args) -> None:
     """Go back to a film.yaml you have already watched.
 
@@ -1630,6 +1680,14 @@ def main() -> None:
     p = sub.add_parser("check", help="validate film.yaml")
     p.add_argument("--project", "-p", default=None)
 
+    p = sub.add_parser("fit", help="fit a film a little over its length by "
+                                   "raising the speed a little")
+    p.add_argument("--project", "-p", default=None)
+    p.add_argument("--target", type=float, required=True,
+                   help="seconds to end at or under (a Short: 175)")
+    p.add_argument("--dry-run", action="store_true",
+                   help="say what speed it would use; change nothing")
+
     p = sub.add_parser("edit", help="open the editing bench in your browser")
     p.add_argument("--project", "-p", default=None)
     p.add_argument("--port", type=int, default=8731)
@@ -1774,6 +1832,8 @@ def main() -> None:
             cmd_caption(args)
         elif args.cmd == "check":
             cmd_check(args)
+        elif args.cmd == "fit":
+            cmd_fit(args)
         elif args.cmd == "edit":
             cmd_edit(args)
         elif args.cmd == "go":

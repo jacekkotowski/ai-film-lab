@@ -1,6 +1,6 @@
 ---
 name: fit-to-length
-description: Cut a finished film down to a length (a YouTube Short is 3:00) by dropping whole sentences and whole shots that say something twice, never by speeding up or splitting words. Use when the user says "make it a Short", "get it under 3 minutes", "compress to N seconds", or `film final` warns the film is too long for a Short.
+description: Cut a finished film down to a length (a YouTube Short is 3:00) by dropping whole sentences and whole shots that say something twice, never by changing `speed:` by hand or splitting words. Use when the user says "make it a Short", "get it under 3 minutes", "compress to N seconds", or `film final` warns the film is too long for a Short.
 ---
 
 # Fit to length: cut the repetition, not the words
@@ -26,6 +26,16 @@ cut.
      the film's length; dissolves do not overlap.
    - `analysis/transcript.txt` gives every sentence, with its times.
    - Leave margin: aim for **about 172 s** for a 180 s limit.
+
+2b. **Slightly over? Raise the speed, with `film fit`.**
+   `uv run film fit -p NAME --target 175 --dry-run` prints the one speed
+   (rounded up, every sped-up shot, same number) and the new total.
+   Propose it and wait for go, then run it without `--dry-run`. It moves
+   every caption's `at`/`dur`/`words` with the voice and keeps
+   `film.yaml.bak`. If it says it cannot (speed above `MAX_SPEED`, 1.25,
+   a placeholder that is NOT measured: say so), go on to step 3 and cut.
+   Draft and final use the same number; do not draft at 1.0.
+   Never change `speed:` by hand: the captions would drift late.
 
 3. **List the candidates**, cheapest first:
    - silence: a shot with no captions, where ffmpeg `volumedetect` says
@@ -66,8 +76,8 @@ cut.
 
 ## Never
 
-- Change `speed:` to save time. It changes the voice, and the pace was
-  set to match the narration.
+- Change `speed:` by hand. It moves the voice away from its captions;
+  `film fit` is the way.
 - Invent or shift `words:` timings.
 - Cut inside a sentence to save two seconds. Pick a different sentence
   instead.

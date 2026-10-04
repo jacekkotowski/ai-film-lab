@@ -45,6 +45,12 @@ from .kinds import (REC_PREFIX, VOICEOVER_PREFIX,  # noqa: F401
 # talking to a lens, are slower than they think.
 REC_SPEED = 1.2
 
+# The most `film fit` will raise a speed to. A PLACEHOLDER, not a
+# measurement: nobody has yet measured where speech turns unintelligible
+# or atempo starts to artefact. Past it, fit refuses and the film needs
+# cutting. See docs/plans/2026-10-04/PLAN-fit-by-speed.md.
+MAX_SPEED = 1.25
+
 # The live preview (booth.py shows it) is padded to exactly this,
 # whatever shape the camera is, so the reader knows how many bytes make one frame without having to
 # ask. 12fps is plenty to see whether your head is in the middle.
