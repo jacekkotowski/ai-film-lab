@@ -1,0 +1,435 @@
+# Written by `film init`. Everything here is a starting point.
+# Change the numbers. That is what this file is for.
+#
+# Filename hints `init` understood, if you used any:
+#   00_ 01_ ...     explicit order
+#   open_ close_    which shot opens / closes the film
+#   open_close_     the SAME image opens AND closes it
+#   quote_          held longer, filename becomes a centered title
+#
+#   uv run film peek    seconds    -- is the ORDER right?
+#   uv run film draft   <1 min     -- does the MOTION feel right?
+#   uv run film final   minutes    -- ship it
+
+fps: 24
+resolution: [1080, 1920]   # vertical, for YouTube Shorts
+# Each picture carries its own piece of
+# media/voiceover_20261005-073414.wav -- see `voice:` below.
+# title: the words on the thumbnail. Left out, the film is
+#        called what its folder is called.
+# music: found on its own -- this project's music/ folder if it
+#        has one, otherwise your library/music/ folder.
+music_volume: 0.6      # the level when nobody is talking
+music_fade: 2.0        # seconds of fade in and out
+music_duck: 0.5        # how far the music drops while you talk
+                       # 0 = never drops. 1 = gets right out of the way
+
+look:
+  preset: old_film      # clean | warm | old_film | projector
+  glow: 0.25            # lifts shadows -- better lighting
+
+# Uncomment if a wide clip is losing too much to a tall frame.
+# `blur` keeps the picture whole on a blurred copy of itself
+# instead of cropping it. fill_aspect is the shape of the sharp
+# part: 1.0 square, 0.8 taller and bigger, 1.33 shorter and safer.
+# fill: blur
+# fill_aspect: 1.0
+
+# The room behind you softly blurred, you sharp -- on your own
+# recordings (rec_*) only. 0 = off, 2 = twice as soft. About +45%
+# render time. Barely shows in a vertical close-up: the crop is
+# nearly all face. Another clip can ask for it with its own `bokeh:`.
+bokeh: 1
+
+# Photographs with depth: as the camera moves, what is near
+# slides past what is far (parallax). 0 = flat. Photos only;
+# a .png .gif .svg is a chart and stays flat by itself.
+# 0.8 smears. Needs `uv sync --extra depth` once, flat without
+# it; see docs/decisions/0013.
+depth: 0.5
+
+shots:
+
+  - id: s00
+    src: analysis/title.jpg
+    duration: 2.0
+    move: static
+    note: "the opening card -- the same picture and the same words
+      as the thumbnail, so clicking the miniature lands you on the
+      frame you clicked. Made from your library; delete this whole
+      block if you would rather open on yourself talking."
+
+  - id: s01
+    src: media/rec_20261005-072017.mp4
+    in: "00:00.99"
+    out: "00:15.99"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: static
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.435, 0.333]
+    note: "kept whole -- there is sound on this one, so none of what you said is cut. Trim in:/out: if it drags"
+    captions:
+      - text: "A recorded macro remembers cell addresses,"
+        at: 0.00
+        dur: 2.83
+        pos: lower_third
+        words: [0.00, 0.50, 0.97, 1.43, 1.88, 2.42]
+      - text: "so it breaks when the table grows."
+        at: 3.34
+        dur: 2.11
+        pos: lower_third
+        words: [0.00, 0.18, 0.45, 0.77, 1.32, 1.45, 1.73]
+      - text: "Address the table instead."
+        at: 6.37
+        dur: 1.48
+        pos: lower_third
+        words: [0.00, 0.58, 0.87, 1.18]
+      - text: "Each macro here selects an area or returns a value."
+        at: 8.42
+        dur: 3.70
+        pos: lower_third
+        words: [0.00, 0.18, 0.60, 0.93, 1.53, 1.72, 2.10, 2.53, 3.08, 3.37]
+
+  - id: s02
+    src: media/01_Structured_reference_in_VBA.png
+    voice: media/voiceover_20261005-073414.wav
+    in: "00:04.40"
+    out: "00:27.75"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.393, 0.406]
+    note: "picture 1 of 6 -- holds while these words are said"
+    captions:
+      - text: "Structured reference in VBA."
+        at: 0.16
+        dur: 2.29
+        pos: lower_third
+        words: [0.00, 0.67, 1.20, 1.70]
+      - text: "The macro recorder writes fixed addresses."
+        at: 2.94
+        dur: 2.43
+        pos: lower_third
+        words: [0.00, 0.15, 0.50, 0.93, 1.32, 1.90]
+      - text: "Kowalski is appended in row twenty-six,"
+        at: 5.76
+        dur: 2.13
+        pos: lower_third
+        words: [0.00, 0.48, 0.77, 1.20, 1.47, 1.62]
+      - text: "and the recorded macro leaves him out."
+        at: 7.89
+        dur: 2.70
+        pos: lower_third
+        words: [0.00, 0.58, 0.83, 1.33, 1.78, 2.15, 2.38]
+      - text: "Put the structured reference inside Range,"
+        at: 11.49
+        dur: 2.68
+        pos: lower_third
+        words: [0.00, 0.45, 0.87, 1.30, 1.83, 2.17]
+      - text: "exactly as in a formula."
+        at: 14.17
+        dur: 1.68
+        pos: lower_third
+        words: [0.00, 0.75, 1.02, 1.17, 1.28]
+      - text: "The selection grows with the table."
+        at: 16.29
+        dur: 1.81
+        pos: lower_third
+        words: [0.00, 0.10, 0.45, 0.80, 1.30, 1.45]
+
+  - id: s03
+    src: media/02_Parts_of_a_table.png
+    voice: media/voiceover_20261005-073414.wav
+    in: "00:31.90"
+    out: "00:57.35"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.405, 0.373]
+    note: "picture 2 of 6 -- holds while these words are said"
+    captions:
+      - text: "Parts of a table"
+        at: 0.00
+        dur: 1.33
+        pos: lower_third
+        words: [0.00, 0.63, 0.85, 1.05]
+      - text: "Declare the table as an object and set it once by its name."
+        at: 1.81
+        dur: 4.18
+        pos: lower_third
+        words: [0.00, 0.63, 0.78, 1.08, 1.30, 1.43, 1.73, 2.27, 2.60, 2.77, 3.05, 3.60, 3.87]
+      - text: "Every part of the table hangs off that object."
+        at: 6.54
+        dur: 2.78
+        pos: lower_third
+        words: [0.00, 0.25, 0.52, 0.63, 0.73, 1.05, 1.53, 1.98, 2.30]
+      - text: "Select the header row,"
+        at: 10.01
+        dur: 1.16
+        pos: lower_third
+        words: [0.00, 0.32, 0.53, 0.80]
+      - text: "or select the data body for values without headers or totals,"
+        at: 11.18
+        dur: 4.21
+        pos: lower_third
+        words: [0.00, 0.28, 0.60, 0.80, 1.03, 1.43, 1.92, 2.33, 3.00, 3.35, 3.67]
+      - text: "ready to copy or clear."
+        at: 15.39
+        dur: 1.69
+        pos: lower_third
+        words: [0.00, 0.43, 0.77, 1.08, 1.35]
+      - text: "The whole range selects everything, headers included."
+        at: 17.86
+        dur: 2.94
+        pos: lower_third
+        words: [0.00, 0.17, 0.42, 0.80, 1.47, 1.78, 2.35]
+
+  - id: s04
+    src: media/03_Columns_by_name.png
+    voice: media/voiceover_20261005-073414.wav
+    in: "01:00.45"
+    out: "01:27.40"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.367, 0.377]
+    note: "picture 3 of 6 -- holds while these words are said"
+    captions:
+      - text: "Columns by name A column number works until someone"
+        at: 0.27
+        dur: 3.88
+        pos: lower_third
+        words: [0.00, 0.43, 0.63, 1.63, 1.83, 2.08, 2.47, 2.88, 3.45]
+      - text: "inserts a region column."
+        at: 4.15
+        dur: 1.43
+        pos: lower_third
+        words: [0.00, 0.42, 0.85, 1.08]
+      - text: "Column four then points at February instead of March,"
+        at: 6.58
+        dur: 3.30
+        pos: lower_third
+        words: [0.00, 0.43, 0.73, 1.07, 1.40, 1.67, 2.17, 2.70, 2.95]
+      - text: "and the macro selects the wrong data."
+        at: 9.88
+        dur: 2.69
+        pos: lower_third
+        words: [0.00, 0.63, 0.93, 1.23, 1.93, 2.17, 2.37]
+      - text: "Ask for the column by its name instead."
+        at: 13.20
+        dur: 2.43
+        pos: lower_third
+        words: [0.00, 0.52, 0.80, 0.95, 1.27, 1.43, 1.70, 2.05]
+      - text: "Sum it and show the result:"
+        at: 16.10
+        dur: 1.71
+        pos: lower_third
+        words: [0.00, 0.28, 0.53, 0.92, 1.15, 1.32]
+      - text: "four hundred fifty-seven,"
+        at: 17.82
+        dur: 1.79
+        pos: lower_third
+        words: [0.00]
+      - text: "whatever columns are inserted."
+        at: 19.62
+        dur: 2.28
+        pos: lower_third
+        words: [0.00, 0.90, 1.42, 1.80]
+
+  - id: s05
+    src: media/04_Last_row_and_last_column.png
+    voice: media/voiceover_20261005-073414.wav
+    in: "01:31.90"
+    out: "01:59.80"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.431, 0.381]
+    note: "picture 4 of 6 -- holds while these words are said"
+    captions:
+      - text: "Last row and last column"
+        at: 0.12
+        dur: 1.54
+        pos: lower_third
+        words: [0.00, 0.38, 0.68, 0.97, 1.25]
+      - text: "The classic last-row trick searches up from the"
+        at: 2.22
+        dur: 2.66
+        pos: lower_third
+        words: [0.00, 0.20, 0.72, 1.00, 1.25, 1.52, 1.98, 2.30, 2.52]
+      - text: "bottom of the sheet."
+        at: 4.88
+        dur: 0.76
+        pos: lower_third
+        words: [0.00, 0.20, 0.40, 0.50]
+      - text: "A note under the table counts too,"
+        at: 6.37
+        dur: 1.91
+        pos: lower_third
+        words: [0.00, 0.25, 0.52, 0.83, 0.98, 1.28, 1.58]
+      - text: "so it returns row twenty-seven."
+        at: 8.28
+        dur: 1.39
+        pos: lower_third
+        words: [0.00, 0.53, 0.78, 1.17]
+      - text: "The table knows its size:"
+        at: 11.22
+        dur: 1.84
+        pos: lower_third
+        words: [0.00, 0.32, 0.73, 1.23, 1.45]
+      - text: "five reps and fourteen columns."
+        at: 13.42
+        dur: 1.46
+        pos: lower_third
+        words: [0.00, 0.20, 0.50, 0.73, 1.07]
+      - text: "Then add a row to the table and write Kowalski into it."
+        at: 15.50
+        dur: 3.25
+        pos: lower_third
+        words: [0.00, 0.38, 0.90, 1.08, 1.22, 1.38, 1.52, 1.80, 2.05, 2.28, 2.85, 3.07]
+      - text: "He lands in row twenty-six,"
+        at: 18.75
+        dur: 1.99
+        pos: lower_third
+        words: [0.00, 0.38, 0.77, 1.10, 1.32]
+      - text: "with no row numbers in the code."
+        at: 20.75
+        dur: 2.18
+        pos: lower_third
+        words: [0.00, 0.62, 0.88, 1.10, 1.50, 1.72, 1.83]
+
+  - id: s06
+    src: media/05_One_row_by_value.png
+    voice: media/voiceover_20261005-073414.wav
+    in: "02:00.65"
+    out: "02:27.95"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.390, 0.366]
+    note: "picture 5 of 6 -- holds while these words are said"
+    captions:
+      - text: "One row by value"
+        at: 4.04
+        dur: 1.26
+        pos: lower_third
+        words: [0.00, 0.22, 0.63, 0.90]
+      - text: "Row two is Johnson until someone sorts by total,"
+        at: 5.97
+        dur: 4.15
+        pos: lower_third
+        words: [0.00, 0.25, 0.50, 0.90, 1.85, 2.23, 3.13, 3.50, 3.83]
+      - text: "and then it is Paul."
+        at: 10.13
+        dur: 1.86
+        pos: lower_third
+        words: [0.00, 0.65, 0.98, 1.38, 1.53]
+      - text: "Find the name in the rep column instead."
+        at: 12.96
+        dur: 2.15
+        pos: lower_third
+        words: [0.00, 0.37, 0.63, 0.90, 1.08, 1.25, 1.43, 1.72]
+      - text: "Intersect that row with the total column and read the value:"
+        at: 15.94
+        dur: 3.20
+        pos: lower_third
+        words: [0.00, 0.67, 0.90, 1.15, 1.35, 1.47, 1.72, 2.18, 2.50, 2.70, 2.87]
+      - text: "one hundred ten, in any sort order."
+        at: 19.57
+        dur: 2.88
+        pos: lower_third
+        words: [0.00, 0.60, 1.67, 2.13, 2.45]
+
+  - id: s07
+    src: media/06_The_trap_Nothing.png
+    voice: media/voiceover_20261005-073414.wav
+    in: "02:29.00"
+    out: "02:58.60"
+    speed: 1.2              # 1.0 is the speed you actually read at
+    move: columns
+    focus: [0.364, 0.360]
+    note: "picture 6 of 6 -- holds while these words are said"
+    captions:
+      - text: "Troubleshooting."
+        at: 3.83
+        dur: 0.65
+        pos: lower_third
+        words: [0.00]
+      - text: "An empty table has no data body,"
+        at: 5.27
+        dur: 2.30
+        pos: lower_third
+        words: [0.00, 0.30, 0.75, 1.10, 1.38, 1.63, 1.90]
+      - text: "and a name that is not there gives no found cell."
+        at: 7.57
+        dur: 3.76
+        pos: lower_third
+        words: [0.00, 0.60, 0.75, 1.07, 1.45, 1.58, 1.73, 2.07, 2.58, 3.00, 3.37]
+      - text: "Either one stops the macro with error ninety-one."
+        at: 12.17
+        dur: 2.50
+        pos: lower_third
+        words: [0.00, 0.50, 0.78, 1.15, 1.42, 1.68, 2.02, 2.18]
+      - text: "Check first."
+        at: 16.75
+        dur: 0.83
+        pos: lower_third
+        words: [0.00, 0.47]
+      - text: "Exit when the table has no rows,"
+        at: 18.13
+        dur: 1.71
+        pos: lower_third
+        words: [0.00, 0.42, 0.60, 0.75, 1.00, 1.23, 1.40]
+      - text: "and when the search finds nothing,"
+        at: 19.85
+        dur: 1.71
+        pos: lower_third
+        words: [0.00, 0.48, 0.67, 0.83, 1.10, 1.35]
+      - text: "show a clear message instead of a crash."
+        at: 21.57
+        dur: 2.61
+        pos: lower_third
+        words: [0.00, 0.58, 0.85, 1.05, 1.52, 2.00, 2.25, 2.37]
+
+  - id: s08
+    src: media/close_rec_20261005-073519.mp4
+    in: "00:01.33"
+    out: "00:17.83"
+    speed: 1.2              # 1.0 is the speed you actually spoke at
+    move: drift_left
+    amount: 0.6            # how much of the move to use. 0 = none
+    focus: [0.437, 0.341]
+    note: "closer"
+    captions:
+      - text: "Set the table once,"
+        at: 0.00
+        dur: 1.73
+        pos: lower_third
+        words: [0.00, 0.58, 1.02, 1.35]
+      - text: "ask for parts by name,"
+        at: 2.11
+        dur: 1.58
+        pos: lower_third
+        words: [0.00, 0.27, 0.50, 0.98, 1.22]
+      - text: "and check for empty results."
+        at: 3.69
+        dur: 1.89
+        pos: lower_third
+        words: [0.00, 0.47, 0.82, 1.12, 1.40]
+      - text: "Address the table, not the cells."
+        at: 6.22
+        dur: 2.36
+        pos: lower_third
+        words: [0.00, 0.55, 0.70, 1.40, 1.70, 2.02]
+      - text: "Next: SUMIFS and SUMPRODUCT against DAX."
+        at: 9.39
+        dur: 2.96
+        pos: lower_third
+        words: [0.00, 0.90, 1.17, 1.78, 1.88, 2.62]
+
+# 8 shots, about 189 seconds.
+#
+# 6 slide(s), one per picture, each holding its own piece of
+# the 180s narration. Each `in:`/`out:` is that picture's words, on
+# the narration's own clock. Move a shot and its words move with it;
+# swap `src:` to put a different picture under the same words; hold
+# one longer with `duration:` and the words stay where they were said.
+#
+# Cut where you pressed Next while recording, each cut moved to the
+# nearest pause so no word is split. To change one, move these
+# `in:`/`out:` numbers, or record the narration again.
