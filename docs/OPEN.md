@@ -9,7 +9,17 @@ move it to the bottom section with the commit id — do not delete it.
   content words; intro<->closing named as a possible recap). Calibrated on
   20 films, ONE known true case (SUMIFS intro/closing, 78%). Not yet seen
   catching anything on a new film by Jacek.
-- 2026-10-05 FIXED (this commit, "A pause of exactly the limit is
+- 2026-10-05 caption word timing from whisper misses some numbers.
+  SUMIFS s06 "72,000 and 157.55.": the highlight reaches 157.55 at
+  tight 157.00 s; the speech there is 156.45-158.05 (pause) 158.45-...,
+  so 157.55 starts ~158.45 (inferred from the pause + word length, 50 ms
+  levels, not heard): 1.16 s early on screen. Whisper on the tight copy
+  put it at 159.88 (1.43 s late). Of the 15 words the two whisper runs
+  disagree on, the caption (old run) is: at the word onset 3, 0.2-0.44 s
+  (source) early 5, inside continuous speech so not decidable 5, the
+  157.55 miss 1, plausible 1 (167). The tight run was worse on numbers
+  (167 and "times" placed on the previous word's end). Not fixed.
+- 2026-10-05 FIXED (b458026, "A pause of exactly the limit is
   shortened"; new films only, SUMIFS final left as Jacek accepted it):
   `film tighten` left a pause of exactly 0.60 s uncut: 12 windows x
   0.05 s = 0.5999999999999943 < OVER in `cuts_for` (SUMIFS: orig
