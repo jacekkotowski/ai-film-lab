@@ -18,7 +18,7 @@ move it to the bottom section with the commit id — do not delete it.
   as whisper's fault by any other measure; one 0.60 s pause survives.
   SUMIFS final.mp4 rendered 177.8 s (opening card removed by Jacek);
   then s08 lost its first three sentences (repeats of intro/s02):
-  draft 168.1 s, final NOT re-rendered, nobody has heard the new s08 cut.
+  final.mp4 re-rendered 168.2 s; nobody has heard the new s08 cut yet.
 - 2026-10-02 SKIPPED by Jacek (final rendered 177.8 s with them silent;
   not to be raised again). Excel Time Logic pictures 6 and 7 (s07, s08) have no
   narration: the whole-narration take (162.45 s) is silent where they were
