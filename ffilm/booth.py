@@ -399,6 +399,34 @@ def prompter_width(word_px: float, screen_w: int,
 # --------------------------------------------------------------------------
 
 
+# A take whose file has not grown for this long has stopped recording.
+# Measured 2026-10-05: a normal file grows at least every 1.43 s (voice
+# .wav; 0.58 s camera .mp4), and ffmpeg exits 0.14-0.66 s after `q`.
+STALL_SECONDS = 5.0
+STOP_GRACE_SECONDS = 5.0
+
+
+def watchdog(now: float, rolling: bool, last_growth: float,
+             stopped_at: float | None) -> str | None:
+    """"stop", "kill", or None: what to do with a take that may be stuck.
+
+    Found 2026-10-02: the Windows audio engine crashed mid-take, ffmpeg's
+    microphone input hung, and ffmpeg never read the `q` that SPACE
+    sends. The window stays on RECORDING until ffmpeg exits, so nothing
+    on screen could end the take. A file that stops growing is asked to
+    stop; a take still running after the grace is killed. A killed mp4
+    has no index -- that is the price, and it is still better than a
+    window that cannot be left.
+
+    Not before the camera is rolling: waking it takes a second or so.
+    """
+    if stopped_at is not None:
+        return "kill" if now - stopped_at > STOP_GRACE_SECONDS else None
+    if rolling and now - last_growth > STALL_SECONDS:
+        return "stop"
+    return None
+
+
 class Take:
     """One ffmpeg capture, with its preview and its level pulled off it.
 
@@ -425,6 +453,31 @@ class Take:
         # whoever finishes the take, which turns them into cues.
         self.presses: list[tuple[float, float]] = []
         self.stopped_wall: float | None = None
+        # Set when the watchdog had to step in; the review screen says so.
+        self.stuck: str | None = None
+        self._size = -1
+        self._grew = time.time()
+
+    def watch(self, rolling: bool) -> None:
+        """Called every tick of the window. See `watchdog`."""
+        now = time.time()
+        if not rolling:
+            self._grew = now
+        try:
+            size = self.out.stat().st_size if self.out else -1
+        except OSError:
+            size = -1
+        if size != self._size:
+            self._size, self._grew = size, now
+        act = watchdog(now, rolling, self._grew, self.stopped_wall)
+        if act == "stop":
+            self.stuck = (f"The recording stopped writing for "
+                          f"{STALL_SECONDS:.0f} s, so it was stopped.")
+            self.stop()
+        elif act == "kill" and self.running:
+            self.stuck = ("The recording did not stop when asked, so it "
+                          "was closed by force. The file may not open.")
+            self.proc.kill()
 
     def start(self) -> "Take":
         self.proc = subprocess.Popen(
@@ -926,6 +979,8 @@ def session(script: str, script_path: Path, wpm: int, title: str,
                 if seconds:
                     root.after(int(seconds * 1000), take.stop)
 
+            take.watch(S["rolling"])
+
             elapsed = time.time() - S["t0"] if S["rolling"] else 0.0
             clock.configure(text=f"{int(elapsed) // 60}:{int(elapsed) % 60:02d}")
             # The dot blinks. A caption that never changes is one you stop
@@ -971,6 +1026,10 @@ def session(script: str, script_path: Path, wpm: int, title: str,
         take.stop()
         take.wait()
         lines = finish(take) or []
+        if take.stuck:
+            print(f"  {take.stuck}")
+            lines = (lines[:1] or ["Got it."]) + [take.stuck] + \
+                (lines[1:] or [""])
         # The warnings are written to sit after "Careful:" in the
         # terminal, so they start lower case. On their own line, in a
         # window, they are sentences.

@@ -27,8 +27,13 @@ move it to the bottom section with the commit id — do not delete it.
   ffmpeg's dshow mic input hung when the audio engine died, so it never
   read the `q` that SPACE/Stop/Esc send. Cause of the AUDIODG crash not
   measured. The window has no timeout for a take that stops writing
-  (`booth.Take.wait` only kills 30 s after `q`). Not fixed. Proposed
-  2026-10-05: a watchdog in `booth.Take` (docs/plans/2026-10-05, item 4).
+  (`booth.Take.wait` only kills 30 s after `q`). FIXED 2026-10-05
+  ("A take that stops writing is stopped"): `booth.watchdog` -- file not
+  grown for 5 s -> `q`; still running 5 s later -> killed; the review
+  screen says which. Normal takes measured: growth every <=1.43 s, exit
+  0.14-0.66 s after `q`. Proved on a stand-in process that ignores `q`
+  (stopped 5.02 s, killed 10.05 s). Not yet seen on a real hang (mic
+  unplugged mid-take) by Jacek.
   2026-10-02 later: narration over pictures is now recorded ONE SLIDE PER
   TAKE (window: SPACE ends the slide, Enter next, R this slide again,
   shown after every slide; takes wait in media/_slides, joined into one
