@@ -52,6 +52,7 @@ from .checks import (bokeh_notes, depth_notes, film_shape, framing_notes, librar
                      caption_share_line, half_captioned, music_notes,
                      narration_notes,
                      preflight_report, repeated_captions, shot_lines,
+                     paraphrased_captions,
                      unreadable_captions, unused_media)
 from .checks import speed_to_fit
 from .moves import choose_moves
@@ -679,7 +680,7 @@ def cmd_check(args) -> None:
         for note in half:
             print(note if note.startswith(" ") else f"  {note}")
 
-    again = repeated_captions(film)
+    again = repeated_captions(film) + paraphrased_captions(film)
     if again:
         print()
         for note in again:

@@ -4,6 +4,11 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-10-05 NEW: `film check` names passages said twice in OTHER words
+  (checks.paraphrased_captions: 3 captions vs 3, >=60% and >=5 shared
+  content words; intro<->closing named as a possible recap). Calibrated on
+  20 films, ONE known true case (SUMIFS intro/closing, 78%). Not yet seen
+  catching anything on a new film by Jacek.
 - 2026-10-05 NEW, not yet seen working on a new film by Jacek: every new
   film (`init`, `go`) plays at 1.25 and has its narration pauses of
   0.6 s+ cut to 0.4 s (`film tighten`, decision 0015). Proved on a copy

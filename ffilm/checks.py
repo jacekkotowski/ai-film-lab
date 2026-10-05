@@ -525,6 +525,95 @@ def _said(text: str) -> str:
     return " ".join(re.findall(r"\w+", text.casefold()))
 
 
+# Words that carry no content of their own, so sharing them proves
+# nothing. Short on purpose: a word left out of here only makes the check
+# more cautious, never noisier, because the rule also asks for SAME_WORDS.
+_FILLER = set("""a an the and or but so of to in on at by for with from as is
+    are was be it its this that these those then than into up out no not
+    every each one two do does did has have had you your we our they their
+    i""".split())
+
+# Three captions against three. Measured on every film in projects/
+# (2026-10-05): one sentence against one cannot tell a paraphrase from
+# chance -- both scored 0.67 on SUMIFS. Three can: SUMIFS's closing that
+# re-said its intro scored 0.78 with 7 shared words, the best unrelated
+# passage 0.50; over 20 films, 3 other passages reached the line.
+PARAPHRASE_SPAN = 3
+PARAPHRASE_SHARE = 0.6     # of the shorter passage's content words
+SAME_WORDS = 5             # and at least this many of them
+
+
+def _content(text: str) -> set[str]:
+    """A caption's content words: lower case, no filler, a plural `s`
+    dropped so `filters` and `filter` count as one word."""
+    out = set()
+    for w in re.findall(r"\w+", text.casefold()):
+        if w in _FILLER:
+            continue
+        if len(w) > 3 and w.endswith("s") and not w.endswith("ss"):
+            w = w[:-1]
+        out.add(w)
+    return out
+
+
+def paraphrased_captions(film) -> list[str]:
+    """Passages the film says twice in other words, and where. Pure.
+
+    repeated_captions finds the same words. This finds the same CONTENT:
+    on SUMIFS SUMPRODUCT vs DAX the closing take re-said the intro --
+    "SUMIFS adds by condition" came back as "SUMIFS adds one column by
+    condition", and so on for three sentences -- and only reading found
+    it. Every run of PARAPHRASE_SPAN captions inside one shot is compared
+    with every run in every other shot; a pair of shots is named once, at
+    its closest passages. Like the exact check, this says where and
+    decides nothing: an outro that sums up on purpose is not a fault.
+    """
+    runs = []
+    t = 0.0
+    for s in film.shots:
+        caps = s.captions
+        for i in range(len(caps) - PARAPHRASE_SPAN + 1):
+            part = caps[i:i + PARAPHRASE_SPAN]
+            words = set().union(*(_content(c.text) for c in part))
+            runs.append((s.id, t + part[0].at, words,
+                         " / ".join(c.text for c in part)))
+        t += s.duration or 0.0
+    best: dict[tuple[str, str], tuple] = {}
+    for n, a in enumerate(runs):
+        for b in runs[n + 1:]:
+            if a[0] == b[0] or not a[2] or not b[2]:
+                continue
+            same = a[2] & b[2]
+            share = len(same) / min(len(a[2]), len(b[2]))
+            if share < PARAPHRASE_SHARE or len(same) < SAME_WORDS:
+                continue
+            key = (a[0], b[0])
+            if key not in best or share > best[key][0]:
+                best[key] = (share, a, b)
+    # The first and last shots that speak are the intro and the closing.
+    # A closing that reminds people of the intro is often meant (Jacek,
+    # 2026-10-05), so that pair is named as a recap, not as a repeat.
+    spoken = [s.id for s in film.shots if s.captions]
+    ends = (spoken[0], spoken[-1]) if len(spoken) > 1 else None
+    out = []
+    for share, a, b in best.values():
+        what = ("the closing recaps the intro -- fine if it is a reminder, "
+                "a cut if not" if (a[0], b[0]) == ends
+                else "the same thing said in other words")
+        out.append(f"{what} ({share:.0%} of the content words) -- "
+                   f"{a[0]} at {_clock(a[1])} and {b[0]} at {_clock(b[1])}:")
+        out.append(f'      "{a[3]}"')
+        out.append(f'      "{b[3]}"')
+    if out:
+        out.append("    Found by shared words, not by meaning: read both "
+                   "before cutting.")
+        out.append("    A closing that sums up on purpose is not a fault. "
+                   "Cutting one is")
+        out.append("    the fit-to-length skill: whole sentences, never "
+                   "half of one.")
+    return out
+
+
 def repeated_captions(film) -> list[str]:
     """Lines the film says more than once, and where. Pure.
 
