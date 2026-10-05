@@ -9,11 +9,17 @@ move it to the bottom section with the commit id — do not delete it.
   content words; intro<->closing named as a possible recap). Calibrated on
   20 films, ONE known true case (SUMIFS intro/closing, 78%). Not yet seen
   catching anything on a new film by Jacek.
-- 2026-10-05 still open from the 1.25 / tighten work (accepted, see
-  Fixed): `film fit` has no room left (MAX_SPEED = REC_SPEED = 1.25);
-  15 of 305 words drifted 0.2-2.9 s by whisper re-transcription (mostly
-  numbers), not confirmed as whisper's fault by any other measure; one
-  0.60 s pause survives.
+- 2026-10-05 `film tighten` leaves a pause of exactly 0.60 s uncut:
+  12 windows x 0.05 s = 0.5999999999999943 < OVER in `cuts_for`
+  (SUMIFS: orig 198.10-198.70, tight 184.50-185.10; the other 0.60 s
+  pause in the take summed to >= 0.6 and was cut). Costs 0.16 s of film
+  here. Not fixed: needs a code change Jacek has not asked for.
+  Measured at the same time: the tight copy equals the original minus
+  the cuts sample for sample (9,904,800 samples; 13,745 differ, all
+  inside the 5 ms fades). So the 15 of 304 words whisper hears 0.21-2.88 s
+  off (mostly numbers: 291, 157, 167) are whisper's timing, not the
+  mapping. Jacek, 2026-10-05: `film fit` speed-ups are done, 1.25 is the
+  ceiling; not an open item.
 - 2026-10-02 SKIPPED by Jacek (final rendered 177.8 s with them silent;
   not to be raised again). Excel Time Logic pictures 6 and 7 (s07, s08) have no
   narration: the whole-narration take (162.45 s) is silent where they were
