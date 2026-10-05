@@ -23,9 +23,14 @@ move it to the bottom section with the commit id — do not delete it.
   docs/tech/captions.md): slice 153.5-162.5 heard "72 ,157" with 157 at
   157.14; slice 50.5-56.5 put 157 at 51.78, inside the pause before it
   (onset 52.41). Judged cosmetic by Claude: the caption itself appears
-  on time, only the highlight runs ahead on one word in ~300. If a film
-  shows it worse: a word start inside a pause or just before one moves
-  to the pause's end (fixes the 5 early starts, not 157.55).
+  on time, only the highlight runs ahead on one word in ~300.
+  BUILT anyway at Jacek's ask ("A word starts where the pause before it
+  ends", voice.snap_to_pauses; new captions only, SUMIFS not redone).
+  Real transcribe of the SUMIFS tight narration: caption starts inside
+  a pause 27 -> 0, word starts 30 -> 0 of 300; 30 of 51 captions start
+  later, by 0.01-0.65 s; one sentence now splits after "Insert Slicer,"
+  instead of after "Design," (its "and" moved past the pause). 157.55
+  not fixed by it. Not yet seen on a new film by Jacek.
 - 2026-10-05 FIXED (b458026, "A pause of exactly the limit is
   shortened"; new films only, SUMIFS final left as Jacek accepted it):
   `film tighten` left a pause of exactly 0.60 s uncut: 12 windows x

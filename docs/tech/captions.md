@@ -19,3 +19,9 @@
   ones; thresholds swept over 19 films — decision 0012.
 - A caption shorter than its shot is fine; one cut by the next caption:
   the note "ends at X s, where the next caption begins".
+- Whisper starts ~1 word in 10 inside the pause before it (SUMIFS tight
+  narration: 30 of 300 words, 27 of 51 caption starts). Since 2026-10-05
+  `voice.snap_to_pauses` moves such a start to the pause's end (pauses
+  >= 0.2 s; 0.1 s also caught the gap before a "t"/"p" inside a word).
+  Re-transcribing a slice does NOT fix number timing (157.55 still
+  ~1.3 s early).

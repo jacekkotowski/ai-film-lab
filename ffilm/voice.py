@@ -20,6 +20,7 @@ is cached by faster-whisper itself -- nothing this toolkit manages.
 
 from __future__ import annotations
 
+import copy
 import difflib
 import json
 import logging
@@ -29,7 +30,7 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import kinds
+from . import ingest, kinds
 
 AUDIO_EXT = kinds.AUDIO
 VIDEO_EXT = kinds.VIDEO
@@ -937,10 +938,16 @@ def transcribe(audio: Path, model_size: str = "small",
     # So the script path sees the whole take at once, and the listening
     # path is left exactly as it was.
     following_a_script = bool(script_units(script or ""))
+    # Every word starts where the pause before it ends (snap_to_pauses),
+    # before any line is made, so a caption's start moves with its first
+    # word.
+    segments = list(segments)
+    snapped = iter(snap_to_pauses(
+        [w for seg in segments for w in (seg.words or [])], pauses_in(audio)))
     lines: list[Line] = []
     every_word: list = []
     for seg in segments:
-        words = list(seg.words or [])
+        words = [next(snapped) for _ in (seg.words or [])]
         if not words:
             t = seg.text.strip()
             if t:
@@ -957,6 +964,51 @@ def transcribe(audio: Path, model_size: str = "small",
 
     print(f"  {len(lines)} lines, language detected: {info.language}")
     return lines
+
+
+SNAP_PAUSE = 0.2    # a silence this long is a pause, not the gap before a
+                    # "t" or "p" inside a word (at 0.1 s, "multiplies"
+                    # moved 0.28 s into itself on SUMIFS)
+SNAP_BEFORE = 0.25  # how far before a pause a word's start may sit and
+                    # still be the sound of the word before it
+
+
+def snap_to_pauses(words: list, pauses, before: float = SNAP_BEFORE) -> list:
+    """The words, each starting where the pause before it ends.
+
+    Whisper often starts a word in the silence before it, or on the last
+    sound of the word before. On SUMIFS SUMPRODUCT vs DAX (2026-10-05)
+    "Choose" started 0.44 s before it was said and "The same in DAX"
+    0.64 s; the caption and its lit word ran ahead of the voice.
+
+    A word moves only when its start is inside a pause, or up to
+    `before` ahead of one, AND its end is after the pause: a word that
+    ends first was said first. It never moves onto the next word. The
+    words given are not changed; copies are returned.
+    """
+    out = []
+    for i, w in enumerate(words):
+        start, end = float(w.start), float(w.end)
+        nxt = float(words[i + 1].start) if i + 1 < len(words) else float("inf")
+        for s, e in pauses:
+            if s - before <= start < e and end > e and e < nxt:
+                w = copy.copy(w)
+                w.start = e
+                break
+        out.append(w)
+    return out
+
+
+def pauses_in(audio: Path) -> list[tuple[float, float]]:
+    """The pauses of SNAP_PAUSE or more in `audio`, by ingest's own
+    detector. None found, or the sound unreadable: no pauses, and no
+    word moves."""
+    if not Path(audio).is_file():
+        return []
+    pcm = ingest._pcm(audio)
+    if pcm is None:
+        return []
+    return ingest.quiet_stretches(ingest.window_levels(pcm), SNAP_PAUSE)[0]
 
 
 def attach_word_starts(lines: list[Line], words: list) -> None:
