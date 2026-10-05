@@ -33,7 +33,7 @@ LAYERS = {
     # 4  getting and reading the material
     "record": 4, "ingest": 4, "segment": 4, "depth": 4,
     # 5  sound and words, built from the analysis
-    "audio": 5, "voice": 5, "cover": 5,
+    "audio": 5, "voice": 5, "cover": 5, "tighten": 5,
     # 6  pixels, and captions fitted to shots
     "render": 6, "caption_fit": 6,
     # 7  workflows built on all of that

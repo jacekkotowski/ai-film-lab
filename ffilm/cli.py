@@ -46,6 +46,7 @@ from . import history
 from . import retakes
 from . import scaffold
 from . import slides
+from . import tighten
 from . import timeline
 from .checks import (bokeh_notes, depth_notes, film_shape, framing_notes, library_lines,
                      caption_share_line, half_captioned, music_notes,
@@ -1427,6 +1428,65 @@ def cmd_fit(args) -> None:
         print(f"  the film you had is kept as {bak.name}")
 
 
+def cmd_tighten(args) -> None:
+    """Shorten the long pauses inside the narration over pictures, with
+    the pictures' in/out and the captions moved along. The sums are
+    tighten.cuts_for and tighten.retime_text; this only prints."""
+    import tempfile
+
+    project = find_project(args.project)
+    yml = project / "film.yaml"
+    film = load(project, "final")
+    before = yml.read_text(encoding="utf-8")
+    after = before
+    writes = []
+    voices = list(dict.fromkeys(s.voice for s in film.shots if s.voice))
+    if not voices:
+        print("No narration over pictures in this film. Nothing changed.")
+        return
+    for v in voices:
+        path = film.resolve(v)
+        windows = [(s.tin, s.tout) for s in film.shots if s.voice == v]
+        cuts, line = tighten.find_cuts(path, windows, args.over, args.keep)
+        gone = sum(b - a for a, b in cuts)
+        print(f"{Path(v).name}: {len(cuts)} pause(s) of {args.over:g}s or "
+              f"more cut to {args.keep:g}s, {gone:.1f}s of recording "
+              f"(speech line {line:.1f} dB)")
+        if not cuts:
+            continue
+        name = tighten.tight_name(v, path, cuts)
+        try:
+            after = tighten.retime_text(after, film, v, name, cuts)
+        except ValueError as e:
+            raise SystemExit(f"{e}\nNothing changed.")
+        writes.append((path, project / name, cuts))
+    if not writes:
+        print("Nothing to cut. Nothing changed.")
+        return
+    probe = Path(tempfile.mkdtemp()) / "film.yaml"
+    probe.write_text(after, encoding="utf-8")
+    new_total = Film.load(probe, check_files=False).duration
+    print(f"film: {film.duration:.1f}s -> {new_total:.1f}s")
+    if args.dry_run:
+        print("  --dry-run: film.yaml not touched, no sound written.")
+        return
+    for src, dst, cuts in writes:
+        if not dst.exists():
+            tighten.write_tight(src, dst, cuts)
+        print(f"  shorter narration: {dst.relative_to(project).as_posix()} "
+              f"(the original in media/ is untouched)")
+    bak = keep_a_copy(project)
+    yml.write_text(after, encoding="utf-8")
+    try:
+        Film.load(yml)
+    except SystemExit:
+        yml.write_text(before, encoding="utf-8")
+        raise
+    print("  pictures and captions moved with the words.")
+    if bak is not None:
+        print(f"  the film you had is kept as {bak.name}")
+
+
 def cmd_undo(args) -> None:
     """Go back to a film.yaml you have already watched.
 
@@ -1690,6 +1750,17 @@ def main() -> None:
     p.add_argument("--dry-run", action="store_true",
                    help="say what speed it would use; change nothing")
 
+    p = sub.add_parser("tighten", help="shorten the long pauses inside the "
+                                       "narration over pictures")
+    p.add_argument("--project", "-p", default=None)
+    p.add_argument("--over", type=float, default=tighten.OVER,
+                   help=f"a pause this long or longer is shortened "
+                        f"(default {tighten.OVER})")
+    p.add_argument("--keep", type=float, default=tighten.KEEP,
+                   help=f"... to this many seconds (default {tighten.KEEP})")
+    p.add_argument("--dry-run", action="store_true",
+                   help="say what it would cut; change nothing")
+
     p = sub.add_parser("edit", help="open the editing bench in your browser")
     p.add_argument("--project", "-p", default=None)
     p.add_argument("--port", type=int, default=8731)
@@ -1836,6 +1907,8 @@ def main() -> None:
             cmd_check(args)
         elif args.cmd == "fit":
             cmd_fit(args)
+        elif args.cmd == "tighten":
+            cmd_tighten(args)
         elif args.cmd == "edit":
             cmd_edit(args)
         elif args.cmd == "go":
