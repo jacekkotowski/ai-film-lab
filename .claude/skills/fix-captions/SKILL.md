@@ -1,5 +1,6 @@
 ---
 name: fix-captions
+model: sonnet
 description: Fix captions that flash and vanish, start late, or never show — usually words the English transcriber did not hear (German, Polish, names, numbers). Places each caption on the speech measured in the audio, keeps the script's spelling, never invents word timings. Use when the user says "the caption disappeared", "the German words don't show", "the caption is gone before I finish the sentence".
 ---
 

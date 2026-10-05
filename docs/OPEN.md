@@ -4,11 +4,13 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
-- 2026-10-02 Excel Time Logic pictures 6 and 7 (s07, s08) have no
+- 2026-10-02 SKIPPED by Jacek (final rendered 177.8 s with them silent;
+  not to be raised again). Excel Time Logic pictures 6 and 7 (s07, s08) have no
   narration: the whole-narration take (162.45 s) is silent where they were
   cued (158.8-161.4 s mean -53 dB, 161.4-end -62.6 dB), and retakes exist
   only for pictures 1-5. They hold 4.5 s each with no voice, no captions.
-  Not fixed: needs Jacek to say them (`record --voice --picture 6`, `7`).
+  Not fixed: needs Jacek to say them (`record --voice --picture 6`, `7`;
+  those two were out of range until ea776d4, now offered: menu 1-7).
   The final.mp4 rendered 20:3x predates the caption rebuild below.
 - 2026-10-02 FIXED (0842bcf, e794d44; Jacek has not yet seen the new
   final): doubled captions (46 overlapping pairs -> 0) and intro captions

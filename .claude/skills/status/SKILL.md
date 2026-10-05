@@ -1,5 +1,6 @@
 ---
 name: status
+model: sonnet
 description: Say where a film stands in one screen — what is recorded, whether the edit fits its length, which renders are current and which are stale, what could be uploaded by mistake, and the ONE next step. Read-only. Use when the user says "where am I", "what's left", "is it ready", "status", "can I upload it", or comes back to a film after a break.
 ---
 

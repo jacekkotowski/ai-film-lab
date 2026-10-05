@@ -47,3 +47,10 @@ library/READ ME.txt
 # models/README.md so the next machine can fetch the same bytes.
 models/*
 !models/README.md
+
+# A project's products stay off git: scripts, narrations, .vertical.
+# Only film.yaml is tracked -- every render commits it, and `film undo`
+# reads it back (history.py). test_story's script is read by the tests.
+projects/*/*
+!projects/*/film.yaml
+!projects/test_story/script.txt

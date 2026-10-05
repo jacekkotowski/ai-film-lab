@@ -1,5 +1,6 @@
 ---
 name: change-the-machine
+model: opus
 description: Make a change to the ffilm/ package itself — a bug fix, a new command, a new rule — the way this repo does it — a test named as a sentence first, the smallest change that passes it, the whole suite, a commit that explains why. Use only after the user has explicitly asked for a code change.
 ---
 

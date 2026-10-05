@@ -1,5 +1,6 @@
 ---
 name: investigate
+model: opus
 description: Find the cause of a fault before fixing anything — a noise in the sound, a frozen or black picture, a render that is slow, a clip that disappears. Measure first, name the mechanism second, propose a fix third. Use whenever something "sounds wrong", "looks wrong", "is slow", or "used to work".
 ---
 

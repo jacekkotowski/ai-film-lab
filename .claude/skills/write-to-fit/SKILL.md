@@ -1,5 +1,6 @@
 ---
 name: write-to-fit
+model: sonnet
 description: Before recording, turn the producer's notes and photos into three texts written straight into the files the recording windows open (script_intro.txt, narration.txt, script_outro.txt) — the intro for the camera, one narration paragraph per picture, the closing — inside a word budget for the target length (a Short: about 265 words). Checks each paragraph against its photo. Use when the user says "write the script", "help me with the text", "I have photos and notes", or starts a film with a length in mind.
 ---
 

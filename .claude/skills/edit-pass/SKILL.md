@@ -1,5 +1,6 @@
 ---
 name: edit-pass
+model: sonnet
 description: One round of the everyday editing loop — the user reacts to a render in plain language ("shot 3 drags", "too repetitive", "the caption is too early") and you turn each note into a small, explained edit of film.yaml, then re-render peek or draft. Use for any note about pacing, order, moves or captions of a film.
 argument-hint: "[project] [notes]"
 ---
