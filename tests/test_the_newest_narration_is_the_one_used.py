@@ -78,7 +78,7 @@ def test_init_and_the_captions_pick_the_same_take(tmp_path):
     import json
     import os
 
-    from ffilm import scaffold, voice
+    from ffilm import scaffold, slides, voice
 
     p = tmp_path / "p"
     media = p / "media"
@@ -95,7 +95,7 @@ def test_init_and_the_captions_pick_the_same_take(tmp_path):
         {"media": [{"path": "media/a.png", "kind": "still",
                     "focus": [0.5, 0.5]}]}), encoding="utf-8")
 
-    assert scaffold.narration_of(p) == new
+    assert slides.narration_of(p) == new
     assert voice.voice_sources(p)[0].audio_path == new
 
     # And the film says so, so an older take is not a mystery.

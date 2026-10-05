@@ -18,7 +18,7 @@ Claude on the same file interchangeably.
 One warning it also prints on screen: saving rewrites film.yaml, so
 `#` comments are lost. Use `note:` fields instead -- those are data and
 survive. (Only the BENCH does this. `film caption` used to as well, and
-does not any more -- see scaffold.add_captions.)
+does not any more -- see slides.add_captions.)
 
 It also refuses to save over a film.yaml that changed while the page was
 open, rather than silently winning: Notepad++ and Claude may well be in
@@ -36,7 +36,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from .moves import EASINGS, MOVES
-from .scaffold import _seconds_list, quoted
+from .slides import _seconds_list, quoted
 from .spec import VOICE_TAIL, Film
 
 PAGE = r"""<!DOCTYPE html>

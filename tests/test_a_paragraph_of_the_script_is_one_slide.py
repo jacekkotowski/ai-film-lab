@@ -26,7 +26,8 @@ from dataclasses import dataclass
 
 from pytest import approx
 
-from ffilm import scaffold, voice
+from ffilm import slides as slides_mod   # `slides()` below makes a film
+from ffilm import voice
 from ffilm.scaffold import BREATH
 from ffilm.spec import Film, Shot
 from ffilm.voice import Line, paragraph_windows, script_paragraphs
@@ -170,7 +171,7 @@ def windows(n):
 
 def test_one_paragraph_each_in_order():
     film = slides("a.png", "b.png", "c.png")
-    cuts = scaffold.slide_cuts(film, script_paragraphs(SCRIPT), windows(3))
+    cuts = slides_mod.slide_cuts(film, script_paragraphs(SCRIPT), windows(3))
     assert [c.src for c in cuts] == ["media/a.png", "media/b.png",
                                      "media/c.png"]
     assert [c.sid for c in cuts] == ["s01", "s02", "s03"]
@@ -179,20 +180,20 @@ def test_one_paragraph_each_in_order():
 def test_a_paragraph_that_names_a_picture_gets_that_picture():
     film = slides("1a.png", "2b.png", "3c.png")
     paras = script_paragraphs("[3] third.\n\nsecond.\n\nfirst.")
-    cuts = scaffold.slide_cuts(film, paras, windows(3))
+    cuts = slides_mod.slide_cuts(film, paras, windows(3))
     assert cuts[0].src == "media/3c.png"
 
 
 def test_a_picture_can_be_named_by_its_filename():
     film = slides("1a.png", "2b.png", "3c.png")
     paras = script_paragraphs("[2b.png] words.\n\nmore.")
-    cuts = scaffold.slide_cuts(film, paras, windows(2))
+    cuts = slides_mod.slide_cuts(film, paras, windows(2))
     assert cuts[0].src == "media/2b.png"
 
 
 def test_more_paragraphs_than_pictures_reuses_the_last_picture():
     film = slides("a.png", "b.png")
-    cuts = scaffold.slide_cuts(film, script_paragraphs(SCRIPT), windows(3))
+    cuts = slides_mod.slide_cuts(film, script_paragraphs(SCRIPT), windows(3))
     assert [c.src for c in cuts] == ["media/a.png", "media/b.png",
                                      "media/b.png"]
     assert cuts[2].sid == ""              # a shot that has to be added
@@ -203,7 +204,7 @@ def test_more_pictures_than_paragraphs_share_the_last_paragraph():
     words would say them twice."""
     film = slides("a.png", "b.png", "c.png")
     paras = script_paragraphs("first para.\n\nsecond para.")
-    cuts = scaffold.slide_cuts(film, paras, [(0.0, 10.0), (20.0, 40.0)])
+    cuts = slides_mod.slide_cuts(film, paras, [(0.0, 10.0), (20.0, 40.0)])
     assert len(cuts) == 3
     assert (cuts[1].tin, cuts[1].tout) == (approx(20.0), approx(30.0))
     assert (cuts[2].tin, cuts[2].tout) == (approx(30.0), approx(40.0))
@@ -212,7 +213,7 @@ def test_more_pictures_than_paragraphs_share_the_last_paragraph():
 def test_a_paragraph_that_was_never_said_takes_no_picture():
     film = slides("a.png", "b.png")
     paras = script_paragraphs("said.\n\nskipped.\n\nsaid too.")
-    cuts = scaffold.slide_cuts(film, paras, [(0.0, 5.0), None, (9.0, 14.0)])
+    cuts = slides_mod.slide_cuts(film, paras, [(0.0, 5.0), None, (9.0, 14.0)])
     assert len(cuts) == 2
     assert [c.src for c in cuts] == ["media/a.png", "media/b.png"]
 
@@ -252,13 +253,13 @@ shots:
 '''
 
 
-def cut(sid, src, tin, tout, note="") -> scaffold.SlideCut:
-    return scaffold.SlideCut(sid=sid, src=src, voice="media/vo.wav",
+def cut(sid, src, tin, tout, note="") -> slides_mod.SlideCut:
+    return slides_mod.SlideCut(sid=sid, src=src, voice="media/vo.wav",
                              tin=tin, tout=tout, note=note)
 
 
 def test_a_recut_slide_keeps_everything_that_was_not_its_words():
-    out = scaffold.recut_slides(YAML, [cut("s01", "media/a.png", 2.0, 20.0),
+    out = slides_mod.recut_slides(YAML, [cut("s01", "media/a.png", 2.0, 20.0),
                                        cut("s02", "media/b.png", 21.0, 40.0)])
     assert 'in: "00:02.00"' in out
     assert 'out: "00:20.00"' in out
@@ -271,13 +272,13 @@ def test_a_recut_slide_keeps_everything_that_was_not_its_words():
 
 
 def test_a_recut_slide_can_change_its_picture():
-    out = scaffold.recut_slides(YAML, [cut("s01", "media/c.png", 2.0, 20.0)])
+    out = slides_mod.recut_slides(YAML, [cut("s01", "media/c.png", 2.0, 20.0)])
     assert "src: media/c.png" in out
     assert "src: media/a.png" not in out
 
 
 def test_an_extra_slide_is_added_at_the_end_of_the_shots():
-    out = scaffold.recut_slides(YAML, [
+    out = slides_mod.recut_slides(YAML, [
         cut("s01", "media/a.png", 2.0, 20.0),
         cut("s02", "media/b.png", 21.0, 40.0),
         cut("", "media/b.png", 41.0, 50.0, note="paragraph 3 of 3")])
@@ -291,15 +292,15 @@ def test_the_file_stops_saying_the_cuts_were_guessed():
     """`init` writes that it guessed the cuts from the pauses. Once a
     script has said where the paragraphs are, that is no longer true --
     the same reason `add_captions` takes out NO_CAPTIONS_YET."""
-    guessed = YAML + "\n".join(("",) + scaffold.SLIDES_GUESSED) + "\n"
-    out = scaffold.recut_slides(guessed,
+    guessed = YAML + "\n".join(("",) + slides_mod.SLIDES_GUESSED) + "\n"
+    out = slides_mod.recut_slides(guessed,
                                 [cut("s01", "media/a.png", 2.0, 20.0)])
     assert "GUESSED" not in out
-    assert scaffold.SLIDES_BY_SCRIPT[0] in out
+    assert slides_mod.SLIDES_BY_SCRIPT[0] in out
 
 
 def test_the_note_says_which_paragraph_this_picture_holds():
-    out = scaffold.recut_slides(YAML, [
+    out = slides_mod.recut_slides(YAML, [
         cut("s01", "media/a.png", 2.0, 20.0, note="paragraph 1 of 3")])
     assert "paragraph 1 of 3" in out
     assert "picture 1 of 3" not in out
@@ -309,7 +310,7 @@ def test_the_preview_is_fitted_against_the_new_windows():
     """`caption` without --apply writes nothing, and its preview has to
     show the film the script asks for -- not the one being replaced."""
     film = slides("a.png", "b.png")
-    after = scaffold.apply_cuts(film, [cut("s01", "media/a.png", 2.0, 20.0),
+    after = slides_mod.apply_cuts(film, [cut("s01", "media/a.png", 2.0, 20.0),
                                        cut("s02", "media/b.png", 21.0, 40.0)])
     assert [s.tin for s in after.shots] == [approx(2.0), approx(21.0)]
     assert after.shots[0].duration == approx(18.0 + 0.4)
@@ -318,7 +319,7 @@ def test_the_preview_is_fitted_against_the_new_windows():
 
 def test_an_extra_slide_joins_the_film_in_memory_too():
     film = slides("a.png", "b.png")
-    after = scaffold.apply_cuts(film, [
+    after = slides_mod.apply_cuts(film, [
         cut("s01", "media/a.png", 2.0, 20.0),
         cut("s02", "media/b.png", 21.0, 40.0),
         cut("", "media/b.png", 41.0, 50.0)])
@@ -333,7 +334,7 @@ def test_what_it_writes_is_a_film_that_loads(tmp_path):
         (media / n).write_bytes(b"")
     (tmp_path / "analysis").mkdir()
     (tmp_path / "analysis" / "title.jpg").write_bytes(b"")
-    out = scaffold.recut_slides(YAML, [
+    out = slides_mod.recut_slides(YAML, [
         cut("s01", "media/a.png", 2.0, 20.0, note="paragraph 1 of 3"),
         cut("s02", "media/b.png", 21.0, 40.0, note="paragraph 2 of 3"),
         cut("", "media/b.png", 41.0, 50.0, note="paragraph 3 of 3")])

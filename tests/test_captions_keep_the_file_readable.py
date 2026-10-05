@@ -13,7 +13,7 @@ Every test here is one thing that must survive being captioned.
 
 import pytest
 
-from ffilm.scaffold import add_captions
+from ffilm.slides import add_captions
 from ffilm.spec import Caption
 
 SCAFFOLDED = """\

@@ -182,7 +182,7 @@ def one_picture_choices(menu: list[str], voice_only: bool,
     Asked 2026-09-28: "make a button in the recording pane". Only when
     reading over ALL the pictures: in front of the camera there is no
     picture, and a window already on one picture has nothing to pick.
-    `menu` is `scaffold.picture_menu`, empty until there is an edit.
+    `menu` is `retakes.picture_menu`, empty until there is an edit.
     2026-09-29, It Reads Us: recorded before any edit, and the button was
     never there -- so with a narration it shows anyway."""
     if not voice_only or one_already:

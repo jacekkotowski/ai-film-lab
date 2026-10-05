@@ -262,7 +262,7 @@ def write_retake(take: Path, picture: str, tin: float, tout: float,
     in it they are, and the words that were on screen -- the captions'
     spelling. The N in picture4_ is only where that picture was in the
     film the day it was recorded; this is what a rewritten edit finds it
-    by (scaffold.keep_retakes)."""
+    by (retakes.keep_retakes)."""
     out = take.with_name(take.stem + RETAKE_SUFFIX)
     out.write_text(json.dumps({"picture": picture, "in": round(tin, 2),
                                "out": round(tout, 2), "words": words},

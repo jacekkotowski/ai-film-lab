@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ffilm import scaffold
+from ffilm import retakes
 from ffilm.spec import Film
 
 YAML = """\
@@ -49,7 +49,7 @@ def _project(tmp_path: Path) -> Path:
 
 def test_the_pictures_can_be_listed_while_the_old_intro_is_gone(tmp_path):
     film = Film.load(_project(tmp_path), check_files=False)
-    menu = scaffold.picture_menu(film)
+    menu = retakes.picture_menu(film)
     assert len(menu) == 1 and "1_photo.jpg" in menu[0]
 
 

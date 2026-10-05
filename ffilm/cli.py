@@ -43,7 +43,9 @@ from . import library
 from . import editor
 from . import guide
 from . import history
+from . import retakes
 from . import scaffold
+from . import slides
 from . import timeline
 from .checks import (bokeh_notes, depth_notes, film_shape, framing_notes, library_lines,
                      caption_share_line, half_captioned, music_notes,
@@ -429,9 +431,9 @@ def cmd_caption(args) -> None:
                 and not scaffold.cut_by_hand(film)):
             windows = voice.paragraph_windows(
                 lines, paragraphs, breath=scaffold.BREATH)
-            cuts = scaffold.slide_cuts(film, paragraphs, windows)
+            cuts = slides.slide_cuts(film, paragraphs, windows)
             if cuts:
-                film = scaffold.apply_cuts(film, cuts)
+                film = slides.apply_cuts(film, cuts)
                 missed = sum(1 for w in windows if w is None)
                 print(f"  {len(cuts)} slide(s) re-cut by paragraph"
                       + (f", {missed} paragraph(s) not found in what was "
@@ -508,8 +510,8 @@ def cmd_caption(args) -> None:
     # The slides move first, then the captions are placed on them. The
     # other order would fit every line to a window that is about to
     # change.
-    text = scaffold.recut_slides(before, cuts) if cuts else before
-    yml.write_text(scaffold.add_captions(text, all_placed), encoding="utf-8")
+    text = slides.recut_slides(before, cuts) if cuts else before
+    yml.write_text(slides.add_captions(text, all_placed), encoding="utf-8")
     try:
         Film.load(yml)                 # validate what we just wrote
     except SystemExit as e:
@@ -820,17 +822,17 @@ def _ask_another(n: int) -> bool:
 
 def _intro_and_closing(media: Path) -> tuple[list[Path], list[Path], bool]:
     """The camera takes that open the film and the ones that close it,
-    by the same rule scaffold.place_takes plays them: before the
+    by the same rule slides.place_takes plays them: before the
     narration opens, after it closes, a 0_ in front always opens. Also
     whether there is a narration at all."""
     files = [f for f in media.iterdir() if f.is_file()] if media.is_dir() else []
     narration = kinds.pick_narration(files)
-    when = narration and scaffold._taken_at(narration.stem)
+    when = narration and slides._taken_at(narration.stem)
     intro, closing = [], []
     for f in files:
         if f.suffix.lower() not in kinds.VIDEO or not kinds.is_recording(f.stem):
             continue
-        at = scaffold._taken_at(f.stem)
+        at = slides._taken_at(f.stem)
         if f.stem.lower().startswith(kinds.CLOSE_PREFIX):
             closing.append(f)
         elif kinds.NUM_PREFIX.match(f.stem):
@@ -849,7 +851,7 @@ def _which_picture(project: Path, n: int) -> int:
     if not yml.exists():
         raise SystemExit("There is no edit yet. Record the whole narration "
                          "first; then one picture can be said again.")
-    menu = scaffold.picture_menu(Film.load(yml, check_files=False))
+    menu = retakes.picture_menu(Film.load(yml, check_files=False))
     if not menu:
         raise SystemExit("No picture in this film has words over it yet. "
                          "Record the narration first: film record --voice")
@@ -962,7 +964,7 @@ def cmd_record(args) -> None:
 
     # Narrating photographs: the window shows them one at a time, each
     # with its own paragraph, and SPACE moves on. Which picture, and in
-    # which order, is scaffold's rule -- the same one `init` builds the
+    # which order, is the rule in slides.py -- the same one `init` builds the
     # film by -- so the words said over picture 2 land under picture 2.
     shown: list[str] = []
     steps: list = []
@@ -973,8 +975,8 @@ def cmd_record(args) -> None:
         # narration.txt: the window writes back what it shows, and this
         # is one paragraph of it.
         film_now = Film.load(project / "film.yaml", check_files=False)
-        picture = scaffold.picture_shots(film_now)[picking - 1].src
-        script = scaffold.words_for_picture(project, film_now, picking,
+        picture = retakes.picture_shots(film_now)[picking - 1].src
+        script = retakes.words_for_picture(project, film_now, picking,
                                             script)
         words_path = project / "analysis" / f"picture{picking}.txt"
         words_path.parent.mkdir(parents=True, exist_ok=True)
@@ -994,12 +996,12 @@ def cmd_record(args) -> None:
                 + out.name[len(kinds.VOICEOVER_PREFIX):]))
     elif args.voice:
         from . import voice as voice_mod
-        pictures = scaffold.pictures_in_order(project)
+        pictures = slides.pictures_in_order(project)
 
         def pair(words: str) -> list:
             """Again on Start, from what was typed in the window. `shown`
             is changed in place: the cues are written against it."""
-            pairs = scaffold.narration_steps(
+            pairs = slides.narration_steps(
                 pictures, voice_mod.script_paragraphs(words))
             shown[:] = [rel for rel, _text in pairs]
             return [(project / rel, text) for rel, text in pairs]
@@ -1141,7 +1143,7 @@ def cmd_record(args) -> None:
         menu: list[str] = []
         if args.voice and not picking:
             try:
-                menu = scaffold.picture_menu(
+                menu = retakes.picture_menu(
                     Film.load(project / "film.yaml", check_files=False))
             except (Exception, SystemExit):
                 menu = []
@@ -1227,7 +1229,7 @@ def cmd_record(args) -> None:
         words = words_path.read_text(encoding="utf-8") \
             if words_path.exists() else script
         print()
-        for line in scaffold.retake_picture(project, picking, takes[-1],
+        for line in retakes.retake_picture(project, picking, takes[-1],
                                             words):
             print(f"  {line}")
         print("\n  Watch it: uv run film draft -p "
@@ -1380,7 +1382,7 @@ def cmd_pack(args) -> None:
 def cmd_fit(args) -> None:
     """Fit a film that is a little over its length by raising `speed:`
     on every sped-up shot, with the captions moved along. The sums are
-    checks.speed_to_fit and scaffold.refit_speed; this only prints."""
+    checks.speed_to_fit and slides.refit_speed; this only prints."""
     import tempfile
 
     project = find_project(args.project)
@@ -1400,7 +1402,7 @@ def cmd_fit(args) -> None:
             f"fit-to-length skill.")
     before = yml.read_text(encoding="utf-8")
     try:
-        after = scaffold.refit_speed(before, film, s)
+        after = slides.refit_speed(before, film, s)
     except ValueError as e:
         raise SystemExit(f"{e}\nNothing changed.")
     probe = Path(tempfile.mkdtemp()) / "film.yaml"

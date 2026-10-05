@@ -13,14 +13,14 @@ none: `-` on its own is a picture with no words, and `[5]` jumps to
 picture 5 and carries on from there, 6, 7...
 """
 
-from ffilm import scaffold
+from ffilm import slides
 from ffilm.voice import script_paragraphs
 
 PICS = [f"media/{i}_.jpg" for i in range(1, 6)]
 
 
 def steps(text):
-    return scaffold.narration_steps(PICS, script_paragraphs(text))
+    return slides.narration_steps(PICS, script_paragraphs(text))
 
 
 def test_a_dash_is_a_picture_with_no_words():
@@ -43,5 +43,5 @@ def test_the_pictures_are_always_shown_in_the_film_order():
 
 def test_the_film_puts_each_paragraph_under_the_same_picture():
     paras = script_paragraphs("One.\n\n-\n\n[4] Four.\n\nFive.")
-    assert scaffold.paragraph_pictures(paras, PICS) == [
+    assert slides.paragraph_pictures(paras, PICS) == [
         "media/1_.jpg", "media/2_.jpg", "media/4_.jpg", "media/5_.jpg"]

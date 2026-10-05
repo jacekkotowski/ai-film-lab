@@ -15,7 +15,7 @@ is exact, and needs no new transcription.
 import pytest
 
 from ffilm.checks import speed_to_fit
-from ffilm.scaffold import refit_speed
+from ffilm.slides import refit_speed
 from ffilm.spec import Film
 
 YAML = """\

@@ -20,7 +20,7 @@ from pytest import approx
 from ffilm.caption_fit import _place
 from ffilm.editor import dump
 from ffilm.render import lit_word
-from ffilm.scaffold import _caption_lines
+from ffilm.slides import _caption_lines
 from ffilm.spec import Caption
 from ffilm.voice import Line, attach_word_starts
 

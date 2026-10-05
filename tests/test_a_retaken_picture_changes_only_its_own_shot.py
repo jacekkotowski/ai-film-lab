@@ -11,7 +11,7 @@ other shot, move, focus or caption changes.
 """
 from pathlib import Path
 
-from ffilm import kinds, scaffold
+from ffilm import kinds, retakes
 from ffilm.spec import Film
 from ffilm.voice import Line
 
@@ -69,15 +69,15 @@ def _film(tmp_path, text=FILM):
 def test_pictures_are_counted_as_the_notes_count_them(tmp_path):
     """Picture 1 is the first shot with words over a photo, not the
     first shot: the talking head before it is not a picture."""
-    shots = scaffold.picture_shots(_film(tmp_path))
+    shots = retakes.picture_shots(_film(tmp_path))
     assert [s.id for s in shots] == ["s02", "s03"]
 
 
 def test_only_that_shot_points_at_the_new_take(tmp_path):
     film = _film(tmp_path)
-    cut = scaffold.retake_cut(film, 1, "media/picture1_20260923-150000.wav",
+    cut = retakes.retake_cut(film, 1, "media/picture1_20260923-150000.wav",
                               0.4, 12.6)
-    text = scaffold.retake_text(FILM, cut, [])
+    text = retakes.retake_text(FILM, cut, [])
     assert "voice: media/picture1_20260923-150000.wav" in text
     assert 'in: "00:00.40"' in text
     assert text.count("voice: media/voiceover_1.wav") == 1     # s03's
@@ -89,9 +89,9 @@ def test_only_that_shot_points_at_the_new_take(tmp_path):
 
 def test_its_old_captions_go_and_the_others_stay(tmp_path):
     film = _film(tmp_path)
-    cut = scaffold.retake_cut(film, 1, "media/picture1_x.wav", 0.0, 10.0)
+    cut = retakes.retake_cut(film, 1, "media/picture1_x.wav", 0.0, 10.0)
     from ffilm.spec import Caption
-    text = scaffold.retake_text(FILM, cut, [Caption(text="New words.",
+    text = retakes.retake_text(FILM, cut, [Caption(text="New words.",
                                                     at=0.5, dur=2.0)])
     assert "Old words" not in text
     assert "New words." in text
@@ -103,13 +103,13 @@ def test_its_old_captions_go_and_the_others_stay(tmp_path):
 
 
 def test_the_picture_is_chosen_by_what_was_said(tmp_path):
-    menu = scaffold.picture_menu(_film(tmp_path))
+    menu = retakes.picture_menu(_film(tmp_path))
     assert menu == ["  1  1_oil.jpg  'Old words one.'",
                     "  2  2_thermo.jfif  'Keep me.'"]
 
 
 def test_a_picture_the_film_does_not_have_is_said_plainly(tmp_path):
-    assert scaffold.retake_cut(_film(tmp_path), 7, "media/x.wav", 0, 1) is None
+    assert retakes.retake_cut(_film(tmp_path), 7, "media/x.wav", 0, 1) is None
 
 
 def test_the_silence_before_and_after_the_words_is_not_kept():
@@ -117,9 +117,9 @@ def test_the_silence_before_and_after_the_words_is_not_kept():
     for SPACE are not the picture's words."""
     lines = [Line(start=1.2, end=3.0, text="a"), Line(start=3.5, end=9.8,
                                                       text="b")]
-    assert scaffold.speech_window(lines, 11.0) == (0.9, 10.1)
-    assert scaffold.speech_window([], 11.0) == (0.0, 11.0)
-    assert scaffold.speech_window(
+    assert retakes.speech_window(lines, 11.0) == (0.9, 10.1)
+    assert retakes.speech_window([], 11.0) == (0.0, 11.0)
+    assert retakes.speech_window(
         [Line(start=0.1, end=10.9, text="a")], 11.0) == (0.0, 11.0)
 
 
@@ -153,13 +153,13 @@ def test_a_rewrite_keeps_a_retaken_picture(tmp_path):
     record.write_retake(take, "media/1_oil.jpg", 0.4, 12.6)
     os.utime(media / "voiceover_1.wav", (100, 100))
     os.utime(take, (200, 200))
-    text = scaffold.keep_retakes(tmp_path, FILM)
+    text = retakes.keep_retakes(tmp_path, FILM)
     assert "voice: media/picture1_20260923-150000.wav" in text
     assert 'out: "00:12.60"' in text
     assert text.count("voice: media/voiceover_1.wav") == 1
 
     os.utime(take, (50, 50))          # older than the narration
-    assert scaffold.keep_retakes(tmp_path, FILM) == FILM
+    assert retakes.keep_retakes(tmp_path, FILM) == FILM
 
 
 def test_the_newest_retake_of_each_picture_since_the_narration_wins():
@@ -167,6 +167,6 @@ def test_the_newest_retake_of_each_picture_since_the_narration_wins():
              ("media/picture4_b.wav", "media/4.jfif", 20.0),
              ("media/picture2_a.wav", "media/2.jfif", 5.0),   # before it
              ("media/picture1_a.wav", "media/1.jpg", 30.0)]
-    assert scaffold.latest_retakes(found, since=8.0) == {
+    assert retakes.latest_retakes(found, since=8.0) == {
         "media/4.jfif": "media/picture4_b.wav",
         "media/1.jpg": "media/picture1_a.wav"}

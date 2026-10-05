@@ -7,7 +7,7 @@ and the numbers put every photo ahead of the intro -- the film would
 have opened on the slides and ended on "hello".
 """
 
-from ffilm.scaffold import _hint, place_takes
+from ffilm.slides import _hint, place_takes
 
 
 def tagged(*paths):

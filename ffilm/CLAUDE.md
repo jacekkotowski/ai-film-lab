@@ -71,6 +71,8 @@ authoritative description; this table is only the index.
 THE SPINE
   spec.py         what a film IS. Everything else turns these objects into pixels
   scaffold.py     media -> a first film.yaml. All editing decisions live here
+  slides.py       narration cut into slides; film.yaml text kept in step (captions, speed)
+  retakes.py      one picture's words said again, put into its own shot
   render.py       film.yaml -> pixels. The camera is one function, `warp`
   moves.py        the movement vocabulary + the taste constants
 
@@ -103,13 +105,14 @@ THE WAY IN
 and fails if an import points up. There are no exceptions:
 
 ```
-9  cli                                  the command line
-8  guide, editor                        the ways in
-7  scaffold, booth, checks              workflows
+10 cli                                  the command line
+9  guide, editor                        the ways in
+8  scaffold                             the first draft (keeps retakes)
+7  retakes, booth, checks               workflows
 6  render, caption_fit                  pixels; captions fitted to shots
 5  audio, voice, cover                  sound and words
 4  record, ingest, segment, depth       getting and reading the material
-3  moves      2  spec      1  library, models
+3  moves, timeline, slides   2  spec    1  library, models
 0  kinds, pix, paths, ffmpeg, fonts, history, pack
 ```
 

@@ -27,8 +27,9 @@ LAYERS = {
     "library": 1, "models": 1,
     # 2  what a film IS
     "spec": 2,
-    # 3  the movement vocabulary; where each shot sits in time
-    "moves": 3, "timeline": 3,
+    # 3  the movement vocabulary; where each shot sits in time; the
+    #    narration cut into slides and the film.yaml text kept in step
+    "moves": 3, "timeline": 3, "slides": 3,
     # 4  getting and reading the material
     "record": 4, "ingest": 4, "segment": 4, "depth": 4,
     # 5  sound and words, built from the analysis
@@ -36,11 +37,13 @@ LAYERS = {
     # 6  pixels, and captions fitted to shots
     "render": 6, "caption_fit": 6,
     # 7  workflows built on all of that
-    "scaffold": 7, "booth": 7, "checks": 7,
-    # 8  the ways in
-    "guide": 8, "editor": 8,
-    # 9  the command line, which dispatches to everything
-    "cli": 9,
+    "retakes": 7, "booth": 7, "checks": 7,
+    # 8  the first draft, which keeps any retake already recorded
+    "scaffold": 8,
+    # 9  the ways in
+    "guide": 9, "editor": 9,
+    # 10 the command line, which dispatches to everything
+    "cli": 10,
 }
 
 # Every upward import that is still true, with the reason. Empty since

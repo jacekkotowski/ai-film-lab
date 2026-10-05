@@ -527,7 +527,7 @@ def _best_steps(project: Path) -> list[Step]:
             elif narration and _newest(media, kinds.VIDEO) < narration:
                 # Intro, pictures, and now the last word. A take recorded
                 # after the narration plays after the pictures (see
-                # scaffold.place_takes), so this is all it takes.
+                # slides.place_takes), so this is all it takes.
                 steps.append(Step(
                     "...or say a few closing words to the camera",
                     ["record", "--closing"] + p,
@@ -946,7 +946,7 @@ def so_far(names: list[str]) -> str:
     Found 2026-09-19: the guide said what to do next and never what was
     already done, so after reopening it there was no telling whether the
     intro had been kept, or whether the narration had been recorded.
-    Opening and closing are the places scaffold.place_takes gives the
+    Opening and closing are the places slides.place_takes gives the
     takes: before the narration, or after it.
     """
     stills = [n for n in names if Path(n).suffix.lower()
