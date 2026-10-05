@@ -9,16 +9,11 @@ move it to the bottom section with the commit id — do not delete it.
   content words; intro<->closing named as a possible recap). Calibrated on
   20 films, ONE known true case (SUMIFS intro/closing, 78%). Not yet seen
   catching anything on a new film by Jacek.
-- 2026-10-05 NEW, not yet seen working on a new film by Jacek: every new
-  film (`init`, `go`) plays at 1.25 and has its narration pauses of
-  0.6 s+ cut to 0.4 s (`film tighten`, decision 0015). Proved on a copy
-  of SUMIFS media: 30 pauses cut, 196.9 -> 182.1 s. Open: `film fit` has
-  no room left (MAX_SPEED = REC_SPEED = 1.25); 15 of 305 words drifted
-  0.2-2.9 s by whisper re-transcription (mostly numbers), not confirmed
-  as whisper's fault by any other measure; one 0.60 s pause survives.
-  SUMIFS final.mp4 rendered 177.8 s (opening card removed by Jacek);
-  then s08 lost its first three sentences (repeats of intro/s02):
-  final.mp4 re-rendered 168.2 s; nobody has heard the new s08 cut yet.
+- 2026-10-05 still open from the 1.25 / tighten work (accepted, see
+  Fixed): `film fit` has no room left (MAX_SPEED = REC_SPEED = 1.25);
+  15 of 305 words drifted 0.2-2.9 s by whisper re-transcription (mostly
+  numbers), not confirmed as whisper's fault by any other measure; one
+  0.60 s pause survives.
 - 2026-10-02 SKIPPED by Jacek (final rendered 177.8 s with them silent;
   not to be raised again). Excel Time Logic pictures 6 and 7 (s07, s08) have no
   narration: the whole-narration take (162.45 s) is silent where they were
@@ -133,6 +128,11 @@ move it to the bottom section with the commit id — do not delete it.
 ---
 
 ## Fixed (with the commit, once Jacek has seen it work)
+- 2026-10-05 every new film plays at 1.25 and its narration pauses of
+  0.6 s+ are cut to 0.4 s -- bfc57a2 (decision 0015). SUMIFS SUMPRODUCT
+  vs DAX final.mp4 168.2 s with s08's repeats cut (8bb2109). Jacek
+  watched it: "status of SUMIFS is good, 1.25 is good, pause tightening
+  looks good".
 - 2026-09-28 `render.source_maps` widened the parallax grid to float64 —
   231bdf0 (decision 0013): 98.9 -> ~41 ms/call, isolated benchmark.
   Real `film final` of What Is Love with the fix (258.9 s, 11 shots,
