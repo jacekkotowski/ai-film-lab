@@ -378,45 +378,45 @@ shots:
   - id: s07
     src: media/06_The_trap_text_in_a_number_column.png
     voice: media/voiceover_20261005-105141.wav
-    in: "03:12.95"
+    in: "03:16.00"
     out: "03:41.40"
     speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
     focus: [0.340, 0.318]
-    note: "picture 6 of 6 -- holds while these words are said"
+    note: "picture 6 of 6 -- holds while these words are said. in: was 03:12.95; 190.46-196.11 s is silent (one click at 193.25), cut 3.05 s"
     captions:
       - text: "Data types are important."
-        at: 2.63
+        at: 0.09
         dur: 1.46
         pos: lower_third
         words: [0.00, 0.38, 0.77, 1.00]
       - text: "Someone typed a dash for zero sales."
-        at: 4.68
+        at: 2.14
         dur: 2.18
         pos: lower_third
         words: [0.00, 0.37, 0.65, 0.85, 1.05, 1.33, 1.70]
       - text: "Times returns a value error on text."
-        at: 7.30
+        at: 4.76
         dur: 2.71
         pos: lower_third
         words: [0.00, 0.43, 1.07, 1.38, 1.73, 2.08, 2.35]
       - text: "The comma form treats it as zero and stays silent."
-        at: 11.08
+        at: 8.54
         dur: 3.85
         pos: lower_third
         words: [0.00, 0.18, 0.47, 0.90, 1.38, 1.78, 2.15, 2.63, 2.88, 3.20]
       - text: "Count the text first:"
-        at: 15.85
+        at: 13.31
         dur: 1.46
         pos: lower_third
         words: [0.00, 0.73, 0.93, 1.18]
       - text: "ISTEXT with a double minus finds one cell."
-        at: 17.82
+        at: 15.28
         dur: 2.64
         pos: lower_third
         words: [0.00, 0.12, 0.43, 0.67, 0.83, 1.05, 1.52, 1.90, 2.23]
       - text: "Type zero, and every formula works."
-        at: 21.15
+        at: 18.61
         dur: 2.11
         pos: lower_third
         words: [0.00, 0.28, 0.62, 0.98, 1.30, 1.63]
