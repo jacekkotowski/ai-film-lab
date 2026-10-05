@@ -310,6 +310,18 @@ def cmd_ingest(args) -> None:
     guide.print_next(project)
 
 
+def tighten_new(yml: Path, indent: str) -> None:
+    """Every new film has its narration pauses tightened (decision 0015),
+    before the captions, so they are made from the shorter file. A
+    narration that cannot be read costs the tightening, not the film."""
+    try:
+        lines = tighten.apply(yml)
+    except SystemExit as e:
+        lines = [f"pauses not tightened: {e}"]
+    for line in lines:
+        print(f"{indent}{line}")
+
+
 def cmd_init(args) -> None:
     project = find_project(args.project)
     # --force throws away an edit. Keep it where she can find it, the same
@@ -318,6 +330,7 @@ def cmd_init(args) -> None:
     out = scaffold.write(project, force=args.force, seed=args.seed,
                          target=args.target)
     print(f"Wrote {out}")
+    tighten_new(out, "  ")
     if bak is not None:
         print(f"  the edit you had is kept as {bak.name}")
     text = out.read_text(encoding="utf-8")
@@ -573,6 +586,7 @@ def cmd_go(args) -> None:
             print("[2/4] writing the edit")
         scaffold.write(project, force=True, seed=args.seed,
                        target=args.target)
+        tighten_new(yml, "      ")
         existing = False
 
     # Captions are APPENDED to a shot, so transcribing an already-captioned
@@ -1432,57 +1446,12 @@ def cmd_tighten(args) -> None:
     """Shorten the long pauses inside the narration over pictures, with
     the pictures' in/out and the captions moved along. The sums are
     tighten.cuts_for and tighten.retime_text; this only prints."""
-    import tempfile
-
     project = find_project(args.project)
-    yml = project / "film.yaml"
-    film = load(project, "final")
-    before = yml.read_text(encoding="utf-8")
-    after = before
-    writes = []
-    voices = list(dict.fromkeys(s.voice for s in film.shots if s.voice))
-    if not voices:
-        print("No narration over pictures in this film. Nothing changed.")
-        return
-    for v in voices:
-        path = film.resolve(v)
-        windows = [(s.tin, s.tout) for s in film.shots if s.voice == v]
-        cuts, line = tighten.find_cuts(path, windows, args.over, args.keep)
-        gone = sum(b - a for a, b in cuts)
-        print(f"{Path(v).name}: {len(cuts)} pause(s) of {args.over:g}s or "
-              f"more cut to {args.keep:g}s, {gone:.1f}s of recording "
-              f"(speech line {line:.1f} dB)")
-        if not cuts:
-            continue
-        name = tighten.tight_name(v, path, cuts)
-        try:
-            after = tighten.retime_text(after, film, v, name, cuts)
-        except ValueError as e:
-            raise SystemExit(f"{e}\nNothing changed.")
-        writes.append((path, project / name, cuts))
-    if not writes:
-        print("Nothing to cut. Nothing changed.")
-        return
-    probe = Path(tempfile.mkdtemp()) / "film.yaml"
-    probe.write_text(after, encoding="utf-8")
-    new_total = Film.load(probe, check_files=False).duration
-    print(f"film: {film.duration:.1f}s -> {new_total:.1f}s")
-    if args.dry_run:
-        print("  --dry-run: film.yaml not touched, no sound written.")
-        return
-    for src, dst, cuts in writes:
-        if not dst.exists():
-            tighten.write_tight(src, dst, cuts)
-        print(f"  shorter narration: {dst.relative_to(project).as_posix()} "
-              f"(the original in media/ is untouched)")
-    bak = keep_a_copy(project)
-    yml.write_text(after, encoding="utf-8")
-    try:
-        Film.load(yml)
-    except SystemExit:
-        yml.write_text(before, encoding="utf-8")
-        raise
-    print("  pictures and captions moved with the words.")
+    load(project, "final")                 # the same checks as every command
+    bak = None if args.dry_run else keep_a_copy(project)
+    for line in tighten.apply(project / "film.yaml", args.over, args.keep,
+                              args.dry_run):
+        print(line)
     if bak is not None:
         print(f"  the film you had is kept as {bak.name}")
 

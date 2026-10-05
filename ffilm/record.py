@@ -40,15 +40,16 @@ from .kinds import (REC_PREFIX, VOICEOVER_PREFIX,  # noqa: F401
                     is_recording)  # used by scaffold, tests
 
 # Recorded takes get this in film.yaml. Not applied to the file on disk:
-# the original stays the speed you spoke at, and `speed: 1.2` is a number
+# the original stays the speed you spoke at, and `speed: 1.25` is a number
 # in the edit that you can argue with. Most people, recording themselves
-# talking to a lens, are slower than they think.
-REC_SPEED = 1.2
+# talking to a lens, are slower than they think. Was 1.2; Jacek heard
+# SUMIFS SUMPRODUCT vs DAX at 1.25 (2026-10-05) and asked for it always.
+REC_SPEED = 1.25
 
-# The most `film fit` will raise a speed to. A PLACEHOLDER, not a
-# measurement: nobody has yet measured where speech turns unintelligible
-# or atempo starts to artefact. Past it, fit refuses and the film needs
-# cutting. See docs/plans/2026-10-04/PLAN-fit-by-speed.md.
+# The most `film fit` will raise a speed to. Since REC_SPEED became 1.25
+# it is also the default, so fit has no room left on a new film: past
+# it, the film needs cutting. Atempo round-trip distortion measured no
+# knee up to 1.35 (docs/tech/audio.md); nobody has asked for more.
 MAX_SPEED = 1.25
 
 # The live preview (booth.py shows it) is padded to exactly this,

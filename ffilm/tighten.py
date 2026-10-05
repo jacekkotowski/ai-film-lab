@@ -30,6 +30,7 @@ import numpy as np
 from . import ingest
 from .ffmpeg import ffmpeg_bin, ffprobe_bin
 from .slides import _shot_blocks, quoted, tc
+from .spec import Film
 
 OVER = 0.6      # a pause this long or longer is shortened ...
 KEEP = 0.4      # ... to this. Measured: 30 of the 50 pauses >= 0.25 s
@@ -195,3 +196,63 @@ def write_tight(src: Path, dst: Path, cuts) -> None:
         w.setframerate(rate)
         w.writeframes(y.astype("<i2").tobytes())
     tmp.replace(dst)
+
+
+def apply(yml: Path, over: float = OVER, keep: float = KEEP,
+          dry_run: bool = False) -> list[str]:
+    """Tighten every narration in the film at `yml`, write the shorter
+    copies and the new film.yaml, and say what was done, line by line.
+
+    `film tighten` calls it, and so do `film init` and `film go` right
+    after they write a new film: Jacek heard SUMIFS SUMPRODUCT vs DAX
+    tightened (2026-10-05) and asked for it on every film. It runs BEFORE
+    the captions there, so `film caption` listens to the shorter file
+    and nothing has to be moved.
+    """
+    film = Film.load(yml, check_files=False)
+    before = yml.read_text(encoding="utf-8")
+    after = before
+    said: list[str] = []
+    writes = []
+    for v in dict.fromkeys(s.voice for s in film.shots if s.voice):
+        path = film.resolve(v)
+        windows = [(s.tin, s.tout) for s in film.shots if s.voice == v]
+        cuts, line = find_cuts(path, windows, over, keep)
+        said.append(f"{Path(v).name}: {len(cuts)} pause(s) of {over:g}s or "
+                    f"more cut to {keep:g}s, "
+                    f"{sum(b - a for a, b in cuts):.1f}s of recording "
+                    f"(speech line {line:.1f} dB)")
+        if not cuts:
+            continue
+        name = tight_name(v, path, cuts)
+        try:
+            after = retime_text(after, film, v, name, cuts)
+        except ValueError as e:
+            raise SystemExit(f"{e}\nNothing changed.")
+        writes.append((path, yml.parent / name, cuts))
+    if not said:
+        return ["No narration over pictures in this film. Nothing changed."]
+    if not writes:
+        return said + ["Nothing to cut. Nothing changed."]
+    probe = yml.with_name("film.yaml.tighten")
+    probe.write_text(after, encoding="utf-8")
+    try:
+        new_total = Film.load(probe, check_files=False).duration
+    finally:
+        probe.unlink()
+    said.append(f"film: {film.duration:.1f}s -> {new_total:.1f}s")
+    if dry_run:
+        return said + ["  --dry-run: film.yaml not touched, no sound written."]
+    for src, dst, cuts in writes:
+        if not dst.exists():
+            write_tight(src, dst, cuts)
+        said.append(f"  shorter narration: "
+                    f"{dst.relative_to(yml.parent).as_posix()} "
+                    f"(the original in media/ is untouched)")
+    yml.write_text(after, encoding="utf-8")
+    try:
+        Film.load(yml)
+    except SystemExit:
+        yml.write_text(before, encoding="utf-8")
+        raise
+    return said + ["  pictures and captions moved with the words."]

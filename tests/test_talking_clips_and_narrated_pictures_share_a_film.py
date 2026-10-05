@@ -108,8 +108,11 @@ def test_nobody_talks_over_anybody(tmp_path, monkeypatch):
     spans = sorted((d / 1000, d / 1000 + (b - a) / sp)
                    for _src, a, b, d, sp in specs)
     assert len(spans) >= 4
+    # Half a millisecond: audio.speech_specs places each piece in WHOLE
+    # milliseconds (adelay's unit), so at 1.25 a start of 9.58333 s is
+    # written 9583 ms. At 1.2 the numbers happened to land exactly.
     for (s0, e0), (s1, _e1) in zip(spans, spans[1:]):
-        assert e0 <= s1 + 1e-6
+        assert e0 <= s1 + 0.0005
 
 
 def test_without_presses_the_pictures_are_cut_at_the_pauses(tmp_path,

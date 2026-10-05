@@ -4,6 +4,14 @@ Every session reads this first. A fault stays here until it is fixed AND
 Jacek has seen the fix work in a real render. Newest first. When fixed:
 move it to the bottom section with the commit id — do not delete it.
 
+- 2026-10-05 NEW, not yet seen working on a new film by Jacek: every new
+  film (`init`, `go`) plays at 1.25 and has its narration pauses of
+  0.6 s+ cut to 0.4 s (`film tighten`, decision 0015). Proved on a copy
+  of SUMIFS media: 30 pauses cut, 196.9 -> 182.1 s. Open: `film fit` has
+  no room left (MAX_SPEED = REC_SPEED = 1.25); 15 of 305 words drifted
+  0.2-2.9 s by whisper re-transcription (mostly numbers), not confirmed
+  as whisper's fault by any other measure; one 0.60 s pause survives.
+  SUMIFS final.mp4 rendered 177.8 s (opening card removed by Jacek).
 - 2026-10-02 SKIPPED by Jacek (final rendered 177.8 s with them silent;
   not to be raised again). Excel Time Logic pictures 6 and 7 (s07, s08) have no
   narration: the whole-narration take (162.45 s) is silent where they were
