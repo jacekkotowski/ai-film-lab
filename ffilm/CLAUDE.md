@@ -33,7 +33,7 @@ background noise. So:
 
 ## The rules the tests enforce
 
-`uv run --extra dev pytest` runs in under a second, and it runs after any
+`uv run --extra dev pytest` runs in about 20 seconds, and it runs after any
 change to `ffilm/`. Every test exists because that rule broke in front of
 me once. Test names are sentences (`test_nothing_goes_missing.py`); a new
 rule gets a new sentence.

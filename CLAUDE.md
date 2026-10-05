@@ -62,7 +62,7 @@ uv run film draft  -p NAME     under a minute: motion
 uv run film final  -p NAME     slow. ONLY when I ask
 uv run film fit    -p NAME --target N [--dry-run]   slightly over? raise speed: a little, captions follow
 uv run film undo   -p NAME     put back the last film.yaml I watched (--list: all)
-uv run --extra dev pytest      the tests, under a second
+uv run --extra dev pytest      the tests, about 20 seconds
 ```
 
 ## Things that are enforced, not just asked
