@@ -97,9 +97,9 @@ shots:
 
   - id: s02
     src: media/01_SUMIFS_on_a_table.png
-    voice: media/voiceover_20261005-105141.wav
+    voice: analysis/tight/voiceover_20261005-105141__tight_c06a99ed.wav
     in: "00:04.30"
-    out: "00:34.15"
+    out: "00:31.85"
     speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
     focus: [0.360, 0.391]
@@ -111,41 +111,41 @@ shots:
         pos: lower_third
         words: [0.00, 0.48, 0.90, 1.22, 1.45]
       - text: "The region came from the staff table in video two,"
-        at: 4.30
+        at: 3.51
         dur: 2.86
         pos: lower_third
         words: [0.00, 0.27, 0.50, 0.75, 0.98, 1.20, 1.43, 1.87, 2.17, 2.43]
       - text: "and East sold 291 units from January to November."
-        at: 7.17
+        at: 6.38
         dur: 4.50
         pos: lower_third
         words: [0.00, 0.90, 1.68, 2.08, 3.25, 3.62, 3.87, 4.27]
       - text: "Criteria in cells keep the formula fixed."
-        at: 12.87
+        at: 11.66
         dur: 2.93
         pos: lower_third
         words: [0.00, 0.65, 0.87, 1.22, 1.78, 2.15, 2.52]
       - text: "Each extra pair narrows it,"
-        at: 16.57
+        at: 14.94
         dur: 1.80
         pos: lower_third
         words: [0.00, 0.28, 0.70, 0.97, 1.62]
       - text: "so East up to March is 60."
-        at: 18.60
+        at: 16.97
         dur: 2.11
         pos: lower_third
         words: [0.00, 0.25, 0.83, 1.08, 1.23, 1.50, 1.73]
       - text: "SUMIFS only adds a column that exists."
-        at: 22.23
+        at: 20.31
         dur: 2.08
         pos: lower_third
         words: [0.00, 0.25, 0.63, 0.87, 1.28, 1.68]
 
   - id: s03
     src: media/02_SUMPRODUCT_multiply_then_add.png
-    voice: media/voiceover_20261005-105141.wav
-    in: "00:38.75"
-    out: "01:07.50"
+    voice: analysis/tight/voiceover_20261005-105141__tight_c06a99ed.wav
+    in: "00:36.45"
+    out: "01:02.85"
     speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
     focus: [0.402, 0.385]
@@ -158,40 +158,40 @@ shots:
         words: [0.00, 0.77, 1.22, 1.60, 1.83, 2.25, 2.77, 2.97]
       - text: "then adds, with no helper column:"
         at: 4.55
-        dur: 2.59
+        dur: 2.42
         pos: lower_third
-        words: [0.00, 0.33, 1.53, 1.77, 1.97, 2.25]
+        words: [0.00, 0.33, 1.36, 1.60, 1.80, 2.08]
       - text: "72,000 in revenue."
-        at: 7.80
+        at: 7.43
         dur: 2.25
         pos: lower_third
         words: [0.00, 0.42, 1.40, 1.78]
       - text: "Divide by the units sold for the weighted price,"
-        at: 10.62
-        dur: 2.98
+        at: 9.96
+        dur: 2.85
         pos: lower_third
-        words: [0.00, 0.60, 0.75, 0.90, 1.22, 1.65, 2.00, 2.18, 2.48]
+        words: [0.00, 0.47, 0.62, 0.77, 1.09, 1.52, 1.87, 2.05, 2.35]
       - text: "157.55."
-        at: 14.47
+        at: 13.30
         dur: 2.05
         pos: lower_third
         words: [0.00, 1.25]
       - text: "Each unit counts, not each row."
-        at: 17.55
+        at: 15.97
         dur: 2.46
         pos: lower_third
         words: [0.00, 0.32, 0.58, 1.63, 1.88, 2.22]
       - text: "A plain average of the prices says 170."
-        at: 20.73
+        at: 18.77
         dur: 2.63
         pos: lower_third
         words: [0.00, 0.20, 0.40, 0.77, 0.98, 1.12, 1.40, 1.77]
 
   - id: s04
     src: media/03_Conditions_as_1_and_0.png
-    voice: media/voiceover_20261005-105141.wav
-    in: "01:12.40"
-    out: "01:37.70"
+    voice: analysis/tight/voiceover_20261005-105141__tight_c06a99ed.wav
+    in: "01:07.75"
+    out: "01:31.80"
     speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
     focus: [0.451, 0.312]
@@ -208,41 +208,41 @@ shots:
         pos: lower_third
         words: [0.00, 0.40, 0.90, 1.23, 1.50]
       - text: "32,600."
-        at: 7.27
+        at: 6.81
         dur: 1.41
         pos: lower_third
         words: [0.00, 0.33]
       - text: "Times is AND, plus is OR."
-        at: 8.68
-        dur: 2.25
+        at: 8.22
+        dur: 1.96
         pos: lower_third
-        words: [0.00, 0.95, 1.25, 1.73]
+        words: [0.00, 0.66, 0.96, 1.44]
       - text: "Paul or Helmut is one formula,"
-        at: 12.40
+        at: 11.36
         dur: 1.88
         pos: lower_third
         words: [0.00, 0.43, 0.68, 1.07, 1.28, 1.47]
       - text: "91 plus 76,"
-        at: 14.80
+        at: 13.76
         dur: 1.70
         pos: lower_third
         words: [0.00, 0.47, 0.83]
       - text: "so 167."
-        at: 16.80
+        at: 15.76
         dur: 1.68
         pos: lower_third
         words: [0.00, 0.30]
       - text: "SUMIFS needs two formulas."
-        at: 19.60
+        at: 18.56
         dur: 0.95
         pos: lower_third
         words: [0.00, 0.23, 0.52]
 
   - id: s05
     src: media/04_Filters_and_slicers.png
-    voice: media/voiceover_20261005-105141.wav
-    in: "01:42.60"
-    out: "02:14.75"
+    voice: analysis/tight/voiceover_20261005-105141__tight_c06a99ed.wav
+    in: "01:36.70"
+    out: "02:06.00"
     speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
     focus: [0.497, 0.307]
@@ -264,46 +264,46 @@ shots:
         pos: lower_third
         words: [0.00, 0.28, 0.93, 1.35, 1.68]
       - text: "Hidden rows still count,"
-        at: 7.11
-        dur: 1.63
+        at: 6.75
+        dur: 1.49
         pos: lower_third
-        words: [0.00, 0.53, 0.82, 1.22]
+        words: [0.00, 0.39, 0.68, 1.08]
       - text: "so the formula says 72,000."
-        at: 8.93
+        at: 8.43
         dur: 2.44
         pos: lower_third
         words: [0.00, 0.18, 0.37, 0.72, 1.12, 1.72]
       - text: "A SUBTOTAL column returns zero for a filtered-out row."
-        at: 12.04
-        dur: 3.93
+        at: 11.17
+        dur: 3.68
         pos: lower_third
-        words: [0.00, 0.55, 1.02, 1.45, 1.82, 2.32, 2.70, 2.97, 3.22, 3.53]
+        words: [0.00, 0.30, 0.77, 1.20, 1.57, 2.07, 2.45, 2.72, 2.97, 3.28]
       - text: "Multiply by it,"
-        at: 16.51
-        dur: 1.13
+        at: 15.08
+        dur: 1.06
         pos: lower_third
-        words: [0.00, 0.68, 0.83]
+        words: [0.00, 0.61, 0.76]
       - text: "and West shows 39,400."
-        at: 17.64
+        at: 16.14
         dur: 2.48
         pos: lower_third
         words: [0.00, 0.27, 0.53, 0.90, 1.77]
       - text: "It works for this table only."
-        at: 20.91
-        dur: 2.21
+        at: 19.21
+        dur: 1.83
         pos: lower_third
-        words: [0.00, 0.67, 0.97, 1.35, 1.53, 1.87]
+        words: [0.00, 0.29, 0.59, 0.97, 1.15, 1.49]
       - text: "A PivotTable slicer cannot reach it."
-        at: 23.66
-        dur: 2.86
+        at: 21.33
+        dur: 2.81
         pos: lower_third
-        words: [0.00, 0.38, 0.73, 1.18, 1.80, 2.20, 2.65]
+        words: [0.00, 0.33, 0.68, 1.13, 1.75, 2.15, 2.60]
 
   - id: s06
     src: media/05_The_same_in_DAX.png
-    voice: media/voiceover_20261005-105141.wav
-    in: "02:20.15"
-    out: "03:11.20"
+    voice: analysis/tight/voiceover_20261005-105141__tight_c06a99ed.wav
+    in: "02:11.40"
+    out: "02:57.60"
     speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
     focus: [0.514, 0.311]
@@ -311,75 +311,75 @@ shots:
     captions:
       - text: "The same in DAX In Power Pivot,"
         at: 0.11
-        dur: 2.84
+        dur: 2.38
         pos: lower_third
-        words: [0.00, 0.30, 0.53, 0.73, 2.00, 2.17, 2.53]
+        words: [0.00, 0.30, 0.53, 0.73, 1.54, 1.71, 2.07]
       - text: "Calculated Fields, New Calculated Field."
-        at: 2.96
+        at: 2.50
         dur: 2.85
         pos: lower_third
         words: [0.00, 0.48, 1.57, 1.80, 2.33]
       - text: "Quantity is a sum."
-        at: 6.71
+        at: 5.71
         dur: 1.31
         pos: lower_third
         words: [0.00, 0.45, 0.78, 1.02]
       - text: "SUMX is SUMPRODUCT row by row,"
-        at: 9.56
+        at: 7.98
         dur: 1.95
         pos: lower_third
         words: [0.00, 0.42, 0.80, 1.18, 1.47, 1.65]
       - text: "inside the current filter."
-        at: 11.79
+        at: 10.21
         dur: 1.46
         pos: lower_third
         words: [0.00, 0.42, 0.77, 1.05]
       - text: "The average price divides revenue by quantity."
-        at: 14.29
+        at: 11.96
         dur: 2.64
         pos: lower_third
         words: [0.00, 0.30, 0.58, 0.95, 1.42, 1.92, 2.27]
       - text: "With region in Rows,"
-        at: 17.74
-        dur: 1.33
+        at: 14.96
+        dur: 1.15
         pos: lower_third
-        words: [0.00, 0.48, 0.85, 1.03]
+        words: [0.00, 0.30, 0.67, 0.85]
       - text: "the total matches the formulas:"
-        at: 19.53
+        at: 16.57
         dur: 1.68
         pos: lower_third
         words: [0.00, 0.10, 0.45, 1.03, 1.25]
       - text: "457 units,"
-        at: 22.01
+        at: 19.05
         dur: 1.28
         pos: lower_third
         words: [0.00, 0.95]
       - text: "72,000 and 157.55."
-        at: 23.88
-        dur: 4.48
+        at: 20.92
+        dur: 4.27
         pos: lower_third
-        words: [0.00, 0.42, 3.80]
+        words: [0.00, 0.42, 3.59]
       - text: "East pays 112.03 and West 237.35."
-        at: 29.14
-        dur: 4.50
+        at: 25.71
+        dur: 4.26
         pos: lower_third
-        words: [0.00, 0.67, 1.22, 1.93, 3.10, 3.85, 4.17]
+        words: [0.00, 0.43, 0.98, 1.69, 2.86, 3.61, 3.93]
       - text: "Select January to March in the Timeline,"
-        at: 36.29
-        dur: 2.21
+        at: 32.46
+        dur: 2.00
         pos: lower_third
-        words: [0.00, 0.58, 1.03, 1.35, 1.62, 1.80, 1.92]
+        words: [0.00, 0.37, 0.82, 1.14, 1.41, 1.59, 1.71]
       - text: "and the total becomes 144.44."
-        at: 38.51
+        at: 34.47
         dur: 2.31
         pos: lower_third
         words: [0.00, 0.53, 0.68, 0.95, 1.45]
 
   - id: s07
     src: media/06_The_trap_text_in_a_number_column.png
-    voice: media/voiceover_20261005-105141.wav
-    in: "03:16.00"
-    out: "03:41.40"
+    voice: analysis/tight/voiceover_20261005-105141__tight_c06a99ed.wav
+    in: "03:02.40"
+    out: "03:25.45"
     speed: 1.2              # 1.0 is the speed you actually read at
     move: columns
     focus: [0.340, 0.318]
@@ -401,22 +401,22 @@ shots:
         pos: lower_third
         words: [0.00, 0.43, 1.07, 1.38, 1.73, 2.08, 2.35]
       - text: "The comma form treats it as zero and stays silent."
-        at: 8.54
+        at: 7.83
         dur: 3.85
         pos: lower_third
         words: [0.00, 0.18, 0.47, 0.90, 1.38, 1.78, 2.15, 2.63, 2.88, 3.20]
       - text: "Count the text first:"
-        at: 13.31
-        dur: 1.46
+        at: 12.04
+        dur: 1.14
         pos: lower_third
-        words: [0.00, 0.73, 0.93, 1.18]
+        words: [0.00, 0.41, 0.61, 0.86]
       - text: "ISTEXT with a double minus finds one cell."
-        at: 15.28
+        at: 13.70
         dur: 2.64
         pos: lower_third
         words: [0.00, 0.12, 0.43, 0.67, 0.83, 1.05, 1.52, 1.90, 2.23]
       - text: "Type zero, and every formula works."
-        at: 18.61
+        at: 16.65
         dur: 2.11
         pos: lower_third
         words: [0.00, 0.28, 0.62, 0.98, 1.30, 1.63]
