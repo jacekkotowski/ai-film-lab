@@ -11,7 +11,9 @@ move it to the bottom section with the commit id — do not delete it.
   no room left (MAX_SPEED = REC_SPEED = 1.25); 15 of 305 words drifted
   0.2-2.9 s by whisper re-transcription (mostly numbers), not confirmed
   as whisper's fault by any other measure; one 0.60 s pause survives.
-  SUMIFS final.mp4 rendered 177.8 s (opening card removed by Jacek).
+  SUMIFS final.mp4 rendered 177.8 s (opening card removed by Jacek);
+  then s08 lost its first three sentences (repeats of intro/s02):
+  draft 168.1 s, final NOT re-rendered, nobody has heard the new s08 cut.
 - 2026-10-02 SKIPPED by Jacek (final rendered 177.8 s with them silent;
   not to be raised again). Excel Time Logic pictures 6 and 7 (s07, s08) have no
   narration: the whole-narration take (162.45 s) is silent where they were
