@@ -19,6 +19,13 @@ move it to the bottom section with the commit id — do not delete it.
   (source) early 5, inside continuous speech so not decidable 5, the
   157.55 miss 1, plausible 1 (167). The tight run was worse on numbers
   (167 and "times" placed on the previous word's end). Not fixed.
+  Re-transcribing a short slice does NOT help numbers (it does names,
+  docs/tech/captions.md): slice 153.5-162.5 heard "72 ,157" with 157 at
+  157.14; slice 50.5-56.5 put 157 at 51.78, inside the pause before it
+  (onset 52.41). Judged cosmetic by Claude: the caption itself appears
+  on time, only the highlight runs ahead on one word in ~300. If a film
+  shows it worse: a word start inside a pause or just before one moves
+  to the pause's end (fixes the 5 early starts, not 157.55).
 - 2026-10-05 FIXED (b458026, "A pause of exactly the limit is
   shortened"; new films only, SUMIFS final left as Jacek accepted it):
   `film tighten` left a pause of exactly 0.60 s uncut: 12 windows x
