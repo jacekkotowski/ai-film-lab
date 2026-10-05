@@ -414,41 +414,26 @@ shots:
 
   - id: s08
     src: media/close_rec_20261005-105330.mp4
-    in: "00:00.84"
+    in: "00:12.84"
     out: "00:24.14"
     speed: 1.25              # 1.0 is the speed you actually spoke at
     move: drift_left
     amount: 0.6            # how much of the move to use. 0 = none
     focus: [0.398, 0.339]
-    note: "closer"
+    note: "closer. in: was 00:00.84; the first three sentences repeated the intro and s02, cut 2026-10-05. Sentence 4 starts 12.9 s on the sound (+0.24 lag)"
     captions:
-      - text: "SUMIFS adds one column by condition."
-        at: 0.91
-        dur: 1.52
-        pos: lower_third
-        words: [0.00, 0.31, 0.58, 0.84, 1.10]
-      - text: "SUMPRODUCT multiplies first but ignores slicers."
-        at: 3.52
-        dur: 2.38
-        pos: lower_third
-        words: [0.00, 0.65, 1.06, 1.22, 1.66]
-      - text: "A measure computes inside every filter."
-        at: 6.66
-        dur: 2.36
-        pos: lower_third
-        words: [0.00, 0.14, 0.41, 1.06, 1.54, 2.04]
       - text: "SUMIFS filters, SUMPRODUCT multiplies,"
-        at: 10.48
+        at: 0.88
         dur: 1.93
         pos: lower_third
         words: [0.00, 0.70, 0.89, 1.22]
       - text: "SUMX does both under every filter."
-        at: 12.66
+        at: 3.06
         dur: 2.52
         pos: lower_third
         words: [0.00, 0.14, 0.38, 0.74, 1.13, 1.66, 2.14]
       - text: "Next: dropdowns and dynamic ranges."
-        at: 15.67
+        at: 6.07
         dur: 2.50
         pos: lower_third
         words: [0.00, 0.77, 0.96, 1.25, 1.65, 2.09]
