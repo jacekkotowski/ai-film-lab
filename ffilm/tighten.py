@@ -50,7 +50,10 @@ def cuts_for(quiet, windows, over: float = OVER, keep: float = KEEP):
     """
     out = []
     for s, e in quiet:
-        if e - s < over:
+        # Pause times are window counts x 0.05, so a pause of exactly
+        # `over` can come out a hair under it (198.70 - 198.10 =
+        # 0.5999999999999943 on SUMIFS) and be left whole.
+        if e - s < over - 1e-6:
             continue
         if not any(a < s and e < b for a, b in windows):
             continue

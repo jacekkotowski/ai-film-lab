@@ -9,11 +9,12 @@ move it to the bottom section with the commit id — do not delete it.
   content words; intro<->closing named as a possible recap). Calibrated on
   20 films, ONE known true case (SUMIFS intro/closing, 78%). Not yet seen
   catching anything on a new film by Jacek.
-- 2026-10-05 `film tighten` leaves a pause of exactly 0.60 s uncut:
-  12 windows x 0.05 s = 0.5999999999999943 < OVER in `cuts_for`
-  (SUMIFS: orig 198.10-198.70, tight 184.50-185.10; the other 0.60 s
-  pause in the take summed to >= 0.6 and was cut). Costs 0.16 s of film
-  here. Not fixed: needs a code change Jacek has not asked for.
+- 2026-10-05 FIXED (this commit, "A pause of exactly the limit is
+  shortened"; new films only, SUMIFS final left as Jacek accepted it):
+  `film tighten` left a pause of exactly 0.60 s uncut: 12 windows x
+  0.05 s = 0.5999999999999943 < OVER in `cuts_for` (SUMIFS: orig
+  198.10-198.70). After the fix, on SUMIFS media: 30 cuts, 16.15 s
+  (was 29, 15.95 s). Not yet seen on a new film by Jacek.
   Measured at the same time: the tight copy equals the original minus
   the cuts sample for sample (9,904,800 samples; 13,745 differ, all
   inside the 5 ms fades). So the 15 of 304 words whisper hears 0.21-2.88 s
